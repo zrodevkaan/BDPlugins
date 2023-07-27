@@ -1,7 +1,7 @@
 /**
  * @name SafeClick
  * @description Saves you from middle click bypasses on links or from random links you clicked by accident!
- * @author _ninelota_
+ * @author imafrogowo
  * @version 1.0.0
  */
 
