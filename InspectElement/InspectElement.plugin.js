@@ -1,6 +1,6 @@
 /**
  * @name Inspect Element
- * @author _NineLota_
+ * @author imafrogowo
  * @description Forcefully opens dev-tools for users who can't use CTRL+SHIFT+I **Huge thanks to skamt & thecommieaxolotl**
  * @version 1.0.0
  */
