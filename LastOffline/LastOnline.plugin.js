@@ -1,7 +1,7 @@
 /**
  * @name LastOffline
  * @description Allows you to see when someone went last offline.
- * @author davilarek, _ninelota_
+ * @author davilarek, imafrogowo
  * @version 1.0.0
  */
 
