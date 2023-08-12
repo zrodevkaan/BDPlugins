@@ -64,7 +64,7 @@ class MemoryHandler extends React.Component {
   }
 
   handleRestart = () => {
-    window.location.reload();
+    DiscordNative.remoteApp.relaunch()
   };
 
   showWarning = () => {
@@ -79,6 +79,10 @@ class MemoryHandler extends React.Component {
         cancelText: "No Thanks",
         onConfirm: () => {
           handleRestart();
+        },
+        onCancel: () =>
+        {
+          DiscordNative.processUtils.purgeMemory()
         },
       }
     );
@@ -123,27 +127,37 @@ class MemoryHandler extends React.Component {
 
   getSettingsPanel() {
     const css = `
-      .setting {
-        margin-bottom: 20px;
-      }
-      
-      .label {
-        font-weight: bold;
-        color: white;
-      }
-      
-      .input {
-        padding: 5px;
-        border-radius: 4px;
-        border: 1px solid white;
-        width: 100%;
-        color: white;
-        background-color: transparent;
-        margin-top: 5px;
-      }
-    `;
+  .setting {
+    margin-bottom: 20px;
+  }
+  
+  .label {
+    font-weight: bold;
+    color: white;
+  }
+  
+  .input {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid white;
+    width: 100%;
+    color: white;
+    background-color: transparent;
+    margin-top: 5px;
+  }
+  
+  .button {
+    margin-top: 10px;
+    background-color: transparent;
+    color: #fff;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+`;
 
-    BdApi.injectCSS("my-component-styles", css);
+  BdApi.DOM.addStyle("MemoryHandler", css)
 
     return React.createElement(
       "div",
@@ -163,7 +177,6 @@ class MemoryHandler extends React.Component {
           className: "memoryThresholdMB-txt input",
         })
       ),
-
       React.createElement(
         "div",
         { className: "setting" },
@@ -178,7 +191,11 @@ class MemoryHandler extends React.Component {
           description: "This will allow you to set the name of the activity.",
           className: "warningInterval-txt input",
         })
-      )
+      ),
+      React.createElement("button", {
+        className: "button",
+        onClick: () => {DiscordNative.processUtils.purgeMemory();}
+      }, "Purge Memory")
     );
   }
 
