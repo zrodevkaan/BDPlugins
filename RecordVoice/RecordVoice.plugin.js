@@ -252,7 +252,7 @@ const {
       );
     }
     stop() {
-      this.t() ? this.t() : console.log("nuh uh.");
+      this.t ? this.t() : console.log("nuh uh");
     }
   }
   
