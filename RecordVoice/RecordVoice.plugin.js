@@ -73,7 +73,7 @@ const {
       const controller = new AbortController();
       if (!buttonsClassName)
         return UI.showToast(
-          `[${this.meta.name}] Could not add button to textarea.`,
+          `[RecordVoice] Could not add button to textarea.`,
           { type: "error" }
         );
       const instance = await new Promise((resolve, reject) => {
