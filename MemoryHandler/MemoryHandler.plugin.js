@@ -64,7 +64,7 @@ class MemoryHandler extends React.Component {
   }
 
   handleRestart = () => {
-    DiscordNative.remoteApp.relaunch()
+    DiscordNative.remoteApp.relaunch();
   };
 
   showWarning = () => {
@@ -80,9 +80,8 @@ class MemoryHandler extends React.Component {
         onConfirm: () => {
           handleRestart();
         },
-        onCancel: () =>
-        {
-          DiscordNative.processUtils.purgeMemory()
+        onCancel: () => {
+          DiscordNative.processUtils.purgeMemory();
         },
       }
     );
@@ -116,13 +115,16 @@ class MemoryHandler extends React.Component {
   }
 
   start() {
-    this.interval = setInterval(this.checkMemoryUsage.bind(this), 1000);
-    this.loadData();
-  }
+  this.interval = setInterval(this.checkMemoryUsage.bind(this), 1000);
+
+  this.purgeInterval = setTimeout(() => {
+    DiscordNative.processUtils.purgeMemory(); 
+  }, this.state.warningInterval);
+}
 
   stop() {
     clearInterval(this.interval);
-    this.saveData();
+    clearTimeout(this.purgeInterval);
   }
 
   getSettingsPanel() {
@@ -157,7 +159,8 @@ class MemoryHandler extends React.Component {
   }
 `;
 
-  BdApi.DOM.addStyle("MemoryHandler", css)
+    BdApi.DOM.addStyle("MemoryHandler", css);
+    const Modals = ZeresPluginLibrary.WebpackModules.getByProps('openModal', 'closeModal');
 
     return React.createElement(
       "div",
@@ -172,10 +175,12 @@ class MemoryHandler extends React.Component {
         ),
         React.createElement(CustomInput, {
           value: this.state.memoryThresholdMB,
-          onChange: (value) => (this.state.memoryThresholdMB = value),
+          onChange: (value) => (
+            (this.state.memoryThresholdMB = value), this.saveData()
+          ),
           description: "This will allow you to set the name of the activity.",
           className: "memoryThresholdMB-txt input",
-        })
+        }),
       ),
       React.createElement(
         "div",
@@ -187,15 +192,23 @@ class MemoryHandler extends React.Component {
         ),
         React.createElement(CustomInput, {
           value: this.state.warningInterval,
-          onChange: (value) => (this.state.warningInterval = value),
+          onChange: (value) => (
+            (this.state.warningInterval = value), this.saveData()
+          ),
           description: "This will allow you to set the name of the activity.",
           className: "warningInterval-txt input",
         })
       ),
-      React.createElement("button", {
-        className: "button",
-        onClick: () => {DiscordNative.processUtils.purgeMemory();}
-      }, "Purge Memory")
+      React.createElement(
+        "button",
+        {
+          className: "button",
+          onClick: () => {
+            DiscordNative.processUtils.purgeMemory();
+          },
+        },
+        "Purge Memory"
+      )
     );
   }
 
