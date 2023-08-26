@@ -213,6 +213,7 @@ class MemoryHandler extends React.Component {
   }
 
   load() {
+    this.loadData()
     const downloadZeresPluginLibrary = () => {
       if (!global.ZeresPluginLibrary) {
         request(
