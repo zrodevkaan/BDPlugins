@@ -22,3 +22,5 @@ Allows you send voice recordings on desktop
 ## MemberCountFix
 This plugin is a fix of another plugin that was never fixed and was to overcomplicated to fix on the script itself.
 Credit to SyndiShanX for bringing it up one day and letting me recreate it for him. 
+## BulkSave
+Allows you to download many images/videos in a message
