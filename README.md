@@ -24,3 +24,5 @@ This plugin is a fix of another plugin that was never fixed and was to overcompl
 Credit to SyndiShanX for bringing it up one day and letting me recreate it for him. 
 ## BulkSave
 Allows you to download many images/videos in a message
+## ScrollToLatest
+Instantly scrolls to the latest messages of a channel
