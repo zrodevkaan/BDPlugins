@@ -1,28 +1,35 @@
 # BDPlugins
-ImAFrogOwO's plugins.
-# Credit
-Big thanks to Davilarek for help with plugins.
-# Plugins
+
+I extend our gratitude to Davilarek for their invaluable contributions to these plugins.
+
+## BulkSave
+
+Archiving made easy. BulkSave enables the download of numerous images and videos contained within a single message.
+
+## Inspect Element
+
+For users encountering issues, this plugin comes to the rescue. It forcefully opens inspect element, assisting in troubleshooting.
+
 ## LastLogin
 
-Allows you to see the last time someone has when online.
+Witness the moment with LastLogin. This plugin lets you peer into the most recent instance someone was online. Our unique approach involves tracking Discord openings and caching the transition from online to offline, as Discord itself doesn't provide this data.
 
-Although this plugin only tracks when discord is opening considering it takes account of when someones status changes to offline then caches the time.
-
-Discord doesnt keep track of that... so we did it our own way.
-## Inspect Element
-Forcefully opens inspect element for those who have issues.
-## Unshortener
-Allows you to unshorten any url. 
-- Please mind it uses a API outside discord [Unshorten](https://unshorten.me)
-## SafeClick (W.I.P)
-Allows you to safely click links and see the end result. Please mind this doesnt *fully* work.
-## RecordAudio
-Allows you send voice recordings on desktop
 ## MemberCountFix
-This plugin is a fix of another plugin that was never fixed and was to overcomplicated to fix on the script itself.
-Credit to SyndiShanX for bringing it up one day and letting me recreate it for him. 
-## BulkSave
-Allows you to download many images/videos in a message
+
+A solution where complexity met its match. This plugin is a revitalized version of its predecessor, which was abandoned due to intricate issues. Credit goes to SyndiShanX for inspiring its recreation.
+
+## RecordAudio
+
+Unleash your voice with RecordAudio. This plugin empowers desktop users to send voice recordings effortlessly.
+
+## SafeClick (W.I.P)
+
+Safety meets curiosity. SafeClick allows you to cautiously explore links and preview their destinations. Please note, its functionality is a work in progress.
+
 ## ScrollToLatest
-Instantly scrolls to the latest messages of a channel
+
+Navigate conversations seamlessly with ScrollToLatest. It whisks you to the freshest messages in a channel, saving you precious time.
+
+## Unshortener
+
+Long links made simple. Unshortener, powered by an external API ([Unshorten](https://unshorten.me)), expands any shortened URL and lays bare its full original form.
