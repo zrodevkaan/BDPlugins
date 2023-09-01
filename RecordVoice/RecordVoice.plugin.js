@@ -1,5 +1,5 @@
 /**
- * @name RecordAudio
+ * @name RecordVoice
  * @author imafrogowo
  * @description Allows you do to video recordings on desktop!
  * @version 1.0.0
