@@ -1,6 +1,6 @@
 # BDPlugins
 
-I extend our gratitude to Davilarek for their invaluable contributions to these plugins.
+I extend my gratitude to Davilarek for their invaluable contributions to these plugins.
 
 ## BulkSave
 
