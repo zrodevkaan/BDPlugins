@@ -255,3 +255,5 @@ class RecordAudio extends React.Component {
     this.t ? this.t() : console.log("nuh uh")
   }
 }
+
+module.exports = RecordAudio
