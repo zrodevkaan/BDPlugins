@@ -1,6 +1,7 @@
 /**
  * @name ScrollToLast
  * @author square,imafrogowo
+ * @version 1.0.0
  * @description Automatically scrolls to the latest messages of any channel you select!
  */
 
