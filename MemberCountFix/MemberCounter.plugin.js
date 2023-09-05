@@ -5,13 +5,13 @@
  * @version 0.0.1
  */
 
-const { Webpack, React, findModuleByProps, Patcher } = BdApi;
+const { Webpack: { getModule, getStore }, React, findModuleByProps, Patcher } = BdApi;
 
 class MemberCounter {
   constructor() {
     this.patches = [];
     this.MenuItems = {
-      ...Webpack.getModule((m) => m.MenuRadioItem),
+      ...getModule((m) => m.MenuRadioItem),
     };
   }
   addPatch(patchType, moduleToPatch, functionName, callback) {
@@ -21,53 +21,98 @@ class MemberCounter {
   }
   start() {
     const MemberList = findModuleByProps("ListThin");
-    console.log(MemberList.ListThin);
     this.addPatch(
       "after",
       MemberList.ListThin,
       "render",
       (SyndiShanXIsAwesome, [args], ret) => {
         const SelectedGuildStore = findModuleByProps("getLastSelectedGuildId");
+        const SelectedChannelStore = getStore("SelectedChannelStore").__getLocalVars()
         const MemberCount = findModuleByProps("getMemberCounts").getMemberCount(
           SelectedGuildStore.getGuildId()
         );
-        const DMCount = BdApi.Webpack.getStore(
+        //const UseStateFromStores = getModule(m => m.toString?.().includes("useStateFromStores"));
+        const { groups } = getStore("ChannelMemberStore").getProps(
+          SelectedGuildStore.getGuildId(),
+          SelectedChannelStore.selectedChannelId
+        );
+        
+        const OnlineMembers = groups.filter(group => group.id == "online")[0];
+
+        const DMCount = getStore(
           "PrivateChannelSortStore"
         ).getSortedChannels()[1];
-        const counterWrapper =
-          MemberCount?.toLocaleString() !== undefined
-            ? React.createElement(
-                "div",
-                {
-                  className: "member-counter-wrapper",
-                  style: { textAlign: "center" },
-                },
-                React.createElement(
-                  "h3",
-                  {
-                    className:
-                      "member-counter-text membersGroup-2eiWxl container-q97qHp",
-                    style: { color: "var(--channels-default)" },
-                  },
-                  "Members - " + MemberCount?.toLocaleString()
-                )
-              )
-            : React.createElement(
-                "div",
-                {
-                  className: "member-counter-wrapper",
-                  style: { textAlign: "center" },
-                },
-                React.createElement(
-                  "h3",
-                  {
-                    className:
-                      "member-counter-text membersGroup-2eiWxl container-q97qHp",
-                    style: { color: "var(--channels-default)" },
-                  },
-                  "DMs - " + DMCount?.length
-                )
-              );
+        const onlineCounter = React.createElement(
+          "div",
+          {
+            className: "member-counter-wrapper",
+            style: { textAlign: "center", marginBottom: "-10px" },
+          },
+          React.createElement(
+            "h1",
+            {
+              className:
+                "member-counter-text membersGroup-2eiWxl container-q97qHp",
+              style: { color: "var(--channels-default)", fontWeight: "bold" },
+            },
+            `🟢 Online - ${OnlineMembers?.count}`
+          )
+        );
+        
+        const offlineCounter = React.createElement(
+          "div",
+          {
+            className: "member-counter-wrapper",
+            style: { textAlign: "center" },
+          },
+          React.createElement(
+            "h1",
+            {
+              className:
+                "member-counter-text membersGroup-2eiWxl container-q97qHp",
+              style: { color: "var(--channels-default)", fontWeight: "bold" },
+            },
+            `⚫ Offline - ${parseInt(MemberCount) - parseInt(OnlineMembers?.count)}`
+          )
+        );
+
+        const dmCounter = React.createElement(
+          "div",
+          {
+            className: "member-counter-wrapper",
+            style: { textAlign: "center", marginTop: "-20px" },
+          },
+          React.createElement(
+            "h3",
+            {
+              className:
+                "member-counter-text membersGroup-2eiWxl container-q97qHp",
+              style: {
+                color: "var(--channels-default)",
+                fontWeight: "bold",
+              },
+            },
+            `🟢 DMs - ${DMCount?.length}`
+          )
+        );
+        
+        const counterWrapper = MemberCount?.toLocaleString() !== undefined ? (
+          React.createElement(
+            "div",
+            null,
+            onlineCounter,
+            offlineCounter
+          )
+        ) : (
+          React.createElement(
+            "div",
+            {
+              className: "dmcounter-wrapper",
+              style: { textAlign: "center" },
+            },
+            dmCounter
+          )
+        );
 
         const children = ret.props.children[0].props.children.props.children;
         children.splice(1, 0, counterWrapper);
@@ -79,3 +124,5 @@ class MemberCounter {
     this.patches.forEach((x) => x());
   }
 }
+
+module.exports = MemberCounter
