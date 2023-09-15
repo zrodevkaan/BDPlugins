@@ -33,3 +33,7 @@ Navigate conversations seamlessly with ScrollToLatest. It whisks you to the fres
 ## Unshortener
 
 Long links made simple. Unshortener, powered by an external API ([Unshorten](https://unshorten.me)), expands any shortened URL and lays bare its full original form.
+
+## AboutMeFix
+
+About me's abled to be fully seen. AboutMeFix fixing all of discords weird text wrapping.
