@@ -37,3 +37,7 @@ Long links made simple. Unshortener, powered by an external API ([Unshorten](htt
 ## AboutMeFix
 
 About me's abled to be fully seen. AboutMeFix fixing all of discords weird text wrapping.
+
+## MassUnfollowThreads (self bot warning)
+
+Swiftly and quickly leave posts from a click of a button!
