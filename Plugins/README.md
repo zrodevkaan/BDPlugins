@@ -6,6 +6,11 @@ I extend my gratitude to Davilarek for their invaluable contributions to these p
 
 Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates.
 
+## Get Mutuals
+
+Allows you to see blocked/friends in a selected server.
+Plugin in early making. Trying to find a good way to implement a UI for it. Be patient please ;3 
+
 ## BulkSave
 
 Archiving made easy. BulkSave enables the download of numerous images and videos contained within a single message.
