@@ -9,6 +9,7 @@ Allowing us to set birthdays – because we're basically the human equivalent of
 ## Get Mutuals
 
 Allows you to see blocked/friends in a selected server.
+Currently prints users to your console, CTRL + Shift + I
 Plugin in early making. Trying to find a good way to implement a UI for it. Be patient please ;3 
 
 ## Oneko
