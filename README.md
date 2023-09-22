@@ -38,6 +38,7 @@ Long links made simple. Unshortener, powered by an external API ([Unshorten](htt
 
 About me's abled to be fully seen. AboutMeFix fixing all of discords weird text wrapping.
 
-## MassUnfollowThreads (self bot warning)
+## MassUnfollowThreads
 
 Swiftly and quickly leave posts from a click of a button!
+**NOTE: This is very likely considered "Self-botting", I am not held liable for your usage of this plugin. It has a 2 second timer on each leave.**
