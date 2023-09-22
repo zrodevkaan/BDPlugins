@@ -122,3 +122,5 @@ class Unshortener {
         downloadXenoLib();
     }
 }
+
+module.exports = Unshortener;

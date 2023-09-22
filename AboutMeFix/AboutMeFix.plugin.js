@@ -13,3 +13,5 @@ class AboutMeFix {
         BdApi.DOM.removeStyle("AboutMeFix")
     }
 }
+
+module.exports = AboutMeFix;
