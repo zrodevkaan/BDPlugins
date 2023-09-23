@@ -5,8 +5,6 @@
  * @description Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates.
  */
 
-/* Don't mind the changes above. You'll figure it out soon*/
-
 const {
   Patcher,
   React,
@@ -49,9 +47,10 @@ class CakeDay {
             this.createBirthdayModal(props.user);
           },
         });
-        const ColorDanger = findModuleByProps("colorDanger", "colorPremium")[
-          "colorDanger"
-        ]; // Stole from AssignBadgesRewrite. my beloved davvy
+        const ColorDanger = BdApi.findModuleByProps(
+          "colorDanger",
+          "colorPremium"
+        )["colorDanger"]; // Stole from AssignBadgesRewrite. my beloved davvy
         const ClearButtonGroup = ContextMenu.buildItem({
           type: "button",
           label: "Clear Birthday",
@@ -98,17 +97,13 @@ class CakeDay {
                 text: "It's my birthday!",
               },
               (data) =>
-                React.createElement(
-                  "div",
-                  {
-                    ...data,
-                    className: "discord-cake-day-message-cake",
-                    onClick: () => {
-                      this.createBirthdayModal(Author);
-                    },
+                React.createElement("button", {
+                  ...data,
+                  className: "discord-cake-day-message-cake",
+                  onClick: () => {
+                    this.createBirthdayModal(Author);
                   },
-                  "🍰"
-                )
+                })
             )
           );
         }
@@ -233,119 +228,106 @@ class CakeDay {
   }
 
   getSettingsPanel() {
+    const CakeDayCSS = `
+  .cake-day-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
 
-    // Original CSS
-    const CakeDayCSSGrid = `
-      .cake-day-grid-container {  
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        border-style : hidden;
-      }
-      
-      .cake-day-grid-row {
-        display: contents;
-        color: white;
-      }
-      
-      .cake-day-grid-cell {
-        border: 1px solid #ccc; 
-        padding: 8px;
-      }
-      
-      .cake-day-header-row {
-        font-weight: bold; 
-      }
-      
-      .cake-day-profile img {
-        max-width: 48px;
-        border-radius: 25px;
-      }
-    `;
-  
-    BdApi.DOM.addStyle("CakeDayCSS", CakeDayCSSGrid);
-  
-    // Original panel setup
-    const panel = document.createElement("div");
-    panel.className = "cake-day-settings";
-  
-    // Scroll container
-    const scrollContainer = document.createElement('div');
-    scrollContainer.style.overflow = 'auto';
-    scrollContainer.style.maxHeight = '500px';
-  
-    // Grid container
-    const gridContainer = document.createElement("div");
-    gridContainer.className = "cake-day-grid-container";
-  
-    // Header definitions
-    const headers = ["Profile Picture", "Name", "Data"];
-  
-    // Get data
-    const data = [];
+  .cake-day-table th,
+  .cake-day-table td {
+    border: none;
+    padding: 8px;
+    text-align: left;
+    color: white;
+    vertical-align: middle;
+  }
+
+  .cake-day-table th {
+    font-weight: bold;
+  }
+
+  .cake-day-profile a {
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .cake-day-profile img {
+    max-width: 48px;
+    border-radius: 25px;
+  }
+
+  .clear-birthday-button {
+    text-align: center;
+    vertical-align: middle;
+  }
+`;
+
+    const rows = [];
+
     for (const userId in this.savedBirthdays) {
       if (this.savedBirthdays.hasOwnProperty(userId)) {
         const birthday = this.savedBirthdays[userId];
         const user = BdApi.findModuleByProps("getUser").getUser(userId);
         if (user) {
-          data.push([user, birthday]);
+          const profileLink = React.createElement(
+            "a",
+            { href: "#" },
+            React.createElement("img", {
+              src: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}?size=1024`,
+            })
+          );
+
+          rows.push(
+            React.createElement(
+              "tr",
+              { key: userId, "data-user-id": userId },
+              React.createElement(
+                "td",
+                { className: "cake-day-profile" },
+                profileLink
+              ),
+              React.createElement("td", null, user.username),
+              React.createElement("td", null, birthday),
+              React.createElement(
+                "button",
+                {
+                  onClick: () => {
+                    this.clearBirthday(user)
+                    //console.log(user)
+                  },
+                  className: "clear-birthday-button bd-button button-ejjZWC lookFilled-1H2Jvj colorBrand-2M3O3N sizeMedium-2oH5mg grow-2T4nbg"
+                },
+                "Clear Birthday"
+              )
+            )
+          );
         }
       }
     }
-  
-    // Create header row
-    const headerRow = document.createElement("div");
-    headerRow.className = "cake-day-grid-row cake-day-header-row";
-    headers.forEach(header => {
-      const headerCell = document.createElement("div");
-      headerCell.className = "cake-day-grid-cell cake-day-header";
-      headerCell.textContent = header;
-      headerRow.appendChild(headerCell);
-    });
-    gridContainer.appendChild(headerRow);
-  
-    // Create data rows 
-    data.forEach(rowData => {
-      const [user, birthday] = rowData;
-      const dataRow = document.createElement("div");
-      dataRow.className = "cake-day-grid-row";
-      
-      // Profile cell
-      const profileCell = document.createElement("div"); 
-      profileCell.className = "cake-day-grid-cell cake-day-profile";
-      
-      // Image
-      const avatar = document.createElement("img");
-      avatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}?size=1024`;
-      profileCell.appendChild(avatar);
-      
-      // Name cell
-      const nameCell = document.createElement("div");
-      nameCell.className = "cake-day-grid-cell cake-day-name";
-      nameCell.textContent = user.username;
-      
-      // Data cell
-      const dataCell = document.createElement("div");
-      dataCell.className = "cake-day-grid-cell cake-day-data";
-      dataCell.textContent = birthday;
-  
-      dataRow.appendChild(profileCell);
-      dataRow.appendChild(nameCell);
-      dataRow.appendChild(dataCell);
-      gridContainer.appendChild(dataRow);
-    });
-  
-    // Scrollbar styling
-    scrollContainer.style.scrollbarWidth = 'thin';
-    scrollContainer.style.scrollbarColor = '#6e6e6e transparent';
-  
-    // Append grid to scroll container
-    scrollContainer.appendChild(gridContainer);
-  
-    // Append scroll container to panel
-    panel.appendChild(scrollContainer);
-  
-    return panel;
-  
+
+    return React.createElement(
+      "div",
+      { className: "cake-day-settings" },
+      React.createElement("style", null, CakeDayCSS),
+      React.createElement(
+        "table",
+        { className: "cake-day-table" },
+        React.createElement(
+          "thead",
+          null,
+          React.createElement(
+            "tr",
+            null,
+            React.createElement("th", null, "Profile Picture"),
+            React.createElement("th", null, "Name"),
+            React.createElement("th", null, "Date"),
+            React.createElement("th", null, "")
+          )
+        ),
+        React.createElement("tbody", null, rows)
+      )
+    );
   }
 }
 
