@@ -26,20 +26,21 @@ class MemberCounter {
       MemberList.ListThin,
       "render",
       (SyndiShanXIsAwesome, [args], ret) => {
+        const ChannelStore = getStore("ChannelStore")
         const SelectedGuildStore = findModuleByProps("getLastSelectedGuildId");
-        const SelectedChannelStore = getStore("SelectedChannelStore").__getLocalVars()
+        const SelectedChannelStore = findModuleByProps("getLastSelectedChannelId");
         const MemberCount = findModuleByProps("getMemberCounts").getMemberCount(
           SelectedGuildStore.getGuildId()
         );
         //const UseStateFromStores = getModule(m => m.toString?.().includes("useStateFromStores"));
-        const { groups } = getStore("ChannelMemberStore").getProps(
+        const { groups } = BdApi.Webpack.getStore("ChannelMemberStore").getProps(
           SelectedGuildStore.getGuildId(),
-          SelectedChannelStore.selectedChannelId
+          SelectedChannelStore.getChannelId()
         );
         
         const OnlineMembers = groups.filter(group => group.id == "online")[0];
-
-        const DMCount = getStore(
+        const ThreadBasedOnlineMembers = ChannelStore.getChannel(SelectedChannelStore.getChannelId()).memberCount || OnlineMembers?.count;      
+        const DMCount = BdApi.Webpack.getStore(
           "PrivateChannelSortStore"
         ).getSortedChannels()[1];
         const onlineCounter = React.createElement(
@@ -55,7 +56,7 @@ class MemberCounter {
                 "member-counter-text membersGroup-2eiWxl container-q97qHp",
               style: { color: "var(--channels-default)", fontWeight: "bold" },
             },
-            `🟢 Online - ${OnlineMembers?.count}`
+            `🟢 Online - ${ThreadBasedOnlineMembers}`
           )
         );
         
