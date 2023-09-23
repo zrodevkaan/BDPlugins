@@ -1,14 +1,10 @@
 /**
  * @name CakeDay
  * @author Imafrogowo
- * @authorId 917630027477159986
  * @version 1.2.0
- * @invite FFFFFFFFF
- * @description Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates. **Cough cough** ~~voidloops~~
- * @website Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates. **Cough cough** ~~voidloops~~
- * @source Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates. **Cough cough** ~~voidloops~~
- * @updateUrl Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates. **Cough cough** ~~voidloops~~
  */
+
+/* Don't mind the changes above. You'll figure it out soon*/
 
 const {
   Patcher,
