@@ -21,7 +21,7 @@ class GetMutuals {
 
     const SelectedGuildId = SelectedGuildStore.getGuildId();
     const FriendUserIds = Object.keys(
-      RelationshipStore.__getLocalVars().relationships
+      RelationshipStore.getRelationships()
     );
 
     const MutualFriendsInSelectedGuild = [];
