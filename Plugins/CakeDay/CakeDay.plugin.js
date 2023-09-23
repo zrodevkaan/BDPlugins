@@ -2,6 +2,7 @@
  * @name CakeDay
  * @author Imafrogowo
  * @version 1.2.0
+ * @description Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates.
  */
 
 /* Don't mind the changes above. You'll figure it out soon*/
