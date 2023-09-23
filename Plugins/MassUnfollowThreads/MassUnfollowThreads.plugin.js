@@ -27,12 +27,6 @@ class MassUnfollowThreads {
         (x) => x.getActiveJoinedThreadsForParent
       ).getActiveJoinedThreadsForParent(GuildId, ChannelId);
     // >> half way into this I realized getThreadsForParent had no active threads. get changed nerd.
-
-    const SelectedGuildStore = findModuleByProps("getLastSelectedGuildId");
-    const SelectedChannelStore = getStore(
-      "SelectedChannelStore"
-    ).__getLocalVars(); // Stole 27 - 28 from my MemberCountFix plugin.
-
     // console.log(GetThreadsFromParent()) >> I forgot i need to add context menu. xD
 
     this.MassUnfollowThreadsContext = ContextMenu.patch(
