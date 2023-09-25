@@ -6,31 +6,32 @@ body, h1, h2, p {
 /* I really suck at css. Where's my beloved pastel when I need him :(( */
 
 html {
-    background: url(https://wallpaperaccess.com/full/2525116.png) no-repeat center center fixed;
+    /*background: url(https://wallpaperaccess.com/full/2525116.png) no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
-    background-size: cover;
+    background-size: cover;*/
 }
 
 
 body {
     font-family: Arial, sans-serif;
-    color: #333; 
+    /*color: #190535; */
+    background-color: #190535;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #ffffff00; 
+    background-color: #190535; 
     border-radius: 10px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); 
 }
 
 .header {
     position: relative;
-    background-color: #333;
+    background-color: #00000090;
     color: #fff;
     text-align: center;
     padding: 2rem 0;
@@ -57,7 +58,7 @@ body {
 
 .footer {
     position: relative;
-    background-color: #333; 
+    background-color: #00000090; 
     color: #fff;
     text-align: center;
     padding: 1rem 0;
@@ -84,8 +85,7 @@ body {
 }
 
 .plugin {
-    background-color: #444; 
-    border: 1px solid #555; 
+    background-color: #00000090; 
     padding: 20px;
     color: #fff;
     border-radius: 5px;
@@ -104,7 +104,7 @@ body {
 
 .btn {
     display: inline-block;
-    background-color: #333;
+    background-color: #e514be;
     color: #fff;
     padding: 10px 20px;
     text-decoration: none;
