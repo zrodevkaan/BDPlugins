@@ -23,7 +23,85 @@ class CakeDay {
   start() {
     BdApi.DOM.addStyle(
       "DiscordCakeDay-CSS",
-      `.discord-cake-day-message-cake, .discord-cake-day-member-cake {display: inline-block; height: 16px; width: 16px; min-width: 16px; min-height: 16px; margin-left: 6px; vertical-align: middle; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAADH0lEQVRYw+2WTUycVRSGn3Pu5eMbJghSqT8sqjbtwnSjiUbSxJgmtli70Oh0ogmVuKldGN24MMaFGzcu0E50ZxxhYUpNdQH+Ld0qmlCMqa1aQEQLM8wMA8zP993rAqVkLIoRJ5rw7m7uzXnfe857Tg7sYAf/VRwbOMuxgbObnptG/tCTIy8fPXHm7sb77YJcixyQ0WzKHz1x5tMwkXwgdo7q6nJdVV8XOD02lJ7Z+H40m9oeAQ3k54LW5CO9hw5yiy0zOe+YufA9S6UcURTNqkjGeTf40fDjtX8iRjYhf9sGyYGTT/e5wyMvKh+M4J95nuHbn2DifI56tUwhP09xMYf3/ktRyYy9k842fmYrYuQa5G8FQfhU35Fel3q0W4PHjmMnv6La9zB+8FXee/9nvr60hDGKiFAuFcjnrlAuFUH4RJDM2FB6rNEvm4mRBvI3wzA81XPrHZw8voeuDotLCnjAg67CT/MVsuemCFp0LYAIImuJLCwusJhfYLm8hKoOA5kPh9Kf/1lW7AbyN8IwPLV3/wEq1Yi5hQo33tBOfQW8BxEIAsgXa6hctY73Hu89AB2du+js6sbFEfmF+f5CYaH/wf536yKaETg9mk1NNYqR31rtlTCReGHvvgM4FwNQqzsO3dvN/tvaubnbcHm2xvhkgYkLRYIWxf9VXUUwaqhUVijk1zITx9GciGSAwdFsqvJ7CZ51zr3Wfl2nExHdGCiOPfXY4WKwRrBWUJW/3WgiYIylVMwTRREAqnoRuMt654507dpNoq1Nvd9KQL/VkfIHJNraAEFVmZud2hfHcY/1+MgGCVoTneu1/LehxgLTgHe2VnccPribe+7cQ+xcUwQkE5bnXjpPqeqxKsKVXJVL08u4JgkIW1twHlTAWitMfFvkhzmDpzklMGqIYo9RwQKoCMaA99IcAUbW7Wy9h2TCcH1HQJM8iLVmvWdstebou+8m7u/tIY6bIyAZQnp8nJVVh20NlI8/+4UvvomamoFq3dFiFSsgq1VPqeybZ0JzdeBaNcb9OP0dM1MXm7dwejDWoqq1bd/x/neb9w528CtJD20wscn0EwAAAABJRU5ErkJggg=='); background-size: 16px;}`
+      `.discord-cake-day-message-cake, .discord-cake-day-member-cake {
+        display: inline-block; 
+        height: 16px; 
+        width: 16px; 
+        min-width: 16px; 
+        min-height: 16px; 
+        margin-left: 6px; 
+        vertical-align: middle; 
+        background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAADH0lEQVRYw+2WTUycVRSGn3Pu5eMbJghSqT8sqjbtwnSjiUbSxJgmtli70Oh0ogmVuKldGN24MMaFGzcu0E50ZxxhYUpNdQH+Ld0qmlCMqa1aQEQLM8wMA8zP993rAqVkLIoRJ5rw7m7uzXnfe857Tg7sYAf/VRwbOMuxgbObnptG/tCTIy8fPXHm7sb77YJcixyQ0WzKHz1x5tMwkXwgdo7q6nJdVV8XOD02lJ7Z+H40m9oeAQ3k54LW5CO9hw5yiy0zOe+YufA9S6UcURTNqkjGeTf40fDjtX8iRjYhf9sGyYGTT/e5wyMvKh+M4J95nuHbn2DifI56tUwhP09xMYf3/ktRyYy9k842fmYrYuQa5G8FQfhU35Fel3q0W4PHjmMnv6La9zB+8FXee/9nvr60hDGKiFAuFcjnrlAuFUH4RJDM2FB6rNEvm4mRBvI3wzA81XPrHZw8voeuDotLCnjAg67CT/MVsuemCFp0LYAIImuJLCwusJhfYLm8hKoOA5kPh9Kf/1lW7AbyN8IwPLV3/wEq1Yi5hQo33tBOfQW8BxEIAsgXa6hctY73Hu89AB2du+js6sbFEfmF+f5CYaH/wf536yKaETg9mk1NNYqR31rtlTCReGHvvgM4FwNQqzsO3dvN/tvaubnbcHm2xvhkgYkLRYIWxf9VXUUwaqhUVijk1zITx9GciGSAwdFsqvJ7CZ51zr3Wfl2nExHdGCiOPfXY4WKwRrBWUJW/3WgiYIylVMwTRREAqnoRuMt654507dpNoq1Nvd9KQL/VkfIHJNraAEFVmZud2hfHcY/1+MgGCVoTneu1/LehxgLTgHe2VnccPribe+7cQ+xcUwQkE5bnXjpPqeqxKsKVXJVL08u4JgkIW1twHlTAWitMfFvkhzmDpzklMGqIYo9RwQKoCMaA99IcAUbW7Wy9h2TCcH1HQJM8iLVmvWdstebou+8m7u/tIY6bIyAZQnp8nJVVh20NlI8/+4UvvomamoFq3dFiFSsgq1VPqeybZ0JzdeBaNcb9OP0dM1MXm7dwejDWoqq1bd/x/neb9w528CtJD20wscn0EwAAAABJRU5ErkJggg=='); 
+        background-size: 16px;
+      }
+
+      .birthday-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #2F3136 !important; /* Why couldn't I remove it without "!important"?? - Knew */
+        color: #DCDDDE;
+        padding: 20px;
+        width: 300px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        z-index: 10000;
+      }
+
+      .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: transparent;
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+      }
+      
+      .close-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }      
+
+      .set-button {
+        background-color: #7289DA;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        width: 304px;
+        height: 37px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 8px;
+        display: inline-block;
+        transition: background-color 0.15s ease-in-out;
+      }
+
+      .close-button:hover, .set-button:hover {
+        background-color: #5B6EAE;
+        border-radius: 4px;
+        transition: background-color 0.15s ease-in-out;
+      }
+
+      .birthday-input {
+        width: 100%;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        border-radius: 4px;
+        border: 1px solid #72767d;
+        background: #3A3C42;
+        color: #DCDDDE;
+        margin-top: 8px;
+        transition: border 0.15s ease-in-out, background-color 0.15s ease-in-out;
+      }
+
+      `
     );
     //const GetUser = (ID) => getModule(x=>x.getUser).getUser(ID) >> Realized isnt needed. Patch returns user object.
     const Tooltip = BdApi.Webpack.getModule((x) => x.Tooltip).Tooltip;
@@ -97,13 +175,13 @@ class CakeDay {
                 text: "It's my birthday!",
               },
               (data) =>
-                React.createElement("button", {
-                  ...data,
-                  className: "discord-cake-day-message-cake",
-                  onClick: () => {
-                    this.createBirthdayModal(Author);
-                  },
-                })
+              React.createElement("button", {
+                ...data,
+                className: "discord-cake-day-message-cake",
+                onClick: () => {
+                  this.createBirthdayModal(Author);
+                },
+              })
             )
           );
         }
@@ -154,19 +232,22 @@ class CakeDay {
     modal.style.cssText = modalStyles;
     modal.className = "birthday-modal";
 
-    const closeButton = createButton("Close", "close-button", () =>
-      modal.remove()
+    const closeButton = createButton("", "close-button", () => 
+    modal.remove()
     );
-    const titleLabel = createHeading("Set Your Birthday", "h2");
+    const titleLabel = createHeading(`Set ${author.username}’s birthday:`, "h2");
     const birthdayInput = createInput(
       "text",
-      "MM/DD or DD/MM",
+      "    MM/DD or DD/MM",
       "birthday-input"
     );
-    const setButton = createButton("Set", "set-button", () =>
-      handleSetButtonClick()
+    const setButton = createButton("Set birthday?", "set-button", () => 
+    handleSetButtonClick()
     );
 
+    titleLabel.style = "color: white; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;";
+    modal.append(titleLabel, birthdayInput, setButton, closeButton); // Just making sure that the close button appears on top. - Knew
+    
     const handleSetButtonClick = () => {
       const birthday = birthdayInput.value;
       if (isValidBirthday(birthday)) {
@@ -190,8 +271,34 @@ class CakeDay {
       button.textContent = text;
       button.className = className;
       button.addEventListener("click", clickHandler);
+  
+      if (className === "close-button") {
+          const svgData = `
+              <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#FFFFFF">
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+                  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g id="SVGRepo_iconCarrier">
+                      <g clip-path="url(#clip0_429_10978)">
+                          <path d="M16.9999 7.00004L6.99994 17" stroke="#f2f2f2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M7.00006 7.00003L17.0001 17" stroke="#f2f2f2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </g>
+                      <defs>
+                          <clipPath id="clip0_429_10978">
+                              <rect width="24" height="24" fill="white"/>
+                          </clipPath>
+                      </defs>
+                  </g>
+              </svg>
+          `;
+          const svgDataURL = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svgData);
+          button.style.backgroundImage = `url('${svgDataURL}')`;
+          button.style.backgroundSize = "contain";
+          button.style.backgroundRepeat = "no-repeat";
+          button.style.backgroundPosition = "center";
+      } // I couldn't add the SVG through CSS for some reason (nothing would appear). Either way, this reduces the number of HTTP requests made. - Knew
+  
       return button;
-    }
+  }  
 
     function createHeading(text, level) {
       const heading = document.createElement(level);
@@ -233,7 +340,6 @@ class CakeDay {
     width: 100%;
     border-collapse: collapse;
   }
-
   .cake-day-table th,
   .cake-day-table td {
     border: none;
@@ -242,29 +348,23 @@ class CakeDay {
     color: white;
     vertical-align: middle;
   }
-
   .cake-day-table th {
     font-weight: bold;
   }
-
   .cake-day-profile a {
     display: inline-block;
     text-decoration: none;
   }
-
   .cake-day-profile img {
     max-width: 48px;
     border-radius: 25px;
   }
-
   .clear-birthday-button {
     text-align: center;
     vertical-align: middle;
   }
 `;
-
     const rows = [];
-
     for (const userId in this.savedBirthdays) {
       if (this.savedBirthdays.hasOwnProperty(userId)) {
         const birthday = this.savedBirthdays[userId];
@@ -277,7 +377,6 @@ class CakeDay {
               src: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}?size=1024`,
             })
           );
-
           rows.push(
             React.createElement(
               "tr",
@@ -305,7 +404,6 @@ class CakeDay {
         }
       }
     }
-
     return React.createElement(
       "div",
       { className: "cake-day-settings" },
@@ -330,5 +428,4 @@ class CakeDay {
     );
   }
 }
-
 module.exports = CakeDay;
