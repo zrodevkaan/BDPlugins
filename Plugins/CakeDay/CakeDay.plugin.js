@@ -113,7 +113,7 @@ class CakeDay {
             x2 &&
             x2?.toString?.()?.match(/(.roleDot.{10,50}{children:.{1,2})}\)/)
         )
-    );
+    ) ?? getModule(BdApi.Webpack.Filters.byStrings(".roleDot", "renderPopout", "BADGES"));
 
     this.UnpatchBirthdayContext = ContextMenu.patch(
       "user-context",
@@ -199,7 +199,7 @@ class CakeDay {
 
   addPatch(patchType, moduleToPatch, functionName, callback) {
     this.patches.push(
-      Patcher[patchType](this.name, moduleToPatch, functionName, callback)
+      Patcher[patchType](this.constructor.name, moduleToPatch, functionName, callback)
     );
   }
 
