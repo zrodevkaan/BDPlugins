@@ -2,7 +2,7 @@
  * @name RecordVoice
  * @author imafrogowo
  * @description Allows you do to video recordings on desktop!
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 const {
@@ -31,6 +31,8 @@ class RecordAudio extends React.Component {
     });
     this.SelectedChannel = getStore("SelectedChannelStore");
     this.RestAPI = findModuleByProps("getAPIBaseURL");
+    this.cancel = false;
+    this.isRecording = false;
   }
   onceAdded = (selector, callback, signal) => {
     let directMatch;
@@ -121,7 +123,6 @@ class RecordAudio extends React.Component {
         if (this.state === undefined) {
           this.state = { isRecording: false };
         }
-
         const toggleRecording = async () => {
           console.log(
             "State:",
@@ -129,38 +130,35 @@ class RecordAudio extends React.Component {
             "this:",
             this.isRecording
           );
+          const wasRecording = this.isRecording;
+
+          // Update the state
           this.setState((prevState) => ({
             isRecording: !prevState.isRecording,
           }));
           this.isRecording = !this.isRecording;
-
-          if (this.isRecording) {
-            UI.showToast("Voice Recording Started", {
-              forceShow: true,
-              type: "success",
-            });
-            this.VoiceModule.startLocalAudioRecording({},(success) => {});
-          } else {
+  
+          if (wasRecording) {
             UI.showToast("Voice Recording Ended", {
               forceShow: true,
               type: "danger",
             });
-            this.VoiceModule.stopLocalAudioRecording(
-              (audioFilePath, dfg) => {
-                  (this.audioFileToSend = audioFilePath);
-              }
-            );
+  
+            this.VoiceModule.stopLocalAudioRecording((audioFilePath, dfg) => {
+              this.audioFileToSend = audioFilePath;
+            });
+  
             const channelId = getStore("SelectedChannelStore").getChannelId();
             await new Promise((resolve) => setTimeout(resolve, 500));
             const buffer = require("fs").readFileSync(
               String(this.audioFileToSend),
-              "" // Really? utf8's toString on readFileSync on DEFAULT?? 
+              "" // Really? utf8's toString on readFileSync on DEFAULT??
             );
             const Audio = new Blob([buffer], {
               type: "audio/ogg; codecs=opus",
             });
             this.FileToUpload = new File([Audio], "recording.ogg");
-            const UploadFIle = new this.UploadModule(
+            const UploadFile = new this.UploadModule(
               {
                 file: this.FileToUpload,
                 isClip: false,
@@ -171,7 +169,7 @@ class RecordAudio extends React.Component {
               false,
               0
             );
-            UploadFIle.on("complete", () => {
+            UploadFile.on("complete", () => {
               this.RestAPI.post({
                 url: `/channels/${channelId}/messages`,
                 body: {
@@ -183,8 +181,8 @@ class RecordAudio extends React.Component {
                   attachments: [
                     {
                       id: "0",
-                      filename: UploadFIle.filename,
-                      uploaded_filename: UploadFIle.uploadedFilename,
+                      filename: UploadFile.filename,
+                      uploaded_filename: UploadFile.uploadedFilename,
                       waveform: "ThisCanBeAnythingOwO",
                       duration_secs: 1,
                     },
@@ -192,8 +190,14 @@ class RecordAudio extends React.Component {
                 },
               });
             });
-            UploadFIle.on("error", (yes, no) => console.log(yes, no));
-            UploadFIle.upload();
+            UploadFile.on("error", (yes, no) => console.log(yes, no));
+            UploadFile.upload();
+          } else {
+            UI.showToast("Voice Recording Started", {
+              forceShow: true,
+              type: "success",
+            });
+            this.VoiceModule.startLocalAudioRecording({}, (success) => {});
           }
         };
 
@@ -218,7 +222,7 @@ class RecordAudio extends React.Component {
           React.createElement(
             "div",
             {
-              className: "contents-3NembX",
+              className: "buttonContainer-2lnNiN",
               style: {
                 color: "white",
                 left: "-2px" /* Pissed me off too dw.*/,
@@ -244,7 +248,48 @@ class RecordAudio extends React.Component {
           )
         );
 
+        const XButton = React.createElement(
+          "button",
+          {
+            ref: (e) => {
+              if (e) {
+                e.unmount = () => {
+                  this.render = () => null;
+                  this.forceUpdate();
+                };
+              }
+            },
+            onClick: () => {
+              this.VoiceModule.stopLocalAudioRecording((audioFilePath, dfg) => {
+                console.log("Canceled.");
+              });
+              UI.showToast("Voice Recording Canceled.", {
+                forceShow: true,
+                type: "danger",
+              });
+              document.querySelector(".css-sucks").click()
+            },
+            onContextMenu: (e) => ContextMenu.open(e, this.renderContextMenu()),
+            className: `emojiButtonNormal-35P0_i emojiButton-3FRTuj emojiButton-1fMsf3 button-3BaQ4X button-ejjZWC lookBlank-FgPMy6 colorBrand-2M3O3N grow-2T4nbg`,
+            style: { color: "white" },
+          },
+          React.createElement(
+            "svg",
+            {
+              width: "25",
+              height: "25",
+              viewBox: "0 0 24 24",
+              className: "buttonWrapper-3YFQGJ",
+            },
+            React.createElement("path", {
+              fill: "currentColor",
+              d: "M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z",
+            })
+          )
+        );
+
         const children = res.props.children;
+        children.push(XButton);
         children.push(custom);
         res.props.children = children;
         return res;
@@ -252,8 +297,8 @@ class RecordAudio extends React.Component {
     );
   }
   stop() {
-    this.t ? this.t() : console.log("nuh uh")
+    this.t ? this.t() : console.log("nuh uh");
   }
 }
 
-module.exports = RecordAudio
+module.exports = RecordAudio;
