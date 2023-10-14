@@ -100,8 +100,8 @@ class BiggerAvatars {
   
       BdApi.DOM.addStyle("BiggerImagesCSS", this.css);
     }
+  
     stop() {
-        BdApi.DOM.removeStyle("BiggerImagesCSS");
       BdApi.DOM.removeStyle("BiggerImagesCSS");
     }
   }
