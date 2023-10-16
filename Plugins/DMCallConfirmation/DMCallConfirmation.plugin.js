@@ -1,6 +1,7 @@
 /**
  * @name DMCallConfirmation
  * @author imafrogowo
+ * @version 1.0.2
  * @description Gives you a confirmation for the people who accidentally do it. Twice.
  */
 const { Patcher, Webpack, Utils } = BdApi;
