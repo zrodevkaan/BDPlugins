@@ -35,7 +35,7 @@ class DMCallConfirmation {
                             confirmText: "Update Now",
                             cancelText: "Cancel",
                             onConfirm: () => {
-                                Kaan.updatePlugin(githubOwner, pluginName, currentVersion);
+                                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
                             }
                         });
                     }
