@@ -2,7 +2,7 @@
  * @name RecordVoice
  * @author imafrogowo
  * @description Allows you do to video recordings on desktop!
- * @version 1.0.1
+ * @version 1.0.2
  */
 
 const {
@@ -19,6 +19,9 @@ const {
 class RecordAudio extends React.Component {
   constructor(props) {
     super(props);
+    this.name = RecordAudio.name
+    this.version = '1.0.2'
+    this.githubOwner = "ImAFrogOwO"
     this.state = {
       isRecording: false,
     };
@@ -34,6 +37,49 @@ class RecordAudio extends React.Component {
     this.cancel = false;
     this.isRecording = false;
   }
+
+  load() {
+    if (Kaan) {
+      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+        .then((updateAvailable) => {
+          if (updateAvailable) {
+            BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+              confirmText: "Update Now",
+              cancelText: "Cancel",
+              onConfirm: () => {
+                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error(error.message);
+        });
+    } else {
+      BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+        confirmText: "Download Now",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+            await new Promise((resolve, reject) => {
+              if (error) {
+                reject(new Error(`Failed to download Kaan: ${error.message}`));
+              } else {
+                fs.writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                  if (err) {
+                    reject(new Error(`Failed to write Kaan: ${err.message}`));
+                  } else {
+                    resolve();
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+    }
+  }
+
   onceAdded = (selector, callback, signal) => {
     let directMatch;
     if ((directMatch = document.querySelector(selector))) {
@@ -137,17 +183,17 @@ class RecordAudio extends React.Component {
             isRecording: !prevState.isRecording,
           }));
           this.isRecording = !this.isRecording;
-  
+
           if (wasRecording) {
             UI.showToast("Voice Recording Ended", {
               forceShow: true,
               type: "danger",
             });
-  
+
             this.VoiceModule.stopLocalAudioRecording((audioFilePath, dfg) => {
               this.audioFileToSend = audioFilePath;
             });
-  
+
             const channelId = getStore("SelectedChannelStore").getChannelId();
             await new Promise((resolve) => setTimeout(resolve, 500));
             const buffer = require("fs").readFileSync(
@@ -197,7 +243,7 @@ class RecordAudio extends React.Component {
               forceShow: true,
               type: "success",
             });
-            this.VoiceModule.startLocalAudioRecording({}, (success) => {});
+            this.VoiceModule.startLocalAudioRecording({}, (success) => { });
           }
         };
 
@@ -214,9 +260,8 @@ class RecordAudio extends React.Component {
             },
             onClick: toggleRecording,
             onContextMenu: (e) => ContextMenu.open(e, this.renderContextMenu()),
-            className: `css-sucks button-ejjZWC colorBrand-2M3O3N grow-2T4nbg ${
-              this.state.isRecording ? "recording" : ""
-            }`,
+            className: `css-sucks button-ejjZWC colorBrand-2M3O3N grow-2T4nbg ${this.state.isRecording ? "recording" : ""
+              }`,
             style: { color: "white" },
           },
           React.createElement(

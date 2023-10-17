@@ -12,6 +12,7 @@ const {
 } = BdApi;
 
 class GetMutuals {
+  // useless plugin. not being updated.
   start() {}
   onSwitch() {
     const RelationshipStore = getStore("RelationshipStore");

@@ -16,9 +16,54 @@ const {
 
 class CakeDay {
   constructor() {
+    this.name = CakeDay.name
+    this.version = '1.2.0'
+    this.githubOwner = "ImAFrogOwO"
     this.patches = [];
     this.savedBirthdays = {}; // Initialize an object to store saved birthdays
   }
+
+  load() {
+    if (Kaan) {
+        Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+            .then((updateAvailable) => {
+                if (updateAvailable) {
+                    BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+                        confirmText: "Update Now",
+                        cancelText: "Cancel",
+                        onConfirm: () => {
+                            Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                        }
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error(error.message);
+            });
+    } else {
+        BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+            confirmText: "Download Now",
+            cancelText: "Cancel",
+            onConfirm: () => {
+                require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+                    await new Promise((resolve, reject) => {
+                        if (error) {
+                            reject(new Error(`Failed to download Kaan: ${error.message}`));
+                        } else {
+                            fs.writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                                if (err) {
+                                    reject(new Error(`Failed to write Kaan: ${err.message}`));
+                                } else {
+                                    resolve();
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+        });
+    }
+}
 
   start() {
     BdApi.DOM.addStyle(

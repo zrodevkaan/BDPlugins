@@ -2,7 +2,7 @@
  * @name MemoryHandler
  * @author imafrogowo
  * @description Gives you a notification when Discord gets too laggy due to memory issues.
- * @version 1.0.0
+ * @version 1.0.1
  */
 const React = BdApi.React;
 const ReactDOM = BdApi.ReactDOM;
@@ -51,6 +51,9 @@ class CustomInput extends React.Component {
 class MemoryHandler extends React.Component {
   constructor(props) {
     super(props);
+    this.name = MemoryHandler.name
+    this.version = '1.0.1'
+    this.githubOwner = "ImAFrogOwO"
     this.interval = null;
     this.rss = null;
     this.lastWarningTime = 0;
@@ -67,6 +70,48 @@ class MemoryHandler extends React.Component {
     DiscordNative.remoteApp.relaunch();
   };
 
+  load() {
+    if (Kaan) {
+      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+        .then((updateAvailable) => {
+          if (updateAvailable) {
+            BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+              confirmText: "Update Now",
+              cancelText: "Cancel",
+              onConfirm: () => {
+                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error(error.message);
+        });
+    } else {
+      BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+        confirmText: "Download Now",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+            await new Promise((resolve, reject) => {
+              if (error) {
+                reject(new Error(`Failed to download Kaan: ${error.message}`));
+              } else {
+                fs.writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                  if (err) {
+                    reject(new Error(`Failed to write Kaan: ${err.message}`));
+                  } else {
+                    resolve();
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+    }
+  }
+  
   showWarning = () => {
     BdApi.showConfirmationModal(
       "⚠️ Discord Memory Usage",
@@ -115,12 +160,12 @@ class MemoryHandler extends React.Component {
   }
 
   start() {
-  this.interval = setInterval(this.checkMemoryUsage.bind(this), 1000);
+    this.interval = setInterval(this.checkMemoryUsage.bind(this), 1000);
 
-  this.purgeInterval = setTimeout(() => {
-    DiscordNative.processUtils.purgeMemory(); 
-  }, this.state.warningInterval);
-}
+    this.purgeInterval = setTimeout(() => {
+      DiscordNative.processUtils.purgeMemory();
+    }, this.state.warningInterval);
+  }
 
   stop() {
     clearInterval(this.interval);

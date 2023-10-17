@@ -1,5 +1,6 @@
 /**
  * @name MassUnfollowThreads
+ * @version 1.0.1
  * @description Allows you to leave many forums at once.
  */
 
@@ -15,6 +16,12 @@ const {
 } = BdApi;
 
 class MassUnfollowThreads {
+  constructor()
+  {
+    this.name = MassUnfollowThreads.name
+    this.version = '1.0.1'
+    this.githubOwner = "ImAFrogOwO"
+  }
   start() {
     const LeaveThread = getModule((x) => x.leaveThread).leaveThread; // Make sure to pass "Context Menu" as parameter `1`
     const GetChannel = BdApi.Webpack.getModule((x) => x.getChannel).getChannel;

@@ -9,6 +9,9 @@ const { Webpack: { getModule, getStore }, React, findModuleByProps, Patcher } = 
 
 class MemberCounter {
   constructor() {
+    this.name = MemberCounter.name
+    this.version = '0.0.2'
+    this.githubOwner = "ImAFrogOwO"
     this.patches = [];
     this.MenuItems = {
       ...getModule((m) => m.MenuRadioItem),
@@ -18,6 +21,47 @@ class MemberCounter {
     this.patches.push(
       Patcher[patchType]("MemberCount", moduleToPatch, functionName, callback)
     );
+  }
+  load() {
+    if (Kaan) {
+      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+        .then((updateAvailable) => {
+          if (updateAvailable) {
+            BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+              confirmText: "Update Now",
+              cancelText: "Cancel",
+              onConfirm: () => {
+                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error(error.message);
+        });
+    } else {
+      BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+        confirmText: "Download Now",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+            await new Promise((resolve, reject) => {
+              if (error) {
+                reject(new Error(`Failed to download Kaan: ${error.message}`));
+              } else {
+                fs.writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                  if (err) {
+                    reject(new Error(`Failed to write Kaan: ${err.message}`));
+                  } else {
+                    resolve();
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
+    }
   }
   start() {
     const MemberList = findModuleByProps("ListThin");
@@ -37,9 +81,9 @@ class MemberCounter {
           SelectedGuildStore.getGuildId(),
           SelectedChannelStore.getChannelId()
         );
-        
+
         const OnlineMembers = groups.filter(group => group.id == "online")[0];
-        const ThreadBasedOnlineMembers = ChannelStore.getChannel(SelectedChannelStore.getChannelId()).memberCount || OnlineMembers?.count;      
+        const ThreadBasedOnlineMembers = ChannelStore.getChannel(SelectedChannelStore.getChannelId()).memberCount || OnlineMembers?.count;
         const DMCount = BdApi.Webpack.getStore(
           "PrivateChannelSortStore"
         ).getSortedChannels()[1];
@@ -59,7 +103,7 @@ class MemberCounter {
             `🟢 Online - ${ThreadBasedOnlineMembers}`
           )
         );
-        
+
         const offlineCounter = React.createElement(
           "div",
           {
@@ -96,7 +140,7 @@ class MemberCounter {
             `🟢 DMs - ${DMCount?.length}`
           )
         );
-        
+
         const counterWrapper = MemberCount?.toLocaleString() !== undefined ? (
           React.createElement(
             "div",
