@@ -23,45 +23,45 @@ class LastOnline {
 
   load() {
     if (window.Kaan) {
-        Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
-            .then((updateAvailable) => {
-                if (updateAvailable) {
-                    BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
-                        confirmText: "Update Now",
-                        cancelText: "Cancel",
-                        onConfirm: () => {
-                            Kaan.updatePlugin(this.githubOwner, this.name, this.version);
-                        }
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error(error.message);
+      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+        .then((updateAvailable) => {
+          if (updateAvailable) {
+            BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+              confirmText: "Update Now",
+              cancelText: "Cancel",
+              onConfirm: () => {
+                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+              }
             });
-    } else {
-        BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
-            confirmText: "Download Now",
-            cancelText: "Cancel",
-            onConfirm: () => {
-                require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
-                    await new Promise((resolve, reject) => {
-                        if (error) {
-                            reject(new Error(`Failed to download Kaan: ${error.message}`));
-                        } else {
-                            fs.writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
-                                if (err) {
-                                    reject(new Error(`Failed to write Kaan: ${err.message}`));
-                                } else {
-                                    resolve();
-                                }
-                            });
-                        }
-                    });
-                });
-            }
+          }
+        })
+        .catch((error) => {
+          console.error(error.message);
         });
+    } else {
+      BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+        confirmText: "Download Now",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+            await new Promise((resolve, reject) => {
+              if (error) {
+                reject(new Error(`Failed to download Kaan: ${error.message}`));
+              } else {
+                require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                  if (err) {
+                    reject(new Error(`Failed to write Kaan: ${err.message}`));
+                  } else {
+                    resolve();
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
     }
-}
+  }
 
   saveToData(prop, val) {
     this.cache[prop] = val;
@@ -113,39 +113,39 @@ class LastOnline {
     const getUsernameProps = (lastTimeOnline, targetProps, userId) => [
       targetProps,
       BdApi.React.createElement(
-          "h1",
-          {
-            style: { 
-              display: "inline-flex",
-              marginLeft: '15px',
-              fontSize: "17px",
-              fontFamily: "Cosmic Sans, sans-serif",
-            },
-          className: `${this.classes["defCol1"]} ${this.classes["defCol2"]}`,
+        "h1",
+        {
+          style: {
+            display: "inline-flex",
+            marginLeft: '15px',
+            fontSize: "17px",
+            fontFamily: "Cosmic Sans, sans-serif",
           },
-          lastTimeOnline ? "Last Online: " + new Date(lastTimeOnline).toLocaleTimeString() : this.getStatusOfUser(userId)
+          className: `${this.classes["defCol1"]} ${this.classes["defCol2"]}`,
+        },
+        lastTimeOnline ? "Last Online: " + new Date(lastTimeOnline).toLocaleTimeString() : this.getStatusOfUser(userId)
       ),
-  ];
+    ];
 
 
     const usernameCreatorModule = this.usernameCreatorModuleGetter;
 
     this.addPatch("after", usernameCreatorModule.theModule, usernameCreatorModule.funcName, (_, args, ret) => {
-        const { id: userId } = args[0]?.user || {};
+      const { id: userId } = args[0]?.user || {};
 
-        if (this.getStatusOfUser(userId) !== "offline") {
-            return ret;
-        }
-
-        const { newDate } = this.cache[userId] || (this.cache[userId] = "None");
-        const lastTimeOnline = newDate || this.cache[userId].newDate;
-
-        const targetProps = ret.props.children.props.children[0].props.children.props.children[0].props.children;
-        const modProps = getUsernameProps(lastTimeOnline, targetProps, userId);
-
-        ret.props.children.props.children[0].props.children.props.children[0].props.children = modProps;
-
+      if (this.getStatusOfUser(userId) !== "offline") {
         return ret;
+      }
+
+      const { newDate } = this.cache[userId] || (this.cache[userId] = "None");
+      const lastTimeOnline = newDate || this.cache[userId].newDate;
+
+      const targetProps = ret.props.children.props.children[0].props.children.props.children[0].props.children;
+      const modProps = getUsernameProps(lastTimeOnline, targetProps, userId);
+
+      ret.props.children.props.children[0].props.children.props.children[0].props.children = modProps;
+
+      return ret;
     });
   }
 

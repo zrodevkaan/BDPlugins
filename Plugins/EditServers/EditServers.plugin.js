@@ -134,7 +134,7 @@ class EditServers {
                             if (error) {
                                 reject(new Error(`Failed to download Kaan: ${error.message}`));
                             } else {
-                                fs.writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                                require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
                                     if (err) {
                                         reject(new Error(`Failed to write Kaan: ${err.message}`));
                                     } else {
