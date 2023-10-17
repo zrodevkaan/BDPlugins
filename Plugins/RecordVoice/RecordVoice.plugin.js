@@ -16,10 +16,10 @@ const {
   Webpack: { getModule, getStore },
 } = BdApi;
 
-class RecordAudio extends React.Component {
+class RecordVoice extends React.Component {
   constructor(props) {
     super(props);
-    this.name = RecordAudio.name
+    this.name = RecordVoice.name
     this.version = '1.0.3'
     this.githubOwner = "ImAFrogOwO"
     this.state = {
@@ -348,4 +348,4 @@ class RecordAudio extends React.Component {
 
 // flamedance auto update test.
 
-module.exports = RecordAudio;
+module.exports = RecordVoice;
