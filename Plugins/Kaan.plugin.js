@@ -1,7 +1,7 @@
 /**
  * @name Kaan
  * @author imafrogowo 
- * @version 1.0.2
+ * @version 1.0.3
  * @description Library needed for (some) imafrogowo plugins.
  */
 
@@ -13,7 +13,7 @@ class Kaan {
     constructor() {
         // nuh uh
         this.name = "Kaan";
-        this.version = "1.0.2"
+        this.version = "1.0.3"
     }
 
     start() {
@@ -46,7 +46,7 @@ class Kaan {
     }
 
     async fetchPluginVersion(pluginName) {
-        const repoURL = `https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/${pluginName}.plugin.js`;
+        const repoURL = `https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
         console.log(repoURL)
         return new Promise((resolve, reject) => {
             request.get(repoURL, (error, response, body) => {
