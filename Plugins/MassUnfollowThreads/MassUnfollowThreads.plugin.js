@@ -1,6 +1,6 @@
 /**
  * @name MassUnfollowThreads
- * @version 1.0.1
+ * @version 1.0.2
  * @description Allows you to leave many forums at once.
  */
 
@@ -19,8 +19,7 @@ class MassUnfollowThreads {
   constructor()
   {
     this.name = MassUnfollowThreads.name
-    this.version = '1.0.1'
-    this.githubOwner = "ImAFrogOwO"
+    this.version = '1.0.2'
   }
   start() {
     const LeaveThread = getModule((x) => x.leaveThread).leaveThread; // Make sure to pass "Context Menu" as parameter `1`

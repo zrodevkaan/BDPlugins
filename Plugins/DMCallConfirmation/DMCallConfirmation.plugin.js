@@ -1,7 +1,7 @@
 /**
  * @name DMCallConfirmation
  * @author imafrogowo
- * @version 1.0.5
+ * @version 1.0.6
  * @description Gives you a confirmation for the people who accidentally do it. Twice.
  */
 const { Patcher, Webpack, Utils, React, Data, ReactDOM } = BdApi;
@@ -15,8 +15,7 @@ class DMCallConfirmation {
 
     constructor() {
         this.name = DMCallConfirmation.name
-        this.version = '1.0.5'
-        this.githubOwner = "ImAFrogOwO"
+        this.version = '1.0.6'
         this.Settings = Data.load("DMCallConfirmation", "data") || {
             callOnDoubleClick: false,
         };
@@ -28,14 +27,15 @@ class DMCallConfirmation {
 
     load() {
         if (window.Kaan) {
-            Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+            console.log(this.name,this.version)
+            Kaan.isUpdateAvailable(this.name, this.version)
                 .then((updateAvailable) => {
                     if (updateAvailable) {
                         BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
                             confirmText: "Update Now",
                             cancelText: "Cancel",
                             onConfirm: () => {
-                                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                                Kaan.updatePlugin(this.name, this.version);
                             }
                         });
                     }

@@ -2,7 +2,7 @@
  * @name RecordVoice
  * @author imafrogowo
  * @description Allows you do to video recordings on desktop!
- * @version 1.0.4
+ * @version 1.0.5
  */
 
 const {
@@ -20,8 +20,7 @@ class RecordVoice extends React.Component {
   constructor(props) {
     super(props);
     this.name = RecordVoice.name
-    this.version = '1.0.4'
-    this.githubOwner = "ImAFrogOwO"
+    this.version = '1.0.5'
     this.state = {
       isRecording: false,
     };
@@ -40,14 +39,14 @@ class RecordVoice extends React.Component {
 
   load() {
     if (window.Kaan) {
-      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+      Kaan.isUpdateAvailable(this.name, this.version)
         .then((updateAvailable) => {
           if (updateAvailable) {
             BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
               confirmText: "Update Now",
               cancelText: "Cancel",
               onConfirm: () => {
-                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                Kaan.updatePlugin(this.name, this.version);
               }
             });
           }

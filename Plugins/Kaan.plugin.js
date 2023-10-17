@@ -1,7 +1,7 @@
 /**
  * @name Kaan
  * @author imafrogowo 
- * @version 1.0.0
+ * @version 1.0.1
  * @description Library needed for (some) imafrogowo plugins.
  */
 
@@ -28,9 +28,9 @@ class Kaan {
         }
     }
 
-    async fetchPluginVersion(githubOwner, pluginName) {
-        const repoURL = `https://raw.githubusercontent.com/${githubOwner}/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
-
+    async fetchPluginVersion(pluginName) {
+        const repoURL = `https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
+        console.log(repoURL)
         return new Promise((resolve, reject) => {
             request.get(repoURL, (error, response, body) => {
                 if (error) {
@@ -51,8 +51,8 @@ class Kaan {
         });
     }
 
-    async isUpdateAvailable(githubOwner, pluginName, currentVersion) {
-        const latestVersion = await this.fetchPluginVersion(githubOwner, pluginName);
+    async isUpdateAvailable(pluginName, currentVersion) {
+        const latestVersion = await this.fetchPluginVersion(pluginName);
 
         if (!latestVersion) {
             return false;
@@ -72,9 +72,9 @@ class Kaan {
         return false;
     }
 
-    async updatePlugin(githubOwner, pluginName, currentVersion) {
-        if (await this.isUpdateAvailable(githubOwner, pluginName, currentVersion)) {
-            const repoURL = `https://raw.githubusercontent.com/${githubOwner}/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
+    async updatePlugin(pluginName, currentVersion) {
+        if (await this.isUpdateAvailable(pluginName, currentVersion)) {
+            const repoURL = `https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
             const destination = path.join(BdApi.Plugins.folder, `${pluginName}.plugin.js`);
 
             request.get(repoURL, async (error, response, body) => {

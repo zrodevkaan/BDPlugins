@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Imafrogowo, knewest
- * @version 1.2.0
+ * @version 1.2.1
  * @description Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates.
  */
 
@@ -17,7 +17,7 @@ const {
 class CakeDay {
   constructor() {
     this.name = CakeDay.name
-    this.version = '1.2.0'
+    this.version = '1.2.1'
     this.githubOwner = "ImAFrogOwO"
     this.patches = [];
     this.savedBirthdays = {}; // Initialize an object to store saved birthdays
@@ -25,14 +25,14 @@ class CakeDay {
 
   load() {
     if (window.Kaan) {
-        Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+        Kaan.isUpdateAvailable(this.name, this.version)
             .then((updateAvailable) => {
                 if (updateAvailable) {
                     BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
                         confirmText: "Update Now",
                         cancelText: "Cancel",
                         onConfirm: () => {
-                            Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                            Kaan.updatePlugin(this.name, this.version);
                         }
                     });
                 }

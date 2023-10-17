@@ -1,6 +1,6 @@
 /**
  * @name EditServers
- * @version 1.0.0
+ * @version 1.0.1
  * @description Gives you all the people who are in a server who you are friends with
  * @author imafrogowo
  */
@@ -10,7 +10,7 @@ const { Webpack, React, ContextMenu, Data, Patcher } = BdApi;
 class EditServers {
     constructor() {
         this.name = EditServers.name
-        this.version = '1.0.0'
+        this.version = '1.0.1'
         this.githubOwner = "ImAFrogOwO"
         this.FluxDispatcher = Webpack.getModule(
             (e) => e.dispatch && !e.emitter && !e.commands
@@ -109,14 +109,14 @@ class EditServers {
 
     load() {
         if (window.Kaan) {
-            Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+            Kaan.isUpdateAvailable(this.name, this.version)
                 .then((updateAvailable) => {
                     if (updateAvailable) {
                         BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
                             confirmText: "Update Now",
                             cancelText: "Cancel",
                             onConfirm: () => {
-                                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                                Kaan.updatePlugin(this.name, this.version);
                             }
                         });
                     }

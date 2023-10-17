@@ -2,7 +2,7 @@
  * @name MemberCounter
  * @author SyndiShanX, imafrogowo
  * @description Displays the Member Count of a Server or the DMs you have open
- * @version 0.0.1
+ * @version 0.0.3
  */
 
 const { Webpack: { getModule, getStore }, React, findModuleByProps, Patcher } = BdApi;
@@ -10,8 +10,7 @@ const { Webpack: { getModule, getStore }, React, findModuleByProps, Patcher } = 
 class MemberCounter {
   constructor() {
     this.name = MemberCounter.name
-    this.version = '0.0.2'
-    this.githubOwner = "ImAFrogOwO"
+    this.version = '0.0.3'
     this.patches = [];
     this.MenuItems = {
       ...getModule((m) => m.MenuRadioItem),
@@ -24,14 +23,14 @@ class MemberCounter {
   }
   load() {
     if (window.Kaan) {
-      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+      Kaan.isUpdateAvailable(this.name, this.version)
         .then((updateAvailable) => {
           if (updateAvailable) {
             BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
               confirmText: "Update Now",
               cancelText: "Cancel",
               onConfirm: () => {
-                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                Kaan.updatePlugin(this.name, this.version);
               }
             });
           }

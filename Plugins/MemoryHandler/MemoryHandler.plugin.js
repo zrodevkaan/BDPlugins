@@ -2,7 +2,7 @@
  * @name MemoryHandler
  * @author imafrogowo
  * @description Gives you a notification when Discord gets too laggy due to memory issues.
- * @version 1.0.1
+ * @version 1.0.2
  */
 const React = BdApi.React;
 const ReactDOM = BdApi.ReactDOM;
@@ -52,7 +52,7 @@ class MemoryHandler extends React.Component {
   constructor(props) {
     super(props);
     this.name = MemoryHandler.name
-    this.version = '1.0.1'
+    this.version = '1.0.2'
     this.githubOwner = "ImAFrogOwO"
     this.interval = null;
     this.rss = null;
@@ -72,14 +72,14 @@ class MemoryHandler extends React.Component {
 
   load() {
     if (window.Kaan) {
-      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+      Kaan.isUpdateAvailable(this.name, this.version)
         .then((updateAvailable) => {
           if (updateAvailable) {
             BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
               confirmText: "Update Now",
               cancelText: "Cancel",
               onConfirm: () => {
-                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                Kaan.updatePlugin(this.name, this.version);
               }
             });
           }

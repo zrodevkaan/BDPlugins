@@ -2,7 +2,7 @@
  * @name LastOffline
  * @description Allows you to see when someone went last offline.
  * @author davilarek, imafrogowo
- * @version 1.0.1
+ * @version 1.0.2
  */
 
 const { Webpack } = BdApi;
@@ -12,8 +12,7 @@ const UserStore = Webpack.getStore('UserStore');
 class LastOnline {
   constructor() {
     this.name = LastOnline.name;
-    this.version = '1.0.1'
-    this.githubOwner = "ImAFrogOwO"
+    this.version = '1.0.2'
     this.presenceEventListener = null;
     this.patches = [];
     this.classes = {};
@@ -23,14 +22,14 @@ class LastOnline {
 
   load() {
     if (window.Kaan) {
-      Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+      Kaan.isUpdateAvailable(this.name, this.version)
         .then((updateAvailable) => {
           if (updateAvailable) {
             BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
               confirmText: "Update Now",
               cancelText: "Cancel",
               onConfirm: () => {
-                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                Kaan.updatePlugin(this.name, this.version);
               }
             });
           }

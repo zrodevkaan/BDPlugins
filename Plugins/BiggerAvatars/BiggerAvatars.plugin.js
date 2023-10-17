@@ -1,7 +1,7 @@
 /**
  * @name BiggerAvatars
  * @author imafrogowo
- * @version 1.0.0
+ * @version 1.0.1
  * @description Bigger Avatars
  */
 
@@ -10,7 +10,7 @@ const { Patcher, Webpack, DOM } = BdApi
 class BiggerAvatars {
     constructor() {
         this.name = BiggerAvatars.name
-        this.version = '1.0.0'
+        this.version = '1.0.1'
         this.githubOwner = "ImAFrogOwO"
         this.css = `
                 .image-div {
@@ -30,14 +30,14 @@ class BiggerAvatars {
 
     load() {
         if (window.Kaan) {
-            Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
+            Kaan.isUpdateAvailable(this.name, this.version)
                 .then((updateAvailable) => {
                     if (updateAvailable) {
                         BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
                             confirmText: "Update Now",
                             cancelText: "Cancel",
                             onConfirm: () => {
-                                Kaan.updatePlugin(this.githubOwner, this.name, this.version);
+                                Kaan.updatePlugin(this.name, this.version);
                             }
                         });
                     }
