@@ -68,7 +68,6 @@ class DMCallConfirmation {
         }
     }
 
-
     start() {
         this.CallPatch = Patcher.instead("DMCallConfirmation", getModule(x => x.call && x.ring), "call", (a, b, c) => {
             const channelId = b[0];

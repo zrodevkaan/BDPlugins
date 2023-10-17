@@ -1,7 +1,7 @@
 /**
  * @name Kaan
  * @author imafrogowo 
- * @version 1.0.1
+ * @version 1.0.2
  * @description Library needed for (some) imafrogowo plugins.
  */
 
@@ -12,6 +12,8 @@ const path = require('path');
 class Kaan {
     constructor() {
         // nuh uh
+        this.name = "Kaan";
+        this.version = "1.0.2"
     }
 
     start() {
@@ -23,8 +25,23 @@ class Kaan {
     }
 
     load() {
-        if (!window.Kaan) {
-            window.Kaan = new Kaan();
+        if (window.Kaan) {
+            console.log(this.name,this.version)
+            this.isUpdateAvailable(this.name, this.version)
+                .then((updateAvailable) => {
+                    if (updateAvailable) {
+                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+                            confirmText: "Update Now",
+                            cancelText: "Cancel",
+                            onConfirm: () => {
+                                this.updatePlugin(this.name, this.version);
+                            }
+                        });
+                    }
+                })
+                .catch((error) => {
+                    console.error(error.message);
+                });
         }
     }
 
