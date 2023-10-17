@@ -2,7 +2,7 @@
  * @name RecordVoice
  * @author imafrogowo
  * @description Allows you do to video recordings on desktop!
- * @version 1.0.2
+ * @version 1.0.3
  */
 
 const {
@@ -20,7 +20,7 @@ class RecordAudio extends React.Component {
   constructor(props) {
     super(props);
     this.name = RecordAudio.name
-    this.version = '1.0.2'
+    this.version = '1.0.3'
     this.githubOwner = "ImAFrogOwO"
     this.state = {
       isRecording: false,
@@ -345,5 +345,7 @@ class RecordAudio extends React.Component {
     this.t ? this.t() : console.log("nuh uh");
   }
 }
+
+// flamedance auto update test.
 
 module.exports = RecordAudio;
