@@ -15,16 +15,16 @@ class Kaan {
     }
 
     start() {
-        window.Kaan = new Kaan();
+        Kaan = new Kaan();
     }
 
     stop() {
-        window.Kaan = undefined;
+        Kaan = undefined;
     }
 
     load()
     {
-        window.Kaan ? window.Kaan = new Kaan() : window.Kaan = undefined;
+        Kaan ? Kaan = new Kaan() : Kaan = undefined;
     }
 
     async fetchPluginVersion(githubOwner, pluginName) {
