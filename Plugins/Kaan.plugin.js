@@ -22,8 +22,7 @@ class Kaan {
         Kaan = undefined;
     }
 
-    load()
-    {
+    load() {
         Kaan ? Kaan = new Kaan() : Kaan = undefined;
     }
 
@@ -95,6 +94,10 @@ class Kaan {
         } else {
             console.log(`${pluginName} is already up to date.`);
         }
+    }
+
+    async showUpdateModal() {
+        
     }
 }
 
