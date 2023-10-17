@@ -22,7 +22,7 @@ class LastOnline {
   }
 
   load() {
-    if (Kaan) {
+    if (window.Kaan) {
         Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
             .then((updateAvailable) => {
                 if (updateAvailable) {

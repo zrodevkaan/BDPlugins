@@ -71,7 +71,7 @@ class MemoryHandler extends React.Component {
   };
 
   load() {
-    if (Kaan) {
+    if (window.Kaan) {
       Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
         .then((updateAvailable) => {
           if (updateAvailable) {
@@ -111,7 +111,7 @@ class MemoryHandler extends React.Component {
       });
     }
   }
-  
+
   showWarning = () => {
     BdApi.showConfirmationModal(
       "⚠️ Discord Memory Usage",
