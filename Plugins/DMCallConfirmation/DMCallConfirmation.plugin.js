@@ -31,7 +31,7 @@ class DMCallConfirmation {
             Kaan.isUpdateAvailable(this.githubOwner, this.name, this.version)
                 .then((updateAvailable) => {
                     if (updateAvailable) {
-                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${pluginName} is available. Do you want to update now?`, {
+                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
                             confirmText: "Update Now",
                             cancelText: "Cancel",
                             onConfirm: () => {
