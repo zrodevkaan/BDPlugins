@@ -20,7 +20,7 @@ class DMCallConfirmation {
     }
 
     getUser = (id) => {
-        return getModule(x => x.getUser).getUser(id);
+        return getModule(x => x.getUser).getUser(id); // test update.
     };
 
     start() {
