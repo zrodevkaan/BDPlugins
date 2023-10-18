@@ -1,7 +1,7 @@
 /**
  * @name DMCallConfirmation
  * @author imafrogowo
- * @version 1.0.6
+ * @version 1.0.7
  * @description Gives you a confirmation for the people who accidentally do it. Twice.
  */
 const { Patcher, Webpack, Utils, React, Data, ReactDOM } = BdApi;
@@ -15,7 +15,7 @@ class DMCallConfirmation {
 
     constructor() {
         this.name = DMCallConfirmation.name
-        this.version = '1.0.6'
+        this.version = '1.0.7'
         this.Settings = Data.load("DMCallConfirmation", "data") || {
             callOnDoubleClick: false,
         };
@@ -25,50 +25,52 @@ class DMCallConfirmation {
         return getModule(x => x.getUser).getUser(id); // test update.
     };
 
-    load() {
-        if (window.Kaan) {
-            console.log(this.name,this.version)
-            Kaan.isUpdateAvailable(this.name, this.version)
-                .then((updateAvailable) => {
-                    if (updateAvailable) {
-                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
-                            confirmText: "Update Now",
-                            cancelText: "Cancel",
-                            onConfirm: () => {
-                                Kaan.updatePlugin(this.name, this.version);
-                            }
+    start() {
+
+        setTimeout(() => {
+            if (window.Kaan) {
+                console.log(this.name, this.version);
+                Kaan.isUpdateAvailable(this.name, this.version)
+                    .then((updateAvailable) => {
+                        if (updateAvailable) {
+                            BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+                                confirmText: "Update Now",
+                                cancelText: "Cancel",
+                                onConfirm: () => {
+                                    Kaan.updatePlugin(this.name, this.version);
+                                }
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error.message);
+                    });
+            } else {
+                BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+                    confirmText: "Download Now",
+                    cancelText: "Cancel",
+                    onConfirm: () => {
+                        require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+                            await new Promise((resolve, reject) => {
+                                if (error) {
+                                    reject(new Error(`Failed to download Kaan: ${error.message}`));
+                                } else {
+                                    require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                                        if (err) {
+                                            reject(new Error(`Failed to write Kaan: ${err.message}`));
+                                        } else {
+                                            resolve();
+                                        }
+                                    });
+                                }
+                            });
                         });
                     }
-                })
-                .catch((error) => {
-                    console.error(error.message);
                 });
-        } else {
-            BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
-                confirmText: "Download Now",
-                cancelText: "Cancel",
-                onConfirm: () => {
-                    require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
-                        await new Promise((resolve, reject) => {
-                            if (error) {
-                                reject(new Error(`Failed to download Kaan: ${error.message}`));
-                            } else {
-                                require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
-                                    if (err) {
-                                        reject(new Error(`Failed to write Kaan: ${err.message}`));
-                                    } else {
-                                        resolve();
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-            });
-        }
-    }
+            }
+        }, 10000); // 10 seconds delay (in milliseconds)
+        
 
-    start() {
         this.CallPatch = Patcher.instead("DMCallConfirmation", getModule(x => x.call && x.ring), "call", (a, b, c) => {
             const channelId = b[0];
             const channelStore = getStore("ChannelStore");
