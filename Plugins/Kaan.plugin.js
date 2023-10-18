@@ -26,7 +26,7 @@ class Kaan {
 
     load() {
         if (window.Kaan) {
-            console.log(this.name,this.version)
+            console.log(this.name, this.version)
             this.isUpdateAvailable(this.name, this.version)
                 .then((updateAvailable) => {
                     if (updateAvailable) {
@@ -115,9 +115,16 @@ class Kaan {
         }
     }
 
-    async showUpdateModal() {
-        
+    getSettingsPanel() {
+        const Parser = BdApi.Webpack.getModule(x => x["defaultRules"] && x["parse"]).parse;
+
+        return BdApi.React.createElement(
+            "div",
+            {},
+            Parser("```js\nconsole.log('Getting added soon. Will allow users to see the plugin update changes before download.')\n```")
+        );
     }
 }
+
 
 module.exports = Kaan;
