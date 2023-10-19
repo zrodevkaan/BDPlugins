@@ -1,7 +1,7 @@
 /**
  * @name BiggerAvatars
  * @author imafrogowo
- * @version 1.0.2
+ * @version 1.0.3
  * @description Bigger Avatars
  */
 
@@ -11,11 +11,11 @@
 const { Patcher, Webpack, DOM } = BdApi;
 
 class BiggerAvatars {
-    constructor() {
-        this.name = BiggerAvatars.name
-        this.version = '1.0.2'
-        this.githubOwner = "ImAFrogOwO"
-        this.css = `
+  constructor() {
+    this.name = BiggerAvatars.name
+    this.version = '1.0.'
+    this.githubOwner = "ImAFrogOwO"
+    this.css = `
                 .image-div {
                     background-size: cover;
                     border-style: solid;
@@ -28,50 +28,50 @@ class BiggerAvatars {
                 }
             `;
 
-        this.handleMouseOver = this.handleMouseOver.bind(this);
-    }
+    this.handleMouseOver = this.handleMouseOver.bind(this);
+  }
 
-    load() {
-        if (window.Kaan) {
-            Kaan.isUpdateAvailable(this.name, this.version)
-                .then((updateAvailable) => {
-                    if (updateAvailable) {
-                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
-                            confirmText: "Update Now",
-                            cancelText: "Cancel",
-                            onConfirm: () => {
-                                Kaan.updatePlugin(this.name, this.version);
-                            }
-                        });
-                    }
-                })
-                .catch((error) => {
-                    console.error(error.message);
-                });
-        } else {
-            BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
-                confirmText: "Download Now",
-                cancelText: "Cancel",
-                onConfirm: () => {
-                    require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
-                        await new Promise((resolve, reject) => {
-                            if (error) {
-                                reject(new Error(`Failed to download Kaan: ${error.message}`));
-                            } else {
-                                require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
-                                    if (err) {
-                                        reject(new Error(`Failed to write Kaan: ${err.message}`));
-                                    } else {
-                                        resolve();
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
+  load() {
+    if (window.Kaan) {
+      Kaan.isUpdateAvailable(this.name, this.version)
+        .then((updateAvailable) => {
+          if (updateAvailable) {
+            BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+              confirmText: "Update Now",
+              cancelText: "Cancel",
+              onConfirm: () => {
+                Kaan.updatePlugin(this.name, this.version);
+              }
             });
+          }
+        })
+        .catch((error) => {
+          console.error(error.message);
+        });
+    } else {
+      BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+        confirmText: "Download Now",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+            await new Promise((resolve, reject) => {
+              if (error) {
+                reject(new Error(`Failed to download Kaan: ${error.message}`));
+              } else {
+                require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                  if (err) {
+                    reject(new Error(`Failed to write Kaan: ${err.message}`));
+                  } else {
+                    resolve();
+                  }
+                });
+              }
+            });
+          });
         }
+      });
     }
+  }
 
   getModuleWithKey(filter) {
     let target; let id; let key;
@@ -101,9 +101,14 @@ class BiggerAvatars {
     else imgElement.style.pointerEvents = "all";*/
 
     if (
-      imgElement.currentSrc.includes('avatars') ||
-      imgElement.src.includes('avatars')
+      imgElement.currentSrc.includes('avatars') || !imgElement.className.includes("avatarWrapperNormal") && !imgElement.className.includes("clickable") && !imgElement.className.includes("avatarStack")
     ) {
+       // for some reason this stops the bug? by erroring....
+      if (imgElement?.['aria-label'].includes(BdApi.Webpack.getModule(x=>x.getCurrentUser).getCurrentUser().username))
+      {
+        return console.log("included") // if someone wants to fix this go for it. to reproduce you open a profile and hover over the profile picture
+        // in the modal popout.
+      }
       // console.log("imgElement:", imgElement);
       const src = imgElement.currentSrc;
       const newSize = 1280;
@@ -206,6 +211,7 @@ class BiggerAvatars {
       (a, b, c, d, e) => {
         const matchingElements = this.GetElementsBySrc(c);
         matchingElements.forEach((imgElement) => {
+          if (imgElement.className.includes("avatarWrapperNormal") || imgElement.className.includes("clickable") || imgElement.className.includes("avatarStack")) imgElement.style.pointerEvents = 'none';
           imgElement.style.pointerEvents = 'all';
           if (!imgElement.hasEventListener) {
             imgElement.hasEventListener = true;
