@@ -103,12 +103,6 @@ class BiggerAvatars {
     if (
       imgElement.currentSrc.includes('avatars') || !imgElement.className.includes("avatarWrapperNormal") && !imgElement.className.includes("clickable") && !imgElement.className.includes("avatarStack")
     ) {
-       // for some reason this stops the bug? by erroring....
-      if (imgElement?.['aria-label'].includes(BdApi.Webpack.getModule(x=>x.getCurrentUser).getCurrentUser().username))
-      {
-        return console.log("included") // if someone wants to fix this go for it. to reproduce you open a profile and hover over the profile picture
-        // in the modal popout.
-      }
       // console.log("imgElement:", imgElement);
       const src = imgElement.currentSrc;
       const newSize = 1280;
