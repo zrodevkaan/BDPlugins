@@ -1,341 +1,187 @@
 /**
  * @name EditServers
- * @version 1.0.1
- * @description Gives you all the people who are in a server who you are friends with
+ * @description Allows you to local edit server names
+ * @version 1.0.2
  * @author imafrogowo
  */
 
 const { Webpack, React, ContextMenu, Data, Patcher } = BdApi;
 
 class EditServers {
-    constructor() {
-        this.name = EditServers.name
-        this.version = '1.0.1'
-        this.githubOwner = "ImAFrogOwO"
-        this.FluxDispatcher = Webpack.getModule(
-            (e) => e.dispatch && !e.emitter && !e.commands
+  constructor() {
+    this.name = EditServers.name
+    this.version = '1.0.2'
+    this.githubOwner = "ImAFrogOwO"
+    this.FluxDispatcher = Webpack.getModule(
+      (e) => e.dispatch && !e.emitter && !e.commands
+    );
+  }
+
+  load() {
+    setTimeout(() => {
+      if (window.Kaan) {
+          console.log(this.name, this.version);
+          Kaan.isUpdateAvailable(this.name, this.version)
+              .then((updateAvailable) => {
+                  if (updateAvailable) {
+                      BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+                          confirmText: "Update Now",
+                          cancelText: "Cancel",
+                          onConfirm: () => {
+                              Kaan.updatePlugin(this.name, this.version);
+                          }
+                      });
+                  }
+              })
+              .catch((error) => {
+                  console.error(error.message);
+              });
+      } else {
+          BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+              confirmText: "Download Now",
+              cancelText: "Cancel",
+              onConfirm: () => {
+                  require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+                      await new Promise((resolve, reject) => {
+                          if (error) {
+                              reject(new Error(`Failed to download Kaan: ${error.message}`));
+                          } else {
+                              require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
+                                  if (err) {
+                                      reject(new Error(`Failed to write Kaan: ${err.message}`));
+                                  } else {
+                                      resolve();
+                                  }
+                              });
+                          }
+                      });
+                  });
+              }
+          });
+      }
+  }, 10000);
+}
+
+  start() {
+    this.GetMutualsGuildPatch = ContextMenu.patch(
+      "guild-context",
+      (res, props) => {
+        const buttonGroup = ContextMenu.buildItem({
+          type: "button",
+          label: "Edit Server",
+          onClick: () => this.createModal(props.guild),
+        });
+        res.props.children.push(
+          ContextMenu.buildItem({ type: "separator" }),
+          buttonGroup
         );
-        BdApi.DOM.addStyle(
-            "EditServers-CSS",
-            `
-      .server-info-modal {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #2F3136 !important;
-        color: #DCDDDE;
-        padding: 20px;
-        width: 300px;
-        border-radius: 8px;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
-        font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        z-index: 10000;
       }
-      .close-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: transparent;
-        color: white;
-        border: none;
-        font-weight: 600;
-        cursor: pointer;
-        width: 20px;
-        height: 20px;
-        display: inline-block;
-      }
-      
-      .close-button:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-      }
-      .set-button {
-        background-color: #7289DA;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        width: 304px;
-        height: 37px;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 8px;
-        display: inline-block;
-        transition: background-color 0.15s ease-in-out;
-      }
-
-      .clear-button {
-        background-color: #ff0000;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        width: 304px;
-        height: 37px;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 8px;
-        display: inline-block;
-        transition: background-color 0.15s ease-in-out;
-      }
-
-      .clear-button:hover {
-        background-color: #990000;
-        transition: background-color 0.15s ease-in-out;
-        border-radius: 4px;
-      }
-      
-      .close-button:hover,
-      .set-button:hover {
-        background-color: #5B6EAE;
-        border-radius: 4px;
-        transition: background-color 0.15s ease-in-out;
-      }
-      .clear-button { background-color: #ff0000; }
-      .clear-button:hover { background-color: #990000; }
-      .close-button:hover, .set-button:hover { background-color: #5B6EAE; }
-      .server-info-input {
-        width: 100%;
-        padding: 8px 0;
-        border-radius: 4px;
-        border: 1px solid #72767d;
-        background: #3A3C42;
-        color: #DCDDDE;
-        margin-top: 8px;
-        transition: border 0.15s ease-in-out, background-color 0.15s ease-in-out;
-      }
-    `
+    );
+    const GuildItem = ((
+      target // Took from TypingIndicator.plugin.js
+    ) =>
+      target
+        ? [
+          target,
+          Object.keys(target).find((k) =>
+            ["includeActivity", "onBlur"].every((s) =>
+              target[k]?.toString?.().includes(s)
+            )
+          ),
+        ]
+        : [])(
+          Webpack.getModule(
+            (m) =>
+              Object.values(m).some((m) =>
+                ["includeActivity", "onBlur"].every((s) =>
+                  m?.toString?.().includes(s)
+                )
+              ),
+            { searchGetters: false }
+          )
         );
-    }
+    this.GuildPatch = Patcher.after(
+      "EditServers",
+      GuildItem[0],
+      "Z",
+      (a, b, c) => {
+        const Guild = c?.props?.text?.props?.guild;
 
-    load() {
-        if (window.Kaan) {
-            Kaan.isUpdateAvailable(this.name, this.version)
-                .then((updateAvailable) => {
-                    if (updateAvailable) {
-                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
-                            confirmText: "Update Now",
-                            cancelText: "Cancel",
-                            onConfirm: () => {
-                                Kaan.updatePlugin(this.name, this.version);
-                            }
-                        });
-                    }
-                })
-                .catch((error) => {
-                    console.error(error.message);
-                });
-        } else {
-            BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
-                confirmText: "Download Now",
-                cancelText: "Cancel",
-                onConfirm: () => {
-                    require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
-                        await new Promise((resolve, reject) => {
-                            if (error) {
-                                reject(new Error(`Failed to download Kaan: ${error.message}`));
-                            } else {
-                                require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
-                                    if (err) {
-                                        reject(new Error(`Failed to write Kaan: ${err.message}`));
-                                    } else {
-                                        resolve();
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
-            });
+        if (Guild) {
+          const savedData = Data.load("EditServersData", "data") || {};
+          const guildData = savedData[Guild.id];
+
+          if (guildData) {
+            const newName = guildData.settingName || guildData.originalName;
+            Guild.name = newName;
+          }
         }
+      }
+    );
+  }
+
+  createModal(server) {
+    const ConfirmationModal = Webpack.getModule(m => m?.toString?.()?.includes('.confirmButtonColor'), { searchExports: true });
+    Webpack.getModule(m => m.openModal).openModal(props => {
+      return React.createElement(
+        "div",
+        {},
+        React.createElement(ConfirmationModal, Object.assign({
+          header: `${server.name}`,
+          confirmButtonColor: BdApi.findModuleByProps('button', 'colorBrand').colorBrand,
+          confirmText: `Confirm`,
+          cancelText: 'Clear',
+          onConfirm: (sdfsdf) => {
+            this.SetButtonClick(server, this.serverName)
+          },
+          onCancel: () => {
+            this.ResetButtonClick(server)
+          },
+          ...props,
+        }),
+          React.createElement("div", {}, React.createElement(Webpack.getModule(x => x.TextArea).TextInput, { placeholder: "Enter new guild name.", onChange: (v) => { this.serverName = v } })),
+        )
+      );
+    });
+  }
+
+  ResetButtonClick(server) {
+    const savedData = Data.load("EditServersData", "data") || {};
+    if (savedData[server.id]) {
+      const originalName = savedData[server.id].originalName;
+      const currentName = server.name;
+
+      if (currentName !== originalName) {
+        server.name = originalName;
+        console.log(originalName)
+        savedData[server.id].settingName = "";
+        Data.save("EditServersData", "data", savedData);
+      }
     }
+  }
 
-    createElem(type, text, className, clickHandler, backgroundSVG = "") {
-        const elem = document.createElement(type);
-        elem.textContent = text;
-        elem.className = className;
-        elem.addEventListener("click", clickHandler);
-        if (backgroundSVG) {
-            const svgDataURL =
-                "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(backgroundSVG);
-            elem.style.backgroundImage = `url('${svgDataURL}')`;
-            elem.style.backgroundSize = "contain";
-            elem.style.backgroundRepeat = "no-repeat";
-            elem.style.backgroundPosition = "center";
-        }
-        return elem;
-    }
-
-    start() {
-        //this.PatchGuildItem();
-        this.GetMutualsGuildPatch = ContextMenu.patch(
-            "guild-context",
-            (res, props) => {
-                const buttonGroup = ContextMenu.buildItem({
-                    type: "button",
-                    label: "Edit Server",
-                    onClick: () => this.createModal(props.guild),
-                });
-                res.props.children.push(
-                    ContextMenu.buildItem({ type: "separator" }),
-                    buttonGroup
-                );
-            }
-        );
-        const GuildItem = ((
-            target // Took from TypingIndicator.plugin.js
-        ) =>
-            target
-                ? [
-                    target,
-                    Object.keys(target).find((k) =>
-                        ["includeActivity", "onBlur"].every((s) =>
-                            target[k]?.toString?.().includes(s)
-                        )
-                    ),
-                ]
-                : [])(
-                    Webpack.getModule(
-                        (m) =>
-                            Object.values(m).some((m) =>
-                                ["includeActivity", "onBlur"].every((s) =>
-                                    m?.toString?.().includes(s)
-                                )
-                            ),
-                        { searchGetters: false }
-                    )
-                );
-        this.GuildPatch = Patcher.after(
-            "EditServers",
-            GuildItem[0],
-            "Z",
-            (a, b, c) => {
-                const Guild = c?.props?.text?.props?.guild;
-
-                if (Guild) {
-                    const savedData = Data.load("EditServersData", "data") || {};
-                    const guildData = savedData[Guild.id];
-
-                    if (guildData) {
-                        const newName = guildData.settingName || guildData.originalName;
-                        Guild.name = newName;
-                    }
-                }
-            }
-        );
-    }
-
-    createModal(server) {
-        const modalStyles = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #fff;
-      color: #333;
-      padding: 20px;
-      width: 300px;
-      border-radius: 5px;
-      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-    `;
-
-        const modal = this.createElem("div", "", "server-info-modal");
-        modal.style.cssText = modalStyles;
-        const closeButton = this.createElem(
-            "button",
-            "",
-            "close-button",
-            () => modal.remove(),
-            `
-      <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#FFFFFF">
-        <g id="SVGRepo_bgCarrier" stroke-width="0"/>
-        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-        <g id="SVGRepo_iconCarrier">
-          <g clip-path="url(#clip0_429_10978)">
-            <path d="M16.9999 7.00004L6.99994 17" stroke="#f2f2f2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M7.00006 7.00003L17.0001 17" stroke="#f2f2f2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </g>
-          <defs>
-            <clip-path id="clip0_429_10978">
-              <rect width="24" height="24" fill="white"/>
-            </clip-path>
-          </defs>
-        </g>
-      </svg>
-    `
-        );
-        const titleLabel = this.createElem(
-            "h2",
-            `Server Information: ${server.name}`,
-            "",
-            null
-        );
-        const serverInfoInput = this.createElem("input", "", "server-info-input");
-        serverInfoInput.type = "text";
-        serverInfoInput.placeholder = "Enter server information here";
-        const setButton = this.createElem(
-            "button",
-            "Set Server Name",
-            "set-button",
-            () => this.SetButtonClick(server, titleLabel, serverInfoInput.value)
-        );
-        const clearButton = this.createElem(
-            "button",
-            "Reset Server Name",
-            "clear-button",
-            () => this.ResetButtonClick(server, titleLabel)
-        );
-
-        titleLabel.style =
-            "color: white; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;";
-        modal.append(
-            closeButton,
-            titleLabel,
-            serverInfoInput,
-            setButton,
-            clearButton
-        );
-        document.body.appendChild(modal);
-    }
-
-    ResetButtonClick(server, titleLabel) {
+  SetButtonClick(server, name) {
+    const guildStore = BdApi.Webpack.getStore("GuildStore");
+    if (guildStore) {
+      const guildData = guildStore.getGuild(server.id);
+      if (guildData) {
         const savedData = Data.load("EditServersData", "data") || {};
-        if (savedData[server.id]) {
-            const originalName = savedData[server.id].originalName;
-            const currentName = server.name;
-
-            if (currentName !== originalName) {
-                server.name = originalName;
-                titleLabel.textContent = `Server Information: ${originalName}`;
-                savedData[server.id].settingName = "";
-                Data.save("EditServersData", "data", savedData);
-            }
-        }
+        savedData[server.id] = {
+          ...(savedData[server.id] || {}), // Preserve stuff. ig
+          settingName: name,
+          id: server.id,
+        };
+        Data.save("EditServersData", "data", savedData);
+        guildData.name = name;
+      }
     }
+  }
 
 
-    SetButtonClick(server, titleLabel, name) {
-        const guildStore = BdApi.Webpack.getStore("GuildStore");
-        if (guildStore) {
-            const guildData = guildStore.getGuild(server.id);
-            if (guildData) {
-                const savedData = Data.load("EditServersData", "data") || {};
-                savedData[server.id] = {
-                    originalName: guildData.name,
-                    settingName: name,
-                    id: server.id,
-                };
-                Data.save("EditServersData", "data", savedData);
-                guildData.name = name;
-                titleLabel.textContent = `Server Information: ${name}`;
-            }
-        }
-    }
-
-    stop() {
-        this.GetMutualsGuildPatch();
-        this.GuildPatch();
-        BdApi.DOM.removeStyle("EditServers-CSS");
-    }
+  stop() {
+    this.GetMutualsGuildPatch();
+    this.GuildPatch();
+  }
 }
 
 module.exports = EditServers;
