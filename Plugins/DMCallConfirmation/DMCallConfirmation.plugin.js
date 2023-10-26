@@ -1,7 +1,7 @@
 /**
  * @name DMCallConfirmation
  * @author imafrogowo
- * @version 1.0.8
+ * @version 1.0.9
  * @description Gives you a confirmation for the people who accidentally do it. Twice.
  */
 const { Patcher, Webpack, Utils, React, Data, ReactDOM } = BdApi;
@@ -15,7 +15,7 @@ class DMCallConfirmation {
 
     constructor() {
         this.name = DMCallConfirmation.name
-        this.version = '1.0.8'
+        this.version = '1.0.9'
         this.Settings = Data.load("DMCallConfirmation", "data") || {
             callOnDoubleClick: false,
         };
@@ -75,6 +75,7 @@ class DMCallConfirmation {
             const channelId = b[0];
             const channelStore = getStore("ChannelStore");
             const channel = channelStore.getChannel(channelId);
+            const rawRec = channel.rawRecipients;
             const recipients = channel.recipients;
             console.log("Data:", a, b, c);
             const userNames = recipients.length > 1
@@ -82,7 +83,7 @@ class DMCallConfirmation {
                     const user = this.getUser(userId);
                     return user ? user.username : "Unknown User"; // Hm......
                 }).join(', '))
-                : (recipients.length === 1 ? (this.getUser(recipients[0])?.username || "Unknown User") : channel.name);
+                : (recipients.length === 1 ? (rawRec[0]?.username || "Unknown User") : channel.name);
 
 
             BdApi.showConfirmationModal(`Calling ${userNames}`, `Are you sure you want to call ${userNames}?`, {
