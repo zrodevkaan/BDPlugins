@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Imafrogowo, knewest
- * @version 1.2.1
+ * @version 1.2.2
  * @description Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates.
  */
 
@@ -16,23 +16,22 @@ const {
 
 class CakeDay {
   constructor() {
-    this.name = CakeDay.name
-    this.version = '1.2.1'
-    this.githubOwner = "ImAFrogOwO"
     this.patches = [];
+    this.verison = "1.2.2"
+    this.name = CakeDay.name
     this.savedBirthdays = {}; // Initialize an object to store saved birthdays
   }
 
   load() {
     if (window.Kaan) {
-        Kaan.isUpdateAvailable(this.name, this.version)
+        Kaan.isUpdateAvailable(this.constructor.name, this.version)
             .then((updateAvailable) => {
                 if (updateAvailable) {
-                    BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
+                    BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.constructor.name} is available. Do you want to update now?`, {
                         confirmText: "Update Now",
                         cancelText: "Cancel",
                         onConfirm: () => {
-                            Kaan.updatePlugin(this.name, this.version);
+                            Kaan.updatePlugin(this.constructor.name, this.version);
                         }
                     });
                 }
@@ -41,11 +40,11 @@ class CakeDay {
                 console.error(error.message);
             });
     } else {
-        BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.name} is missing. Please click Download Now to install it.`, {
+        BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.constructor.name} is missing. Please click Download Now to install it.`, {
             confirmText: "Download Now",
             cancelText: "Cancel",
             onConfirm: () => {
-                require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+                require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Kaan.plugin.js", async (error, response, body) => {
                     await new Promise((resolve, reject) => {
                         if (error) {
                             reject(new Error(`Failed to download Kaan: ${error.message}`));
@@ -148,17 +147,28 @@ class CakeDay {
 
       `
     );
+
+    function getModuleWithKey(filter) {
+      let target; let id; let key;
+  
+      BdApi.Webpack.getModule(
+        (e, m, i) => filter(e, m, i) && (target = m) && (id = i) && true,
+        { searchExports: true },
+      );
+  
+      for (const k in target.exports) {
+        if (filter(target.exports[k], target, id)) {
+          key = k;
+          break;
+        }
+      }
+  
+      return [target.exports, key];
+    }
+
     //const GetUser = (ID) => getModule(x=>x.getUser).getUser(ID) >> Realized isnt needed. Patch returns user object.
     const Tooltip = BdApi.Webpack.getModule((x) => x.Tooltip).Tooltip;
-    const Tree = getModule(
-      (x) =>
-        x &&
-        Object.values(x).some(
-          (x2) =>
-            x2 &&
-            x2?.toString?.()?.match(/(.roleDot.{10,50}{children:.{1,2})}\)/)
-        )
-    ) ?? getModule(BdApi.Webpack.Filters.byStrings(".roleDot", "renderPopout", "BADGES"));
+    const Tree = getModuleWithKey(BdApi.Webpack.Filters.byStrings(".roleDot", "renderPopout", "BADGES"));
 
     this.UnpatchBirthdayContext = ContextMenu.patch(
       "user-context",
@@ -191,11 +201,10 @@ class CakeDay {
         res.props.children.push(ClearButtonGroup);
       }
     );
-
-    this.addPatch("after", Tree, "Z", (OwO, [props], ret) => {
+    
+    this.Pastel = Patcher.after("mybelovedPastelLove", Tree[0], "default", (OwO, [props], ret) => {
       const Author = props?.message?.author;
-      const Decorations = ret.props?.children[3]?.props?.children;
-
+      const Decorations = ret.props?.children[4]?.props?.children;
       if (Author.id in this.savedBirthdays) {
         const Today = new Date();
 
@@ -220,13 +229,13 @@ class CakeDay {
                 text: "It's my birthday!",
               },
               (data) =>
-              React.createElement("button", {
-                ...data,
-                className: "discord-cake-day-message-cake",
-                onClick: () => {
-                  this.createBirthdayModal(Author);
-                },
-              })
+                React.createElement("button", {
+                  ...data,
+                  className: "discord-cake-day-message-cake",
+                  onClick: () => {
+                    this.createBirthdayModal(Author);
+                  },
+                })
             )
           );
         }
@@ -240,12 +249,6 @@ class CakeDay {
     });
 
     this.savedBirthdays = BdApi.Data.load("CakeDay", "savedBirthdays") || {};
-  }
-
-  addPatch(patchType, moduleToPatch, functionName, callback) {
-    this.patches.push(
-      Patcher[patchType](this.constructor.name, moduleToPatch, functionName, callback)
-    );
   }
 
   clearBirthday(user) {
@@ -277,8 +280,8 @@ class CakeDay {
     modal.style.cssText = modalStyles;
     modal.className = "birthday-modal";
 
-    const closeButton = createButton("", "close-button", () => 
-    modal.remove()
+    const closeButton = createButton("", "close-button", () =>
+      modal.remove()
     );
     const titleLabel = createHeading(`Set ${author.username}’s birthday:`, "h2");
     const birthdayInput = createInput(
@@ -286,13 +289,13 @@ class CakeDay {
       "    MM/DD or DD/MM",
       "birthday-input"
     );
-    const setButton = createButton("Set birthday?", "set-button", () => 
-    handleSetButtonClick()
+    const setButton = createButton("Set birthday?", "set-button", () =>
+      handleSetButtonClick()
     );
 
     titleLabel.style = "color: white; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;";
     modal.append(titleLabel, birthdayInput, setButton, closeButton); // Just making sure that the close button appears on top. - Knew
-    
+
     const handleSetButtonClick = () => {
       const birthday = birthdayInput.value;
       if (isValidBirthday(birthday)) {
@@ -316,9 +319,9 @@ class CakeDay {
       button.textContent = text;
       button.className = className;
       button.addEventListener("click", clickHandler);
-  
+
       if (className === "close-button") {
-          const svgData = `
+        const svgData = `
               <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#FFFFFF">
                   <g id="SVGRepo_bgCarrier" stroke-width="0"/>
                   <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
@@ -335,15 +338,15 @@ class CakeDay {
                   </g>
               </svg>
           `;
-          const svgDataURL = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svgData);
-          button.style.backgroundImage = `url('${svgDataURL}')`;
-          button.style.backgroundSize = "contain";
-          button.style.backgroundRepeat = "no-repeat";
-          button.style.backgroundPosition = "center";
+        const svgDataURL = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svgData);
+        button.style.backgroundImage = `url('${svgDataURL}')`;
+        button.style.backgroundSize = "contain";
+        button.style.backgroundRepeat = "no-repeat";
+        button.style.backgroundPosition = "center";
       } // I couldn't add the SVG through CSS for some reason (nothing would appear). Either way, this reduces the number of HTTP requests made. - Knew
-  
+
       return button;
-  }  
+    }
 
     function createHeading(text, level) {
       const heading = document.createElement(level);
@@ -368,14 +371,15 @@ class CakeDay {
   };
 
   showCustomToast(message, type) {
-    const { createToast, showToast } = getModule((x) => x.createToast);
+    const showToast = BdApi.Webpack.getModule(x => x.showToast).showToast
+    const { createToast } = getModule((x) => x.createToast);
     showToast(createToast(message, type));
   }
 
   stop() {
     BdApi.DOM.removeStyle("DiscordCakeDay-CSS");
     BdApi.DOM.removeStyle("CakeDayCSS");
-    this.patches.forEach((x) => x());
+    this.Pastel();
     this.UnpatchBirthdayContext();
   }
 
@@ -413,11 +417,11 @@ class CakeDay {
     for (const userId in this.savedBirthdays) {
       if (this.savedBirthdays.hasOwnProperty(userId)) {
         const birthday = this.savedBirthdays[userId];
-        const user = BdApi.findModuleByProps("getUser").getUser(userId);
+        const user = BdApi.Webpack.getStore("UserStore").getUser(userId);
         if (user) {
           const profileLink = React.createElement(
             "a",
-            { href: "#" },
+            { href: "#"},
             React.createElement("img", {
               src: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}?size=1024`,
             })
