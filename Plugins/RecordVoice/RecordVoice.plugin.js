@@ -169,12 +169,6 @@ class RecordVoice extends React.Component {
           this.state = { isRecording: false };
         }
         const toggleRecording = async () => {
-          console.log(
-            "State:",
-            this.state.isRecording,
-            "this:",
-            this.isRecording
-          );
           const wasRecording = this.isRecording;
 
           // Update the state
@@ -259,14 +253,14 @@ class RecordVoice extends React.Component {
             },
             onClick: toggleRecording,
             onContextMenu: (e) => ContextMenu.open(e, this.renderContextMenu()),
-            className: `css-sucks button-ejjZWC colorBrand-2M3O3N grow-2T4nbg ${this.state.isRecording ? "recording" : ""
+            className: `button_afdfd9 lookBlank__7ca0a colorBrand_b2253e grow__4c8a4 fm-button ${this.state.isRecording ? "recording" : ""
               }`,
             style: { color: "white" },
           },
           React.createElement(
             "div",
             {
-              className: "buttonContainer-2lnNiN",
+              className: "button_afdfd9 lookBlank__7ca0a colorBrand_b2253e grow__4c8a4 fm-button",
               style: {
                 color: "white",
                 left: "-2px" /* Pissed me off too dw.*/,
@@ -278,7 +272,7 @@ class RecordVoice extends React.Component {
                 width: "25",
                 height: "25",
                 viewBox: "0 0 24 24",
-                className: "buttonWrapper-3YFQGJ",
+                className: "fm-buttonWrapper",
               },
               React.createElement("path", {
                 fill: "currentColor",
@@ -314,7 +308,7 @@ class RecordVoice extends React.Component {
               document.querySelector(".css-sucks").click()
             },
             onContextMenu: (e) => ContextMenu.open(e, this.renderContextMenu()),
-            className: `emojiButtonNormal-35P0_i emojiButton-3FRTuj emojiButton-1fMsf3 button-3BaQ4X button-ejjZWC lookBlank-FgPMy6 colorBrand-2M3O3N grow-2T4nbg`,
+            className: `button_afdfd9 lookBlank__7ca0a colorBrand_b2253e grow__4c8a4 fm-button`,
             style: { color: "white" },
           },
           React.createElement(
@@ -323,7 +317,7 @@ class RecordVoice extends React.Component {
               width: "25",
               height: "25",
               viewBox: "0 0 24 24",
-              className: "buttonWrapper-3YFQGJ",
+              className: "fm-buttonWrapper",
             },
             React.createElement("path", {
               fill: "currentColor",
