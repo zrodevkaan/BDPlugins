@@ -2,7 +2,7 @@
  * @name RecordVoice
  * @author imafrogowo
  * @description Allows you do to video recordings on desktop!
- * @version 1.0.5
+ * @version 1.0.6
  */
 
 const {
@@ -20,7 +20,7 @@ class RecordVoice extends React.Component {
   constructor(props) {
     super(props);
     this.name = RecordVoice.name
-    this.version = '1.0.5'
+    this.version = '1.0.6'
     this.state = {
       isRecording: false,
     };
