@@ -168,7 +168,7 @@ class CakeDay {
 
     //const GetUser = (ID) => getModule(x=>x.getUser).getUser(ID) >> Realized isnt needed. Patch returns user object.
     const Tooltip = BdApi.Webpack.getModule((x) => x.Tooltip).Tooltip;
-    const Tree = getModuleWithKey(BdApi.Webpack.Filters.byStrings(".roleDot", "renderPopout", "BADGES"));
+    const Tree = BdApi.Webpack.getModule(x=>x?.UsernameDecorationTypes)
 
     this.UnpatchBirthdayContext = ContextMenu.patch(
       "user-context",
@@ -202,7 +202,7 @@ class CakeDay {
       }
     );
     
-    this.Pastel = Patcher.after("mybelovedPastelLove", Tree[0], "default", (OwO, [props], ret) => {
+    this.Pastel = Patcher.after("mybelovedPastelLove", Tree, "default", (OwO, [props], ret) => {
       const Author = props?.message?.author;
       const Decorations = ret.props?.children[4]?.props?.children;
       if (Author.id in this.savedBirthdays) {
