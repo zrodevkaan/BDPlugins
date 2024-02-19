@@ -1,6 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
+ * @version 1.0.5
  * @description somefile.txt = dsfDFHJhd4u4r.txt
  */
 
