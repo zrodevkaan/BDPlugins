@@ -204,7 +204,7 @@ class CakeDay {
     
     this.Pastel = Patcher.after("mybelovedPastelLove", Tree, "default", (OwO, [props], ret) => {
       const Author = props?.message?.author;
-      const Decorations = ret.props?.children[4]?.props?.children;
+      const Decorations = ret.props?.children[3]?.props?.children;
       if (Author.id in this.savedBirthdays) {
         const Today = new Date();
 
