@@ -22,48 +22,6 @@ class CakeDay {
     this.savedBirthdays = {}; // Initialize an object to store saved birthdays
   }
 
-  load() {
-    if (window.Kaan) {
-        Kaan.isUpdateAvailable(this.constructor.name, this.version)
-            .then((updateAvailable) => {
-                if (updateAvailable) {
-                    BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.constructor.name} is available. Do you want to update now?`, {
-                        confirmText: "Update Now",
-                        cancelText: "Cancel",
-                        onConfirm: () => {
-                            Kaan.updatePlugin(this.constructor.name, this.version);
-                        }
-                    });
-                }
-            })
-            .catch((error) => {
-                console.error(error.message);
-            });
-    } else {
-        BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${this.constructor.name} is missing. Please click Download Now to install it.`, {
-            confirmText: "Download Now",
-            cancelText: "Cancel",
-            onConfirm: () => {
-                require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Kaan.plugin.js", async (error, response, body) => {
-                    await new Promise((resolve, reject) => {
-                        if (error) {
-                            reject(new Error(`Failed to download Kaan: ${error.message}`));
-                        } else {
-                          require('fs').writeFile(require("path").join(BdApi.Plugins.folder, "Kaan.plugin.js"), body, (err) => {
-                                if (err) {
-                                    reject(new Error(`Failed to write Kaan: ${err.message}`));
-                                } else {
-                                    resolve();
-                                }
-                            });
-                        }
-                    });
-                });
-            }
-        });
-    }
-}
-
   start() {
     BdApi.DOM.addStyle(
       "DiscordCakeDay-CSS",
@@ -205,7 +163,7 @@ class CakeDay {
     this.Pastel = Patcher.after("mybelovedPastelLove", Tree, "default", (OwO, [props], ret) => {
       const Author = props?.message?.author;
       const Decorations = ret.props?.children[3]?.props?.children;
-      if (Author.id in this.savedBirthdays) {
+      if (Author.id in BdApi.Data.load("CakeDay", "savedBirthdays")) { 
         const Today = new Date();
 
         let [MonthStr, DayStr] = this.savedBirthdays[Author.id].split("/");
@@ -217,7 +175,6 @@ class CakeDay {
 
         let Month = parseInt(MonthStr);
         let Day = parseInt(DayStr);
-
         if (
           (Today.getMonth() + 1 === Month && Today.getDate() === Day) ||
           (Today.getDate() === Month && Today.getMonth() + 1 === Day)
