@@ -59,7 +59,7 @@ class RecordVoice extends React.Component {
         confirmText: "Download Now",
         cancelText: "Cancel",
         onConfirm: () => {
-          require("request").get("https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
+          require("request").get("https://raw.githubusercontent.com/zrodevkaan/BDPlugins/main/Plugins/Kaan.plugin.js", async (error, response, body) => {
             await new Promise((resolve, reject) => {
               if (error) {
                 reject(new Error(`Failed to download Kaan: ${error.message}`));
