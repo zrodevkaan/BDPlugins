@@ -11,8 +11,7 @@ module.exports = class FileNameRandomization {
     start() {
         this.Main = BdApi.Patcher.after("FileNameRandomizationPatch", BdApi.Webpack.getByKeys("uploadFiles"), "uploadFiles", (a, b, c) => {
             for (const File of b[0].uploads) {
-                const NoNoFileName = this.generateRandomFilename(File.filename);
-                File.filename = NoNoFileName;
+                File.filename = this.generateRandomFilename(File.filename)
             }
         });
     }
