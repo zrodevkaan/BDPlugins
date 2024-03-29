@@ -9,7 +9,7 @@ const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567
 
 module.exports = class FileNameRandomization {
     start() {
-        this.Main = BdApi.Patcher.after("dfdsf", BdApi.Webpack.getByKeys("uploadFiles"), "uploadFiles", (a, b, c) => {
+        this.Main = BdApi.Patcher.after("FileNameRandomizationPatch", BdApi.Webpack.getByKeys("uploadFiles"), "uploadFiles", (a, b, c) => {
             for (const File of b[0].uploads) {
                 const NoNoFileName = this.generateRandomFilename(File.filename);
                 File.filename = NoNoFileName;
