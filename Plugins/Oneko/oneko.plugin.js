@@ -7,7 +7,7 @@
 
 class NekoAnimation {
   start() {
-    fetch("https://raw.githubusercontent.com/ImAFrogOwO/oneko.js/main/oneko.js")
+    fetch("https://raw.githubusercontent.com/zrodevkaan/oneko.js/main/oneko.js")
     .then((response) => response.text())
     .then((script) => {
       const replacementxDD = script.replace(
