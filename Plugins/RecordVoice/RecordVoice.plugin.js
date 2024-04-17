@@ -32,7 +32,7 @@ class RecordVoice extends React.Component {
       searchExports: true,
     });
     this.SelectedChannel = getStore("SelectedChannelStore");
-    this.RestAPI = findModuleByProps("getAPIBaseURL");
+    this.RestAPI = findModuleByProps("post");
     this.cancel = false;
     this.isRecording = false;
   }
