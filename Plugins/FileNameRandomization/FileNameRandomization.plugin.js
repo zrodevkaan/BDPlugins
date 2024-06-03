@@ -1,9 +1,9 @@
-/** 
- * @name FileNameRandomization 
- * @author kaan 
- * @version 1.0.6 
+/**
+ * @name FileNameRandomization
+ * @author kaan
+ * @version 1.0.6
  * @description The ability to randomize the fileName when uploading any file. somefile.txt = dsfDFHJhd4u4r.txt or somefile.txt = 1685709600000.txt (with Unix timestamp)
-*/
+ */
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 const { FormSwitch } = BdApi.Webpack.getByKeys('FormSwitch');
@@ -32,7 +32,14 @@ module.exports = class FileNameRandomization {
     {
         return BdApi.Data.load("FileNameRandomization", "settings")[id]
     }
-    
+
+    setSetting(id, value)
+    {
+        return BdApi.Data.save("FileNameRandomization", "settings",
+            {[id]: value}
+        )
+    }
+
     generateFilename(originalFilename) {
         const splitStuff = originalFilename.split(".");
         const fileExt = splitStuff[splitStuff.length - 1];
@@ -55,7 +62,7 @@ module.exports = class FileNameRandomization {
 
             const onSwitch = (value) => {
                 setUseTimestamp(value);
-                BdApi.Data.save("FileNameRandomization", "settings", { useTimestamp: value });
+                this.setSetting("useTimestamp", value);
             };
 
             return React.createElement(
