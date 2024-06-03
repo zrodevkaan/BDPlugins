@@ -1,34 +1,76 @@
-/**
- * @name FileNameRandomization
- * @author kaan
- * @version 1.0.5
- * @description somefile.txt = dsfDFHJhd4u4r.txt
- */
-
+/** 
+ * @name FileNameRandomization 
+ * @author kaan 
+ * @version 1.0.6 
+ * @description The ability to randomize the fileName when uploading any file. somefile.txt = dsfDFHJhd4u4r.txt or somefile.txt = 1685709600000.txt (with Unix timestamp)
+*/
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+const { FormSwitch } = BdApi.Webpack.getByKeys('FormSwitch');
+const React = BdApi.React;
+const { useState, useEffect } = React;
 
 module.exports = class FileNameRandomization {
     start() {
-        this.Main = BdApi.Patcher.after("FileNameRandomizationPatch", BdApi.Webpack.getByKeys("uploadFiles"), "uploadFiles", (a, b, c) => {
-            for (const File of b[0].uploads) {
-                File.filename = this.generateRandomFilename(File.filename)
+        this.Main = BdApi.Patcher.after(
+            "FileNameRandomizationPatch",
+            BdApi.Webpack.getByKeys("uploadFiles"),
+            "uploadFiles",
+            (a, b, c) => {
+                for (const File of b[0].uploads) {
+                    File.filename = this.generateFilename(File.filename);
+                }
             }
-        });
+        );
     }
 
     stop() {
-        // this will never change but still
         this.Main?.();
     }
 
-    generateRandomFilename(originalFilename) {
-        const splitStuff = originalFilename.split('.'); // something.exe -> ['something', 'exe']
-        const fileExt = splitStuff[splitStuff.length - 1] // hi there file ext. :)
-        let randomFilename = '';
-        for (let i = 0; i < originalFilename.length; i++) {
-            const randomIndex = Math.floor(Math.random() * characters.length);
-            randomFilename += characters.charAt(randomIndex);
-        }
-        return `${randomFilename}.${fileExt}`
+    getSetting(id)
+    {
+        return BdApi.Data.load("FileNameRandomization", "settings")[id]
     }
+    
+    generateFilename(originalFilename) {
+        const splitStuff = originalFilename.split(".");
+        const fileExt = splitStuff[splitStuff.length - 1];
+
+        if (this.getSetting('useTimestamp')) {
+            return `${Date.now()}.${fileExt}`;
+        } else {
+            let randomFilename = "";
+            for (let i = 0; i < originalFilename.length; i++) {
+                const randomIndex = Math.floor(Math.random() * characters.length);
+                randomFilename += characters.charAt(randomIndex);
+            }
+            return `${randomFilename}.${fileExt}`;
+        }
+    }
+
+    getSettingsPanel() {
+        const SettingsPanel = () => {
+            const [useTimestamp, setUseTimestamp] = useState(this.getSetting('useTimestamp'));
+
+            const onSwitch = (value) => {
+                setUseTimestamp(value);
+                BdApi.Data.save("FileNameRandomization", "settings", { useTimestamp: value });
+            };
+
+            return React.createElement(
+                "div",
+                {},
+                React.createElement(FormSwitch, {
+                    note: 'Instead of random characters you can use a unix timestamp signalling when the file was uploaded.', // ecraig wanted this
+                    // so whoever wanted it also, thank ecraig
+                    value: useTimestamp,
+                    onChange: (e) => onSwitch(e),
+                }, 'Unix Timestamp FileName')
+            );
+        };
+
+        return React.createElement(SettingsPanel.bind(this));
+    }
+
 }
