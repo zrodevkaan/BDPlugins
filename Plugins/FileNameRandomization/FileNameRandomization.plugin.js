@@ -2,7 +2,7 @@
  * @name FileNameRandomization
  * @author kaan
  * @version 1.0.6
- * @description The ability to randomize the fileName when uploading any file. somefile.txt = dsfDFHJhd4u4r.txt or somefile.txt = 1685709600000.txt (with Unix timestamp)
+ * @description The ability to randomize the fileName when uploading any file. \nsomefile.txt = dsfDFHJhd4u4r.txt or somefile.txt = 1685709600000.txt (with Unix timestamp)
  */
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -28,9 +28,9 @@ module.exports = class FileNameRandomization {
         this.Main?.();
     }
 
-    getSetting(id)
-    {
-        return BdApi.Data.load("FileNameRandomization", "settings")[id]
+    getSetting(id) {
+        const settings = BdApi.Data.load("FileNameRandomization", "settings") || {};
+        return settings[id];
     }
 
     setSetting(id, value)
@@ -60,9 +60,9 @@ module.exports = class FileNameRandomization {
         const SettingsPanel = () => {
             const [useTimestamp, setUseTimestamp] = useState(this.getSetting('useTimestamp'));
 
-            const onSwitch = (value) => {
+            const onSwitch = (id, value) => {
                 setUseTimestamp(value);
-                this.setSetting("useTimestamp", value);
+                this.setSetting(id, value);
             };
 
             return React.createElement(
@@ -72,7 +72,7 @@ module.exports = class FileNameRandomization {
                     note: 'Instead of random characters you can use a unix timestamp signalling when the file was uploaded.', // ecraig wanted this
                     // so whoever wanted it also, thank ecraig
                     value: useTimestamp,
-                    onChange: (e) => onSwitch(e),
+                    onChange: (e) => onSwitch('useTimestamp',e),
                 }, 'Unix Timestamp FileName')
             );
         };
