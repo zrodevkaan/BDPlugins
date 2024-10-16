@@ -60,8 +60,6 @@ class FileNameRandomization {
             acc[key] = this.getSetting(key) ?? this.defaultSettings[key];
             return acc;
         }, {});        
-    
-        console.log(settings)
 
         const fileNameParts = originalFilename.split('.');
         
