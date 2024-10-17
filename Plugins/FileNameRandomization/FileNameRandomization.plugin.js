@@ -48,7 +48,7 @@ class FileNameRandomization {
     }
 
     getSetting(key) {
-        return Data.load("FileNameRandomization", key) ?? false;
+        return Data.load("FileNameRandomization", key) ?? this.defaultSettings[key];
     }
 
     setSetting(key, value) {
