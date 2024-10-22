@@ -304,7 +304,7 @@ module.exports = class ShowImagesAnyway {
             transition: all 0.2s ease-in-out;
         }
         .${CONFIG.CSS_CLASSES.LAYOUT.CONTAINER_COLLAPSED} {
-            width: 195px !important;
+            max-width: 195px;
             height: auto !important;
             transition: max-width 0.2s ease-in-out;
         }
