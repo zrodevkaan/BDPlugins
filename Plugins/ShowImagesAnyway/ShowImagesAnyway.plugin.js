@@ -12,6 +12,7 @@ const { openModal } = Webpack.getModule(x => x.openModal);
 const SimpleMarkdownWrapper = Webpack.getModule(m => m.defaultRules && m.parse);
 const CarouselModal = Webpack.getByStrings(".Messages.MEDIA_VIEWER_MODAL_ALT_TEXT");
 const MessageStore = Webpack.getStore("MessageStore");
+const SystemDesign = Webpack.getModule(x=>x.Tooltip && x.ModalRoot)
 
 const CONFIG = {
     MEDIA: {
@@ -36,7 +37,12 @@ const CONFIG = {
             CONTAINER: 'sia-container',
             CONTROLS: 'sia-controls',
             MEDIA_CONTAINER: 'sia-media-container',
-            CONTAINER_COLLAPSED: 'sia-container-collapsed'
+            CONTAINER_COLLAPSED: 'sia-container-collapsed',
+            PREVIEW: 'sia-preview',
+            URL_PREVIEW: 'sia-url-preview',
+            PREVIEW_ICON: 'sia-preview-icon',
+            PREVIEW_TEXT: 'sia-preview-text',
+            ICON_URL_CONTAINER: 'sia-icon-url-container'
         },
         MEDIA: {
             IMAGE: 'sia-image',
@@ -74,6 +80,24 @@ const Utils = {
         url: new RegExp(`^<?https?:\\/\\/[^\\s]+\\.(${CONFIG.MEDIA.IMAGE_EXTENSIONS.join('|')}).*>?`, 'i'),
         hidden: new RegExp(`<https?:\/\/[^\s]+>`,'i'),
         video: new RegExp(`\\.(${CONFIG.MEDIA.VIDEO_EXTENSIONS.join('|')})$`, 'i')
+    },
+
+    shortenUrl(url) {
+        const maxLength = 50;
+        const regex = /^(https?:\/\/[^\/]+\/)(.*?\/)([^\/\?]+)(\?.*)?$/;
+        
+        const match = url.match(regex);
+        if (match) {
+            const domain = match[1];
+            const lastPart = match[3];
+
+            const shortened = url.length > maxLength
+                ? `${domain}.../${lastPart}`
+                : `${domain}${lastPart}`
+    
+            return shortened;
+        }
+        return url;
     },
 
     async getMediaDimensions(src, type = 'image') {
@@ -206,7 +230,7 @@ const MediaViewer = function MediaViewer({ url, args }) {
         ref: containerRef
     },
         React.createElement("div", { 
-            className: CONFIG.CSS_CLASSES.LAYOUT.CONTROLS 
+            className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW
         },
             React.createElement("button", {
                 onClick: toggleMedia,
@@ -214,11 +238,41 @@ const MediaViewer = function MediaViewer({ url, args }) {
                     state.shown ? CONFIG.CSS_CLASSES.BUTTONS.HIDE : CONFIG.CSS_CLASSES.BUTTONS.SHOW
                 }`
             }, state.shown ? "Hide" : "Show"),
-            React.createElement("span", {
-                className: `${CONFIG.CSS_CLASSES.SOURCE.TEXT} ${
-                    isDiscordMedia ? CONFIG.CSS_CLASSES.SOURCE.DISCORD : CONFIG.CSS_CLASSES.SOURCE.EXTERNAL
-                }`
-            }, isDiscordMedia ? "Discord media" : "External media")
+            React.createElement(
+                "div",
+                {
+                    className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_ICON_CONTAINER, 
+                    style: { position: 'relative', display: 'inline-block' } 
+                },
+                React.createElement(
+                    SystemDesign.Tooltip,
+                    { text: Utils.shortenUrl(parsedUrl) }, 
+                    (props) => React.createElement("img", {
+                        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b9bbbe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E",
+                        className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_ICON,
+                        alt: "Image",
+                        ...props
+                    }),
+                )
+            ),            
+            /*
+                React.createElement("span", {
+                    className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_TEXT
+                }, parsedUrl),
+            */
+            React.createElement("div", {
+                className: CONFIG.CSS_CLASSES.LAYOUT.URL_PREVIEW
+            }, 
+                React.createElement("div", {
+                    className: CONFIG.CSS_CLASSES.LAYOUT.ICON_URL_CONTAINER
+                }
+                ),
+                React.createElement("span", {
+                    className: `${CONFIG.CSS_CLASSES.SOURCE.TEXT} ${
+                        isDiscordMedia ? CONFIG.CSS_CLASSES.SOURCE.DISCORD : CONFIG.CSS_CLASSES.SOURCE.EXTERNAL
+                    }`
+                }, isDiscordMedia ? "Discord media" : "External media")
+            ),
         ),
         React.createElement("div", { 
             className: CONFIG.CSS_CLASSES.LAYOUT.MEDIA_CONTAINER 
@@ -235,30 +289,15 @@ const MediaViewer = function MediaViewer({ url, args }) {
                     state.shown ? CONFIG.CSS_CLASSES.OVERLAY.HIDDEN : ''
                 }`
             },
-                React.createElement("div", { 
+                state.isLoading && React.createElement("div", { 
                     className: CONFIG.CSS_CLASSES.OVERLAY.TEXT 
                 },
-                    React.createElement("p", null, 
-                        state.isLoading ? "Loading..." : (state.error || "Click to reveal media")
-                    )
+                    React.createElement("p", null, "Loading...")
                 )
-            ),
-            React.createElement("div", {
-                className: `${CONFIG.CSS_CLASSES.OVERLAY.URL.CONTAINER} ${
-                    state.isHovering ? CONFIG.CSS_CLASSES.OVERLAY.URL.VISIBLE : ''
-                }`
-            },
-                React.createElement("a", {
-                    href: parsedUrl,
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                    className: CONFIG.CSS_CLASSES.OVERLAY.URL.LINK
-                }, parsedUrl)
             )
         )
     );
 };
-
 async function openMediaModal(url) {
     const isVideo = Utils.regex.video.test(url);
     let dimensions, type;
@@ -304,7 +343,7 @@ module.exports = class ShowImagesAnyway {
             transition: all 0.2s ease-in-out;
         }
         .${CONFIG.CSS_CLASSES.LAYOUT.CONTAINER_COLLAPSED} {
-            max-width: 195px;
+            max-width: 230px;
             height: auto !important;
             transition: max-width 0.2s ease-in-out;
         }
@@ -408,6 +447,63 @@ module.exports = class ShowImagesAnyway {
         }
         .${CONFIG.CSS_CLASSES.SOURCE.EXTERNAL} {
             color: #f04747;
+        }
+        .${CONFIG.CSS_CLASSES.LAYOUT.PREVIEW} {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background-color: #2f3136;
+            border-radius: 4px;
+            gap: 12px;
+        }
+        
+        .${CONFIG.CSS_CLASSES.LAYOUT.URL_PREVIEW} {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex: 1;
+            min-width: 0;
+            color: #b9bbbe;
+            font-size: 14px;
+        }
+        
+        .${CONFIG.CSS_CLASSES.LAYOUT.ICON_URL_CONTAINER} {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .${CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_ICON} {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        
+        .${CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_TEXT} {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #b9bbbe;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        
+        .${CONFIG.CSS_CLASSES.BUTTONS.MAIN} {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            flex-shrink: 0;
+            height: fit-content;
+        }
+        
+        .${CONFIG.CSS_CLASSES.SOURCE.TEXT} {
+            font-size: 14px;
+            flex-shrink: 0;
         }
     `);
 
