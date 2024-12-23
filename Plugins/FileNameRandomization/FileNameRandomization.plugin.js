@@ -11,6 +11,7 @@ const { React, Webpack, Patcher, Data } = BdApi;
 const { FormSwitch, FormItem, FormTitle, TextInput, FormText, SearchableSelect } = Webpack.getByKeys('FormSwitch', 'FormItem', 'FormTitle', 'Select');
 const { useState } = React;
 
+const FileUploads = Webpack.getByKeys("uploadFiles")
 const Margins = Webpack.getByKeys('marginBottom40', 'marginTop4');
 
 class FileNameRandomization {
@@ -31,7 +32,7 @@ class FileNameRandomization {
     start() {
         this.Main = Patcher.before(
             "FileNameRandomization",
-            Webpack.getByKeys("uploadFiles"),
+            FileUploads,
             "uploadFiles",
             this.handleFileUpload.bind(this)
         );
