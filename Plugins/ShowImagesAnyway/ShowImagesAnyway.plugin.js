@@ -1,18 +1,19 @@
 /**
  * @name ShowImagesAnyway
  * @author kaan
- * @version 1.0.1
+ * @version 1.0.2
  * @description Enhances Discord's image handling by showing hidden image links with safety controls
  */
 
 const { React, Webpack, DOM } = BdApi;
 const { useState, useCallback, useEffect, useRef } = React;
 
-const { openModal } = Webpack.getModule(x => x.openModal);
+const openModal = Webpack.getModule(Webpack.Filters.byStrings("onCloseRequest:null!="),{searchExports:true})
+
 const SimpleMarkdownWrapper = Webpack.getModule(m => m.defaultRules && m.parse);
 const CarouselModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/,{searchExports:true});
 const MessageStore = Webpack.getStore("MessageStore");
-const SystemDesign = Webpack.getModule(x=>x.Tooltip && x.ModalRoot)
+const SystemDesign = BdApi.Components
 
 const CONFIG = {
     MEDIA: {
@@ -85,7 +86,7 @@ const Utils = {
     shortenUrl(url) {
         const maxLength = 50;
         const regex = /^(https?:\/\/[^\/]+\/)(.*?\/)([^\/\?]+)(\?.*)?$/;
-
+        
         const match = url.match(regex);
         if (match) {
             const domain = match[1];
@@ -94,7 +95,7 @@ const Utils = {
             const shortened = url.length > maxLength
                 ? `${domain}.../${lastPart}`
                 : `${domain}${lastPart}`
-
+    
             return shortened;
         }
         return url;
@@ -105,9 +106,9 @@ const Utils = {
             if (type === 'image') {
                 const img = new window.Image();
                 img.src = src;
-                img.onload = () => resolve({
-                    width: img.naturalWidth,
-                    height: img.naturalHeight
+                img.onload = () => resolve({ 
+                    width: img.naturalWidth, 
+                    height: img.naturalHeight 
                 });
                 img.onerror = reject;
             } else {
@@ -121,7 +122,7 @@ const Utils = {
                 video.onerror = reject;
             }
         });
-    },
+    },    
 
     calculateOptimalDimensions(natural, maxRatio) {
         const maxWidth = window.innerWidth * maxRatio;
@@ -147,8 +148,8 @@ const Utils = {
     isEmbeddedInMessage(message, url) {
         if (!message?.embeds?.length) return false;
         const cleanUrl = url.replace('\\', '');
-        return message.embeds.some(embed =>
-            embed.url?.includes(cleanUrl) ||
+        return message.embeds.some(embed => 
+            embed.url?.includes(cleanUrl) || 
             embed?.image?.url?.includes(cleanUrl)
         );
     }
@@ -224,14 +225,14 @@ const MediaViewer = function MediaViewer({ url, args }) {
     if (Utils.isEmbeddedInMessage(message, parsedUrl)) return null;
 
     return React.createElement("div", {
-            className: `${CONFIG.CSS_CLASSES.LAYOUT.CONTAINER} ${!state.shown ? CONFIG.CSS_CLASSES.LAYOUT.CONTAINER_COLLAPSED : ''}`,
-            onMouseEnter: () => setState(prev => ({ ...prev, isHovering: true })),
-            onMouseLeave: () => setState(prev => ({ ...prev, isHovering: false })),
-            ref: containerRef
+        className: `${CONFIG.CSS_CLASSES.LAYOUT.CONTAINER} ${!state.shown ? CONFIG.CSS_CLASSES.LAYOUT.CONTAINER_COLLAPSED : ''}`,
+        onMouseEnter: () => setState(prev => ({ ...prev, isHovering: true })),
+        onMouseLeave: () => setState(prev => ({ ...prev, isHovering: false })),
+        ref: containerRef
+    },
+        React.createElement("div", { 
+            className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW
         },
-        React.createElement("div", {
-                className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW
-            },
             React.createElement("button", {
                 onClick: toggleMedia,
                 className: `${CONFIG.CSS_CLASSES.BUTTONS.MAIN} ${
@@ -241,12 +242,12 @@ const MediaViewer = function MediaViewer({ url, args }) {
             React.createElement(
                 "div",
                 {
-                    className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_ICON_CONTAINER,
-                    style: { position: 'relative', display: 'inline-block' }
+                    className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_ICON_CONTAINER, 
+                    style: { position: 'relative', display: 'inline-block' } 
                 },
                 React.createElement(
                     SystemDesign.Tooltip,
-                    { text: Utils.shortenUrl(parsedUrl) },
+                    { text: Utils.shortenUrl(parsedUrl) }, 
                     (props) => React.createElement("img", {
                         src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23b9bbbe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E",
                         className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_ICON,
@@ -254,18 +255,18 @@ const MediaViewer = function MediaViewer({ url, args }) {
                         ...props
                     }),
                 )
-            ),
+            ),            
             /*
                 React.createElement("span", {
                     className: CONFIG.CSS_CLASSES.LAYOUT.PREVIEW_TEXT
                 }, parsedUrl),
             */
             React.createElement("div", {
-                    className: CONFIG.CSS_CLASSES.LAYOUT.URL_PREVIEW
-                },
+                className: CONFIG.CSS_CLASSES.LAYOUT.URL_PREVIEW
+            }, 
                 React.createElement("div", {
-                        className: CONFIG.CSS_CLASSES.LAYOUT.ICON_URL_CONTAINER
-                    }
+                    className: CONFIG.CSS_CLASSES.LAYOUT.ICON_URL_CONTAINER
+                }
                 ),
                 React.createElement("span", {
                     className: `${CONFIG.CSS_CLASSES.SOURCE.TEXT} ${
@@ -274,9 +275,9 @@ const MediaViewer = function MediaViewer({ url, args }) {
                 }, isDiscordMedia ? "Discord media" : "External media")
             ),
         ),
-        React.createElement("div", {
-                className: CONFIG.CSS_CLASSES.LAYOUT.MEDIA_CONTAINER
-            },
+        React.createElement("div", { 
+            className: CONFIG.CSS_CLASSES.LAYOUT.MEDIA_CONTAINER 
+        },
             state.shown && React.createElement(Image, {
                 url: parsedUrl,
                 shown: state.shown,
@@ -285,13 +286,13 @@ const MediaViewer = function MediaViewer({ url, args }) {
                 onClick: () => openMediaModal(parsedUrl)
             }),
             React.createElement("div", {
-                    className: `${CONFIG.CSS_CLASSES.OVERLAY.BASE} ${
-                        state.shown ? CONFIG.CSS_CLASSES.OVERLAY.HIDDEN : ''
-                    }`
+                className: `${CONFIG.CSS_CLASSES.OVERLAY.BASE} ${
+                    state.shown ? CONFIG.CSS_CLASSES.OVERLAY.HIDDEN : ''
+                }`
+            },
+                state.isLoading && React.createElement("div", { 
+                    className: CONFIG.CSS_CLASSES.OVERLAY.TEXT 
                 },
-                state.isLoading && React.createElement("div", {
-                        className: CONFIG.CSS_CLASSES.OVERLAY.TEXT
-                    },
                     React.createElement("p", null, "Loading...")
                 )
             )
@@ -520,10 +521,10 @@ module.exports = class ShowImagesAnyway {
                 url: capture[0],
                 type: CONFIG.CONSTS.RULES
             }),
-            react: (node, _, args) => React.createElement(MediaViewer, {
-                url: node.url,
+            react: (node, _, args) => React.createElement(MediaViewer, { 
+                url: node.url, 
                 args: args,
-                key: args.key
+                key: args.key 
             })
         };
 
