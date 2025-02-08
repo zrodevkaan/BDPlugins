@@ -1,14 +1,23 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.1.7
+ * @version 1.1.8
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 const { React, Webpack, Patcher, Data } = BdApi;
-const { FormSwitch, FormItem, FormTitle, TextInput, FormText, SearchableSelect } = Webpack.getByKeys('FormSwitch', 'FormItem', 'FormTitle', 'Select');
+const FormItem = Webpack.getByStrings("case\"legend\"",{searchExports:true})
+const { FormSwitch, FormTitle, TextInput, FormText, SearchableSelect } = Webpack.getMangled(/ConfirmModal:\(\)=>.{1,3}.ConfirmModal/, {
+    FormSwitch: x=>x.toString?.().includes('disabledText'),
+    SearchableSelect: x=>x.render?.toString?.().includes(",renderCustomPill:"),
+    TextInput: Webpack.Filters.byStrings(".error]:this.hasError()"),
+    FormText: Webpack.Filters.byStrings(".SELECTABLE),", ".DISABLED:"),
+    FormTitle: Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
+    FormItem: Webpack.Filters.byStrings('.fieldWrapper:void 0'),
+    openModal: Webpack.Filters.byStrings('onCloseRequest','onCloseCallback','onCloseCallback','instant','backdropStyle')
+})
 const { useState } = React;
 
 const FileUploads = Webpack.getByKeys("uploadFiles")
