@@ -13,7 +13,7 @@ const {
   ReactUtils,
   findModuleByProps,
 } = BdApi;
-const fs = require("fs");
+const fs = require("fs"); // RIP in 1.13.0
 const path = require("path");
 const https = require("https");
 

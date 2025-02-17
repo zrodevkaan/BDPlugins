@@ -24,27 +24,6 @@ class Kaan {
         window.Kaan = undefined;
     }
 
-    load() {
-        if (window.Kaan) {
-            console.log(this.name, this.version)
-            this.isUpdateAvailable(this.name, this.version)
-                .then((updateAvailable) => {
-                    if (updateAvailable) {
-                        BdApi.showConfirmationModal("Update Plugin", `A new version of ${this.name} is available. Do you want to update now?`, {
-                            confirmText: "Update Now",
-                            cancelText: "Cancel",
-                            onConfirm: () => {
-                                this.updatePlugin(this.name, this.version);
-                            }
-                        });
-                    }
-                })
-                .catch((error) => {
-                    console.error(error.message);
-                });
-        }
-    }
-
     async fetchPluginVersion(pluginName) {
         const repoURL = `https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
         console.log(repoURL)
