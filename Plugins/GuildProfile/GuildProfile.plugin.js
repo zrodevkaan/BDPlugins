@@ -175,8 +175,8 @@ const Sounds = Webpack.getStore('SoundboardStore')
 const UserModal = Webpack.getByKeys('openUserProfileModal')
 const getDefaultAvatar = (id) => Number(BigInt(id) >> 22n) % 6
 
-const Endpoints = Webpack.getModule(Filters.byProps("GUILD_EMOJI", "GUILD_EMOJIS"), { searchExports: true });
-const PermissionsBits = Webpack.getModule(Filters.byProps("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
+const Endpoints = Webpack.getModule(Filters.byKeys("GUILD_EMOJI", "GUILD_EMOJIS"), { searchExports: true });
+const PermissionsBits = Webpack.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
 const HTTP = Webpack.getModule(m => typeof m === "object" && m.del && m.put, { searchExports: true })
 const useStateFromStores = Webpack.getByStrings('useStateFromStores', { searchExports: true })
 const { copy } = DiscordNative.clipboard;
@@ -1216,7 +1216,7 @@ function SoundsTab({ guild }) {
                 'div',
                 { className: 'bd-gp-sounds-grid' },
                 sounds.map(sound =>
-                    React.createElement(
+                    React.createElement( 
                         'div',
                         {
                             key: sound.id,
