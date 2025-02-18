@@ -20,6 +20,9 @@ const SystemDesign = {
     ServerOwnerIconClasses: Webpack.getModule(x => x.ownerIcon && x.icon),
     InviteData: Webpack.getByKeys('GuildTemplateName', 'Info', 'Data'),
 };
+
+const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve") })
+
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
 const Section = Webpack.getByStrings("cancelAnimationFrame(", "text-xs/semibold", ".useReducedMotion)")
 const snowflakeUtils = Webpack.getByKeys('extractTimestamp')
@@ -50,14 +53,14 @@ const CONFIG = {
 const Utils = {
     regex: {
         url: new RegExp(`^<?https?:\\/\\/[^\\s]+\\.(${CONFIG.MEDIA.IMAGE_EXTENSIONS.join('|')}).*>?`, 'i'),
-        hidden: new RegExp(`<https?:\/\/[^\s]+>`,'i'),
+        hidden: new RegExp(`<https?:\/\/[^\s]+>`, 'i'),
         video: new RegExp(`\\.(${CONFIG.MEDIA.VIDEO_EXTENSIONS.join('|')})$`, 'i')
     },
 
     shortenUrl(url) {
         const maxLength = 50;
         const regex = /^(https?:\/\/[^\/]+\/)(.*?\/)([^\/\?]+)(\?.*)?$/;
-        
+
         const match = url.match(regex);
         if (match) {
             const domain = match[1];
@@ -66,7 +69,7 @@ const Utils = {
             const shortened = url.length > maxLength
                 ? `${domain}.../${lastPart}`
                 : `${domain}${lastPart}`
-    
+
             return shortened;
         }
         return url;
@@ -77,9 +80,9 @@ const Utils = {
             if (type === 'image') {
                 const img = new window.Image();
                 img.src = src;
-                img.onload = () => resolve({ 
-                    width: img.naturalWidth, 
-                    height: img.naturalHeight 
+                img.onload = () => resolve({
+                    width: img.naturalWidth,
+                    height: img.naturalHeight
                 });
                 img.onerror = reject;
             } else {
@@ -93,7 +96,7 @@ const Utils = {
                 video.onerror = reject;
             }
         });
-    },    
+    },
 
     calculateOptimalDimensions(natural, maxRatio) {
         const maxWidth = window.innerWidth * maxRatio;
@@ -154,7 +157,7 @@ async function openMediaModal(url) {
 
 const DEFAULT_COLOR = [[0, 0, 0]];
 
-const OpenImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/,{searchExports:true});
+const OpenImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
 const GuildMemberCountStore = Webpack.getStore("GuildMemberCountStore");
 const ChannelMemberStore = Webpack.getStore("ChannelMemberStore");
 const GuildMemberStore = Webpack.getStore("GuildMemberStore");
@@ -839,7 +842,7 @@ function UserItem({ userId, guildId }) {
     const guild = useStateFromStores([GuildStore], () => GuildStore.getGuild(guildId));
 
     useLayoutEffect(() => {
-        if (!user) fetchUser(userId);
+        if (!user) FetchModule.fetchUser(userId);
         if (!member) inCommonStore.requestMembersById(guildId, userId);
     }, []);
 
@@ -983,7 +986,7 @@ function GuildProfile({ guildId, transitionState }) {
             .reduce((total, count) => total + count, 0);
     });
 
-    const bannerHeight = useMemo(() => (banner ? 338 : 210), [banner]);
+    const bannerHeight = useMemo(() => (banner ? 210 : 210), [banner]);
 
     const memberCount = GuildMemberCountStore.getMemberCount(guildId);
 
@@ -1036,12 +1039,12 @@ function GuildProfile({ guildId, transitionState }) {
                 { className: "bd-gp-body" },
                 React.createElement(
                     "div",
-                    { className: "bd-gp-info",style: {margin: '10px'}},
+                    { className: "bd-gp-info", style: { margin: '10px' } },
                     React.createElement("div", { className: "bd-gp-name", padding: '10px' }, guild.name),
-                    guild.description && React.createElement('span',{ className: 'bd-gp-section', style: {color: 'white'}}, guild.description),
+                    guild.description && React.createElement('span', { className: 'bd-gp-section', style: { color: 'white' } }, guild.description),
                     React.createElement(
                         "div",
-                        { className: "bd-gp-stats",style: {padding: '10px'} },
+                        { className: "bd-gp-stats", style: { padding: '10px' } },
                         React.createElement(SystemDesign.InviteData.Data, { members: Number(memberCount), membersOnline: Number(onlineCount) })
                     )
                 ),
