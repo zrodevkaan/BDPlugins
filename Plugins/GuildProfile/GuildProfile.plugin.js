@@ -1,7 +1,7 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
 
@@ -13,7 +13,7 @@ let _jsxs = React.createElement
 
 const SystemDesign = {
     VoiceIcon: Webpack.getByStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z', { searchExports: true }),
-    ModalRoot: Webpack.getByRegex(/let{transitionState:.{1,3},children:.{1,3},size:.{1,3}/, { searchExports: true }),
+    ModalRoot: Webpack.getByStrings('let{transitionState:',',children:',',size:','fullscreenOnMobile',{searchExports:true}),
     openModal: Webpack.getByStrings('onCloseRequest', 'onCloseCallback', 'onCloseCallback', 'instant', 'backdropStyle', { searchExports: true }),
     SearchIcon: Webpack.getByStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z', { searchExports: true }),
     VideoIcon: Webpack.getByStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0', { searchExports: true }),
@@ -159,7 +159,7 @@ async function openMediaModal(url) {
 
 const DEFAULT_COLOR = [[0, 0, 0]];
 
-const OpenImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
+const OpenImageModal = Webpack.getByStrings('.shouldHideMediaOptions','hasMediaOptions:','numMediaItems:',{searchExports:true})
 const GuildMemberCountStore = Webpack.getStore("GuildMemberCountStore");
 const ChannelMemberStore = Webpack.getStore("ChannelMemberStore");
 const GuildMemberStore = Webpack.getStore("GuildMemberStore");
