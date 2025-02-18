@@ -570,7 +570,7 @@ function AboutTab({ guild }) {
         ),
         React.createElement(
             Section,
-            { heading: "Join At" },
+            { heading: "Joined At" },
             React.createElement("span", { className: "bd-gp-section" }, dateToNode(guild.joinedAt))
         ),
         React.createElement(
