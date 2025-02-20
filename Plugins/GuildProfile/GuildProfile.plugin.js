@@ -748,7 +748,7 @@ function useForceUpdate() {
 }
 
 function useInternalStore(store, factory) {
-    const forceUpdate = useForceUpdate();
+    const forceUpdate = useForceUpdate;
     const [state, setState] = useState(factory);
 
     useEffect(() => {
@@ -756,7 +756,7 @@ function useInternalStore(store, factory) {
 
         function listener() {
             setState(factory);
-            // forceUpdate();
+            forceUpdate();
         }
 
         store.addChangeListener(listener);

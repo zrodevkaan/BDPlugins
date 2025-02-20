@@ -5,7 +5,7 @@
  * @author Kaan
  */
 
-const { React, Webpack, Webpack: { getByKeys, getStore }, Patcher, ContextMenu, ReactDOM } = BdApi;
+const { React, Utils, React: { useState, useEffect }, Webpack, Webpack: { getByKeys, getStore, getBySource }, Patcher, ContextMenu, ReactDOM, DOM } = BdApi;
 
 // TODO: Add more image editors.
 // TODO: Add non-user profile pictures to Recent Images.
@@ -16,9 +16,87 @@ const ImageUtils = Webpack.getModule(m => m.copyImage);
 const UserStore = Webpack.getModule(m => m.getCurrentUser && m.getUser);
 const GuildStore = Webpack.getModule(m => m.getGuild);
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
-const openImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/,{searchExports:true});
+const openImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
+const MediaClasses = getByKeys('mediaMosaicAltTextPopoutDescription')
+const MediaPatch = getBySource('let{alt:e,zoomThumbnailPlaceholder:').ZP.prototype
 // const MessageStore = Webpack.getModule(m => m.getMessage && m.getMessages);
 // const ChannelStore = Webpack.getModule(m => m.getChannel && m.getCurrentlySelectedChannelId);
+
+const styles = {
+    container: {
+        fontSize: '12px',
+        color: '#a3a6aa',
+        marginTop: '4px',
+        display: 'flex',
+        gap: '8px'
+    },
+    dot: {
+        color: '#a3a6aa'
+    }
+};
+
+const imageData = {}
+const runTimeHash = getByKeys('runtimeHashMessageKey')
+
+const ImageMetadata = React.memo(({ _src }) => {
+    const [metadata, setMetadata] = useState(null);
+    const src = runTimeHash.runtimeHashMessageKey(String(_src))
+
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                if (imageData[src]) {
+                    setMetadata(imageData[src]);
+                }
+                const response = await fetch(_src);
+                const blob = await response.blob();
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(blob);
+
+                img.onload = () => {
+                    const data = {
+                        size: (blob.size / 1024).toFixed(1),
+                        type: blob.type.split('/')[1].toUpperCase(),
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        id: src,
+                        error: undefined,
+                    }
+                    setMetadata(data);
+                    imageData[src] = data
+                    URL.revokeObjectURL(objectUrl);
+                };
+
+                img.src = objectUrl;
+            } catch (error) {
+                setMetadata({ error: 'Click on the image to refetch.' });
+                console.error("Failed to fetch metadata:", error);
+            }
+        };
+
+        fetchMetadata();
+    }, [src]);
+
+    if (!metadata) return null;
+
+    return React.createElement('div', { style: styles.container },
+        !metadata?.error ? [
+            React.createElement('span', { key: 'dimensions' },
+                `${metadata.width}×${metadata.height}`
+            ),
+            React.createElement('span', { key: 'dot1', style: styles.dot }, '•'),
+            React.createElement('span', { key: 'size' },
+                `${metadata.size}KB`
+            ),
+            React.createElement('span', { key: 'dot2', style: styles.dot }, '•'),
+            React.createElement('span', { key: 'type' },
+                metadata.type
+            )
+        ] : React.createElement('span', { key: 'failed' },
+            `${metadata.error}`
+        ),
+    );
+});
 
 const TEST_FOR_TYPE = /https:\/\/cdn.discordapp.com\/.*?\.(\w+)\??size=(\d+)?/;
 // const IMAGE_FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
@@ -75,7 +153,14 @@ const filters = {
     galaxy: 'hue-rotate(240deg) saturate(1.6) brightness(1.2)'
 };
 
-const returnType = (img) => TEST_FOR_TYPE.exec(img)[1]
+const returnType = (img) => {
+    try {
+        return TEST_FOR_TYPE.exec(img)[1] // tenor actually sucks.
+    }
+    catch (ex) {
+        return 'png'
+    }
+}
 
 function extractDomain(url) {
     const matches = url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im);
@@ -561,7 +646,7 @@ class ImageUtilsEnhanced {
                 id: this.generateMenuId(`history-${item.timestamp}`),
                 label: item.filename || "Unnamed Image",
                 subtext: new Date(item.timestamp).toLocaleString(),
-                icon: () => React.createElement('img',{src: item.url, style: {height:24,width:24, borderRadius:24, marginRight:24}}),
+                icon: () => React.createElement('img', { src: item.url, style: { height: 24, width: 24, borderRadius: 24, marginRight: 24 } }),
                 onClick: () => this.openModal(item.url, returnType(item.url))
             }))
         };
@@ -621,7 +706,15 @@ class ImageUtilsEnhanced {
                     { url: embed.video.url, filename: `${name}.mp4`, type: 'video', attachment: embed }
                 ));
             }
-//
+
+            if (embed.image?.url) {
+                items.push(this.createMediaMenuItem(
+                    `${baseId}-image`,
+                    `${name} (Image)`,
+                    { url: embed.image?.url, proxyURL: embed.image.proxyURL, filename: `${name}.png`, attachment: embed }
+                ));
+            }
+
             if (embed.thumbnail?.url) {
                 items.push(this.createMediaMenuItem(
                     `${baseId}-image`,
@@ -677,7 +770,7 @@ class ImageUtilsEnhanced {
             .map((attachment, index) => this.createMediaMenuItem(
                 this.generateMenuId(`attachment-${index}`),
                 attachment.filename || "Image",
-                {url: attachment.url, filename: attachment.filename, attachment}
+                { url: attachment.url, filename: attachment.filename, attachment }
             ));
     }
 
@@ -1127,7 +1220,7 @@ class ImageUtilsEnhanced {
     }
 
 
-    handleImageContext(res,props) {
+    handleImageContext(res, props) {
         res.props.children.push(ContextMenu.buildItem({
             type: "submenu",
             id: this.generateMenuId('image-main'),
@@ -1145,11 +1238,30 @@ class ImageUtilsEnhanced {
         }))
     }
 
+    isThirdParty(props, url) {
+        /*if (url.includes('tenor')) {
+            const meta = Utils.findInTree(props,x=>x.message)
+            const data = Utils.findInTree(meta,x=>x.video)
+            return data.video.url;
+        }*/
+        return url
+    }
+
     start() {
         this.messageContextPatch = ContextMenu.patch("message", this.handleMessageContext.bind(this));
         this.userContextPatch = ContextMenu.patch("user-context", this.handleUserContext.bind(this));
         this.guildContextPatch = ContextMenu.patch("guild-context", this.handleGuildContext.bind(this));
         this.imageContextPatch = ContextMenu.patch("image-context", this.handleImageContext.bind(this));
+
+        Patcher.after('BIU', MediaPatch, 'render', (a, b, res) => {
+            const url = a.props.src;
+            // console.log(a)
+            //console.log(a)
+            //console.log()
+            return [React.createElement(ImageMetadata, { key: 'media-patch', _src: this.isThirdParty(a, url) }), res]
+        })
+
+        DOM.addStyle(`BUI`, `.${MediaClasses.imageContainer} {display: block}`)
     }
 
     async openModal(url, type) {
@@ -1184,6 +1296,8 @@ class ImageUtilsEnhanced {
         this.userContextPatch?.();
         this.guildContextPatch?.();
         this.imageContextPatch?.()
+        Patcher.unpatchAll('BIU')
+        DOM.removeStyle('BIU')
     }
 }
 
