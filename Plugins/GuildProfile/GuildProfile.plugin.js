@@ -1550,7 +1550,7 @@ function GuildProfile({ guildId, transitionState }) {
                         "mask",
                         { id: `${id}-${guildId}` },
                         React.createElement("rect", { x: 0, y: 0, width: "100%", height: "100%", fill: "var(--interactive-normal)" }),
-                        React.createElement("circle", { cx: 84, cy: bannerHeight - 5, r: 68, fill: "var(--interactive-normal)" })
+                        React.createElement("circle", { cx: 84, cy: bannerHeight - 5, r: 68, fill: "currentColor" })
                     ),
                     React.createElement(
                         "foreignObject",
