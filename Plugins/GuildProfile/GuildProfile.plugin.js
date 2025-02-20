@@ -756,7 +756,7 @@ function useInternalStore(store, factory) {
 
         function listener() {
             setState(factory);
-            forceUpdate();
+            // forceUpdate();
         }
 
         store.addChangeListener(listener);
@@ -1202,53 +1202,89 @@ function StickersTab({ guild }) {
     );
 }
 
+function SoundItem({ sound, onPlay, onContextMenu }) {
+    const username = UserStore.getUser(sound.userId)?.username || 'Unknown';
+
+    const renderEmoji = () => {
+        if (sound.emojiId) {
+            return React.createElement('img', {
+                src: `https://cdn.discordapp.com/emojis/${sound.emojiId}.webp?size=1280`,
+                alt: "Sound emoji",
+                style: { width: '24px', height: '24px', marginRight: '8px', display: 'inline-block' }
+            });
+        } else if (sound.emojiName) {
+            return React.createElement('span', {
+                style: { fontSize: '24px', marginRight: '8px' }
+            }, sound.emojiName);
+        }
+        return null;
+    };
+
+    return React.createElement(
+        'div',
+        {
+            className: 'bd-gp-sound-item',
+            onClick: onPlay,
+            onContextMenu: onContextMenu
+        },
+        React.createElement(
+            'div',
+            { className: 'bd-gp-sound-info', style: { display: 'flex', alignItems: 'center' } },
+            renderEmoji(),
+            React.createElement(
+                'div',
+                null,
+                React.createElement('div', { className: 'bd-gp-sound-name' }, sound.name),
+                React.createElement('div', { className: 'bd-gp-sound-user' }, 'Added by ' + username)
+            )
+        )
+    );
+}
+
 function SoundsTab({ guild }) {
     const [sounds, setSounds] = useState(Sounds.getSounds().get(guild.id));
     const [_sound, setSound] = useState(null);
 
+    if (!sounds?.length) {
+        return React.createElement(EmptyState);
+    }
+
     return React.createElement(
         'div',
         { className: 'bd-gp-sounds-container' },
-        !sounds?.length ?
-            React.createElement(EmptyState)
-            :
-            React.createElement(
-                'div',
-                { className: 'bd-gp-sounds-grid' },
-                sounds.map(sound =>
-                    React.createElement( 
-                        'div',
-                        {
-                            key: sound.id,
-                            className: 'bd-gp-sound-item',
-                            onClick: () => {
-                                _sound?.pause?.();
-                                const newSound = new Audio(GetAudioCDN(sound.soundId));
-                                setSound(newSound)
-                                newSound.play();
-                            },
-                            onContextMenu: (e) => {
-                                ContextMenu.open(e, ContextMenu.buildMenu([{
-                                    label: 'Download', action: () => {
-                                        downloadURI(GetAudioCDN(sound.soundId), sound.name)
-                                    }
-                                },
-                                {
-                                    label: 'Copy Link', action: () => {
-                                        copy(GetAudioCDN(sound.soundId))
-                                    }
-                                }]))
-                            }
+        React.createElement(
+            'div',
+            { className: 'bd-gp-sounds-grid' },
+            sounds.map(sound =>
+                React.createElement(
+                    SoundItem,
+                    {
+                        key: sound.id,
+                        sound: sound,
+                        onPlay: () => {
+                            _sound?.pause?.();
+                            const newSound = new Audio(GetAudioCDN(sound.soundId));
+                            setSound(newSound);
+                            newSound.play();
                         },
-                        React.createElement(
-                            'div',
-                            { className: 'bd-gp-sound-info' },
-                            React.createElement('div', { className: 'bd-gp-sound-name' }, sound.name),
-                            React.createElement('div', { className: 'bd-gp-sound-user' }, 'Added by ' + (UserStore.getUser(sound.userId)?.username || 'Unknown'))
-                        )
-                    )
+                        onContextMenu: (e) => {
+                            ContextMenu.open(e, ContextMenu.buildMenu([{
+                                label: 'Download',
+                                action: () => {
+                                    downloadURI(GetAudioCDN(sound.soundId), sound.name)
+                                }
+                            },
+                            {
+                                label: 'Copy Link',
+                                action: () => {
+                                    copy(GetAudioCDN(sound.soundId))
+                                }
+                            }]))
+                        }
+                    }
                 )
             )
+        )
     );
 }
 
