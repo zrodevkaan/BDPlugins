@@ -18,6 +18,7 @@ const GuildStore = Webpack.getModule(m => m.getGuild);
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
 const openImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
 const MediaClasses = getByKeys('mediaMosaicAltTextPopoutDescription')
+const VideoClasses = getByKeys('mosaicItem', 'mosaicItemMediaMosaic')
 const MediaPatch = getBySource('let{alt:e,zoomThumbnailPlaceholder:').ZP.prototype
 // const MessageStore = Webpack.getModule(m => m.getMessage && m.getMessages);
 // const ChannelStore = Webpack.getModule(m => m.getChannel && m.getCurrentlySelectedChannelId);
@@ -38,7 +39,7 @@ const styles = {
 const imageData = {}
 const runTimeHash = getByKeys('runtimeHashMessageKey')
 
-const ImageMetadata = React.memo(({ _src }) => {
+const ImageMetadata = React.memo(({ _src, fileProps }) => {
     const [metadata, setMetadata] = useState(null);
     const src = runTimeHash.runtimeHashMessageKey(String(_src))
 
@@ -56,7 +57,7 @@ const ImageMetadata = React.memo(({ _src }) => {
                 img.onload = () => {
                     const data = {
                         size: (blob.size / 1024).toFixed(1),
-                        type: blob.type.split('/')[1].toUpperCase(),
+                        type: fileProps.animated ? fileProps.alt : blob.type.split('/')[1].toUpperCase(),
                         width: img.naturalWidth,
                         height: img.naturalHeight,
                         id: src,
@@ -1255,13 +1256,10 @@ class ImageUtilsEnhanced {
 
         Patcher.after('BIU', MediaPatch, 'render', (a, b, res) => {
             const url = a.props.src;
-            // console.log(a)
-            //console.log(a)
-            //console.log()
-            return [React.createElement(ImageMetadata, { key: 'media-patch', _src: this.isThirdParty(a, url) }), res]
+            return [React.createElement(ImageMetadata, { key: 'media-patch', _src: this.isThirdParty(a, url), fileProps: a.props }), res]
         })
 
-        DOM.addStyle(`BUI`, `.${MediaClasses.imageContainer} {display: block}`)
+        DOM.addStyle(`BUI`, `.${MediaClasses.imageContainer} {display: block} .${VideoClasses.mosaicItem} {display: block}`)
     }
 
     async openModal(url, type) {
