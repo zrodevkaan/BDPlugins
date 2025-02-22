@@ -8,14 +8,15 @@
 const { Patcher, Webpack, React, DOM } = new BdApi('VoiceHub');
 const Module = Webpack.getBySource('ConnectedPrivateChannelsList');
 
-const SystemDesign = {
-    VoiceIcon: Webpack.getByStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z', { searchExports: true }),
-    ModalRoot: Webpack.getByStrings('.ImpressionTypes.MODAL,"aria-labelledby":', { searchExports: true }),
-    openModal: Webpack.getByStrings('onCloseRequest', 'onCloseCallback', 'onCloseCallback', 'instant', 'backdropStyle', { searchExports: true }),
-    SearchIcon: Webpack.getByStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z', { searchExports: true }),
-    VideoIcon: Webpack.getByStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0', { searchExports: true }),
-    LiveStream: Webpack.getByStrings('dI3q4u')
-};
+const [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdApi.Webpack.getBulk(
+    { filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'), searchExports: true },
+    { filter: BdApi.Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true },
+    { filter: BdApi.Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'instant', 'backdropStyle'), searchExports: true },
+    { filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'), searchExports: true },
+    { filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'), searchExports: true },
+    { filter: BdApi.Webpack.Filters.byStrings('dI3q4u'), searchExports: true }
+  );
+  
 
 const InteractiveModule = Webpack.getByKeys('interactive', 'muted', 'selected');
 const InteractiveAbove = Webpack.getByKeys('channel', 'interactiveSystemDM', 'interactiveSelected');
@@ -98,7 +99,7 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
                 gap: '6px'
             }
         }, [
-            React.createElement(SystemDesign.VoiceIcon, {
+            React.createElement(VoiceIcon, {
                 width: '14',
                 height: '14',
                 color: 'var(--interactive-normal)'
@@ -158,8 +159,8 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
                         fontSize: '13px'
                     }
                 }, user.username),
-                userState.selfVideo && React.createElement(SystemDesign.VideoIcon),
-                userState.selfStream && React.createElement(SystemDesign.LiveStream),
+                userState.selfVideo && React.createElement(VideoIcon),
+                userState.selfStream && React.createElement(LiveStream),
             ])
         }))
     ]);
@@ -233,7 +234,7 @@ const VoiceChannelList = () => {
             })
         ]),
         React.createElement('div', {
-            className: 'hell',
+            className: 'voice-modal-scroller',
             style: {
                 overflowY: 'auto',
                 flex: 1,
@@ -305,7 +306,7 @@ const VoiceHubButton = ({ onClick }) => {
         },
         onClick
     }, [
-        React.createElement(SystemDesign.VoiceIcon, {
+        React.createElement(VoiceIcon, {
             width: '22',
             height: '22',
             color: 'currentColor'
@@ -322,7 +323,7 @@ const VoiceHubButton = ({ onClick }) => {
 class VoiceHub {
     start() {
         DOM.addStyle('voiceHub',
-            `.hell::-webkit-scrollbar {
+            `.voice-modal-scroller::-webkit-scrollbar {
             display: none;
         }`)
         Patcher.after(Module, 'Z', (_, __, res) => {
@@ -333,8 +334,8 @@ class VoiceHub {
                 React.createElement(VoiceHubButton, {
                     key: 'voice-connect',
                     onClick: () => {
-                        SystemDesign.openModal(modalProps => {
-                            return React.createElement(SystemDesign.ModalRoot, {
+                        openModal(modalProps => {
+                            return React.createElement(ModalRoot, {
                                 ...modalProps,
                                 size: "medium",
                                 className: "voice-hub-modal"
