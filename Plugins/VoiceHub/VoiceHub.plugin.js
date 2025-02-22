@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.2
+ * @version 1.0.3
  * @description Wanna know what people are in VCs? Here ya go.
  */
 
@@ -124,7 +124,7 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
             const directUser = member?.avatar ? member : user;
 
             const userState = voiceStates[user.id]
-            // console.log(userState)
+
             return React.createElement('div', {
                 key: user.id,
                 onClick: (e) => {
