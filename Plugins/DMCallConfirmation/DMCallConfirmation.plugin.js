@@ -1,7 +1,7 @@
 /**
  * @name DMCallConfirmation
  * @author imafrogowo
- * @version 1.0.9
+ * @version 1.1.0
  * @description Gives you a confirmation for the people who accidentally do it. Twice.
  */
 const { Patcher, Webpack, Utils, React, Data, ReactDOM } = BdApi;
@@ -32,7 +32,6 @@ class DMCallConfirmation {
             const channel = channelStore.getChannel(channelId);
             const rawRec = channel.rawRecipients;
             const recipients = channel.recipients;
-            console.log("Data:", a, b, c);
             const userNames = recipients.length > 1
                 ? (channel.name !== "" ? channel.name : recipients.map(userId => {
                     const user = this.getUser(userId);
@@ -45,7 +44,7 @@ class DMCallConfirmation {
                 onConfirm: () => c(...b),
             });
         });
-        this.onDoubleClickPatch = Patcher.after("DMCallConfirmation", getModule(x=>x.Clickable.contextType && x.Clickable.prototype.render).Clickable.prototype, "render", (a, b, c) => {
+        this.onDoubleClickPatch = Patcher.after("DMCallConfirmation", BdApi.Webpack.getBySource('renderNonInteractive(){').P.prototype, "render", (a, b, c) => {
             if (this.Settings.callOnDoubleClick) {
                 const CallButton = findInTree(c, (item) => item?.['aria-label'] == "Start Voice Call", { walkable: ["props", "children", "child", "sibling"] });
                 if (CallButton) {

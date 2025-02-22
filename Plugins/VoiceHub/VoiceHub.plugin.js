@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.1
+ * @version 1.0.2
  * @description Wanna know what people are in VCs? Here ya go.
  */
 
@@ -10,7 +10,7 @@ const Module = Webpack.getBySource('ConnectedPrivateChannelsList');
 
 const SystemDesign = {
     VoiceIcon: Webpack.getByStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z', { searchExports: true }),
-    ModalRoot: Webpack.getByStrings('.ImpressionTypes.MODAL,"aria-labelledby":',{searchExports:true}),
+    ModalRoot: Webpack.getByStrings('.ImpressionTypes.MODAL,"aria-labelledby":', { searchExports: true }),
     openModal: Webpack.getByStrings('onCloseRequest', 'onCloseCallback', 'onCloseCallback', 'instant', 'backdropStyle', { searchExports: true }),
     SearchIcon: Webpack.getByStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z', { searchExports: true }),
     VideoIcon: Webpack.getByStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0', { searchExports: true }),
@@ -42,7 +42,7 @@ const SearchBar = ({ value, onChange }) => {
     }, [
         React.createElement('input', {
             className: clsx(InputModule.input),
-            style: {width: '95%'},
+            style: { width: '95%' },
             type: 'text',
             value,
             onChange: e => onChange(e.target.value),
@@ -128,12 +128,12 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
                 key: user.id,
                 onClick: (e) => {
                     e.stopPropagation();
-                    if (e.shiftKey) UserModal.openUserProfileModal({userId: user.id, channelId: channel.id, guildId: guild.id})
+                    if (e.shiftKey) UserModal.openUserProfileModal({ userId: user.id, channelId: channel.id, guildId: guild.id })
                     else handleUserClick(e, user);
                 },
                 style: {
                     display: 'flex',
-                    alignItems: 'center', 
+                    alignItems: 'center',
                     gap: '4px',
                     padding: '2px 6px',
                     borderRadius: '3px',
@@ -238,7 +238,15 @@ const VoiceChannelList = () => {
                 overflowY: 'auto',
                 flex: 1,
             }
-        }, filteredGuilds.map(guild => {
+        }, filteredGuilds.length <= 0 ? React.createElement("div", {
+            style: {
+                flex: "0 1 auto",
+                width: 433,
+                height: 232,
+                backgroundImage: "url(/assets/99ad5845cf7de1c326e2.svg)",
+                margin: "auto"
+            }
+        }) : filteredGuilds.map(guild => {
             const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
             const activeChannels = [...new Set(Object.values(voiceStates).map(state => state.channelId))]
                 .map(channelId => ChannelStore.getChannel(channelId))
@@ -250,7 +258,7 @@ const VoiceChannelList = () => {
                     marginBottom: '24px'
                 }
             }, [
-                React.createElement('div',{style: {display: 'flex', gap: '10px'}}, 
+                React.createElement('div', { style: { display: 'flex', gap: '10px' } },
                     React.createElement('img', {
                         src: guild?.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=1280&quality=lossless` : `https://cdn.discordapp.com/embed/avatars/${getAvatar(guild.id)}.png`,
                         style: {
@@ -313,17 +321,17 @@ const VoiceHubButton = ({ onClick }) => {
 
 class VoiceHub {
     start() {
-        DOM.addStyle('voiceHub', 
-        `.hell::-webkit-scrollbar {
+        DOM.addStyle('voiceHub',
+            `.hell::-webkit-scrollbar {
             display: none;
         }`)
         Patcher.after(Module, 'Z', (_, __, res) => {
-            const isExisting = res.props.children.props.children.find(x=>x?.key === "voice-connect") // prevent button duplication?
+            const isExisting = res.props.children.props.children.find(x => x?.key === "voice-connect") // prevent button duplication?
             // idk how that works.
             if (isExisting) return;
             res.props.children.props.children.unshift(
                 React.createElement(VoiceHubButton, {
-                    key: 'voice-connect', 
+                    key: 'voice-connect',
                     onClick: () => {
                         SystemDesign.openModal(modalProps => {
                             return React.createElement(SystemDesign.ModalRoot, {
