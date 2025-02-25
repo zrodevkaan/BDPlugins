@@ -1,7 +1,7 @@
 /**
  * @name ShowImagesAnyway
  * @author kaan
- * @version 1.0.2
+ * @version 1.0.3
  * @description Enhances Discord's image handling by showing hidden image links with safety controls
  */
 
@@ -76,9 +76,10 @@ const CONFIG = {
         }
     }
 };
+
 const Utils = {
     regex: {
-        url: new RegExp(`^<?https?:\\/\\/[^\\s]+\\.(${CONFIG.MEDIA.IMAGE_EXTENSIONS.join('|')}).*>?`, 'i'),
+        url: new RegExp(`(?:^|\\s)<?([^<\\s]+?://[^\\s]+\\.(${CONFIG.MEDIA.IMAGE_EXTENSIONS.join('|')})(?:[?#][^\\s<>]*)?)>?(?:\\s|$)`, 'i'),
         hidden: new RegExp(`<https?:\/\/[^\s]+>`,'i'),
         video: new RegExp(`\\.(${CONFIG.MEDIA.VIDEO_EXTENSIONS.join('|')})$`, 'i')
     },
