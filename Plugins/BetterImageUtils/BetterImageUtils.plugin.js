@@ -1,27 +1,340 @@
 /**
  * @name BetterImageUtils
  * @description Image manipulation and tools
- * @version 2.0.0
+ * @version 2.0.1
  * @author Kaan
  */
 
-const { React, Utils, React: { useState, useEffect }, Webpack, Webpack: { getByKeys, getStore, getBySource }, Patcher, ContextMenu, ReactDOM, DOM } = BdApi;
-
-// TODO: Add more image editors.
-// TODO: Add non-user profile pictures to Recent Images.
-// TODO: Make MenuItemSlider for setting compression value.
-// TODO: Add User profile picture previews.
+const { React, Data, Utils, React: { useState, useEffect }, Webpack, Webpack: { getByKeys, getStore, getBySource }, Patcher, ContextMenu, ReactDOM, DOM, UI, Net } = new BdApi("BetterImageUtils");
 
 const ImageUtils = Webpack.getModule(m => m.copyImage);
 const UserStore = Webpack.getModule(m => m.getCurrentUser && m.getUser);
 const GuildStore = Webpack.getModule(m => m.getGuild);
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
 const openImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
-const MediaClasses = getByKeys('mediaMosaicAltTextPopoutDescription')
-const VideoClasses = getByKeys('mosaicItem', 'mosaicItemMediaMosaic')
-const MediaPatch = getBySource('let{alt:e,zoomThumbnailPlaceholder:').ZP.prototype
-// const MessageStore = Webpack.getModule(m => m.getMessage && m.getMessages);
-// const ChannelStore = Webpack.getModule(m => m.getChannel && m.getCurrentlySelectedChannelId);
+const Media = Webpack.getBySource(/let{alt:.{1,3},zoomThumbnailPlaceholder:/).ZP; // Webpack.getModule(a => a?.defaultProps?.readyState, { searchExports: true });
+const Clickable = Webpack.getBySource('BaseHeaderBar').ZP.Icon
+const clipboard = {
+    SUPPORTS_NATIVE: (text) => window?.DiscordNative ? DiscordNative.clipboard.copy(text) : navigator.clipboard.writeText(text)
+}
+const check = () => UserStore.getCurrentUser().nsfwAllowed
+
+const [
+    FormSwitch,
+    CopyIcon,
+    OpenExternal,
+    Download,
+] = Webpack.getBulk(
+    { filter: x => x.toString?.().includes('disabledText') && x.toString?.().includes('tooltipNote'), searchExports: true },
+    { filter: x => x.toString?.().includes('"M3 16a1 1 0 0 1-1-1v-5a8 8 0 0 1 8-8h5a1 1 0 0 1 1 1v.5a.5.5 0 0 1-.5.5H'), searchExports: true },
+    { filter: x => x.toString?.().includes('M15 2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V4'), searchExports: true },
+    { filter: x => x.toString?.().includes('"M12 2a1 1 0 0 1 1 1v10.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4'), searchExports: true },
+);
+
+const DataStore = new Proxy(
+    {},
+    {
+        get: (_, key) => {
+            if (key === 'settings') {
+                const savedSettings = Data.load(key) || {};
+                return baseConfig.defaultConfig.reduce((acc, setting) => {
+                    acc[setting.id] = savedSettings[setting.id] ?? setting.value;
+                    return acc;
+                }, {});
+            }
+            return Data.load(key);
+        },
+        set: (_, key, value) => {
+            Data.save(key, value);
+            return true;
+        },
+        deleteProperty: (_, key) => {
+            Data.delete(key);
+            return true;
+        },
+    }
+);
+
+const Eye = () => React.createElement('svg', { viewbox: '0 0 1200 1200', width: '24px', height: '24px', color: 'var(--interactive-normal)' }, React.createElement('path', { fill: 'var(--interactive-normal)', d: 'M12 5C5.648 5 1 12 1 12C1 12 5.648 19 12 19C18.352 19 23 12 23 12C23 12 18.352 5 12 5ZM12 16C9.791 16 8 14.21 8 12C8 9.79 9.791 8 12 8C14.209 8 16 9.79 16 12C16 14.21 14.209 16 12 16Z M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z' }))
+const EyeClose = () => /*#__PURE__*/React.createElement("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 89.9801 1200 1020",
+    color: 'var(--interactive-normal)',
+    width: '24px', height: '24px',
+    children: /*#__PURE__*/React.createElement("path", {
+        d: "M669.727,273.516c-22.891-2.476-46.15-3.895-69.727-4.248c-103.025,0.457-209.823,25.517-310.913,73.536  c-75.058,37.122-148.173,89.529-211.67,154.174C46.232,529.978,6.431,577.76,0,628.74c0.76,44.162,48.153,98.67,77.417,131.764  c59.543,62.106,130.754,113.013,211.67,154.174c2.75,1.335,5.51,2.654,8.276,3.955l-75.072,131.102l102.005,60.286l551.416-960.033  l-98.186-60.008L669.727,273.516z M902.563,338.995l-74.927,129.857c34.47,44.782,54.932,100.006,54.932,159.888  c0,149.257-126.522,270.264-282.642,270.264c-6.749,0-13.29-0.728-19.922-1.172l-49.585,85.84c22.868,2.449,45.99,4.233,69.58,4.541  c103.123-0.463,209.861-25.812,310.84-73.535c75.058-37.122,148.246-89.529,211.743-154.174  c31.186-32.999,70.985-80.782,77.417-131.764c-0.76-44.161-48.153-98.669-77.417-131.763  c-59.543-62.106-130.827-113.013-211.743-154.175C908.108,341.478,905.312,340.287,902.563,338.995L902.563,338.995z   M599.927,358.478c6.846,0,13.638,0.274,20.361,0.732l-58.081,100.561c-81.514,16.526-142.676,85.88-142.676,168.897  c0,20.854,3.841,40.819,10.913,59.325c0.008,0.021-0.008,0.053,0,0.074l-58.228,100.854  c-34.551-44.823-54.932-100.229-54.932-160.182C317.285,479.484,443.808,358.477,599.927,358.478L599.927,358.478z M768.896,570.513  L638.013,797.271c81.076-16.837,141.797-85.875,141.797-168.603C779.81,608.194,775.724,588.729,768.896,570.513L768.896,570.513z",
+        fill: "var(--interactive-normal)"
+    })
+});
+
+const MediaWrapper = (props) => {
+    const { children, data, returnMetadata, getButtonState, downloadImage } = props;
+
+    const hiddenMediaCache = React.useMemo(() => {
+        return new Map(DataStore.hiddenMedias || new Map());
+    }, []);
+
+    const getMediaIdentifier = () => {
+        const imageArgs = returnMetadata(data);
+        const mediaUrl = imageArgs?.url || imageArgs?.src;
+        const mediaId = data?.id || mediaUrl;
+        return mediaId;
+    };
+
+    const mediaId = getMediaIdentifier();
+
+    const [hidden, setHidden] = React.useState(() => {
+        return mediaId ? hiddenMediaCache.get(mediaId) || false : false;
+    });
+
+    React.useEffect(() => {
+        if (mediaId) {
+            hiddenMediaCache.set(mediaId, hidden);
+            DataStore.hiddenMedias = Array.from(hiddenMediaCache.entries());
+        }
+    }, [hidden, mediaId, hiddenMediaCache]);
+
+    const imageArgs = returnMetadata(data);
+    if (!imageArgs?.placeholder) return children;
+
+    const mediaUrl = imageArgs?.url || imageArgs?.src;
+    const mediaFilename = imageArgs?.filename || imageArgs?.alt;
+
+    const hideButtonState = {
+        tooltip: hidden ? 'Show Image' : 'Hide Image',
+        icon: hidden ? Eye : EyeClose,
+        onClick: () => setHidden(!hidden)
+    };
+
+    const copyButtonState = getButtonState(
+        'Copy Link',
+        mediaUrl,
+        'Unable to copy: No valid URL found'
+    );
+
+    const downloadButtonState = getButtonState(
+        'Download',
+        mediaUrl && mediaFilename,
+        'Unable to download: Missing filename or URL'
+    );
+
+    const externalButtonState = getButtonState(
+        'Open in Window',
+        mediaUrl,
+        'Unable to locate URL'
+    );
+
+    return React.createElement('div', {
+        style: {
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            zIndex: 2,
+        },
+        onMouseEnter: (e) => {
+            const actionBar = e.currentTarget.querySelector('.media-action-container');
+            if (actionBar) {
+                actionBar.style.opacity = '1';
+                actionBar.style.visibility = 'visible';
+            }
+        },
+        onMouseLeave: (e) => {
+            const actionBar = e.currentTarget.querySelector('.media-action-container');
+            if (actionBar) {
+                actionBar.style.opacity = '0';
+                actionBar.style.visibility = 'hidden';
+            }
+        },
+        className: 'media-wrapper',
+    }, [
+        React.createElement('div', {
+            style: {
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: '100%',
+                position: 'relative',
+                filter: hidden ? 'blur(50px)' : 'blur(0px)',
+                transition: `filter 0.5s ease`,
+                zIndex: 3,
+            },
+            className: 'media-container'
+        }, children),
+
+        React.createElement('div', {
+            style: {
+                position: 'absolute',
+                bottom: '10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 'auto',
+                backgroundColor: 'var(--background-primary)',
+                zIndex: 4,
+                borderRadius: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+                transition: 'opacity 0.2s ease-in-out, visibility 0.2s ease-in-out',
+                opacity: '0',
+                visibility: 'visible',
+                boxShadow: '0 2px 10px 0 rgba(0, 0, 0, 0.2)',
+            },
+            onClick: (e) => e.stopPropagation(),
+            className: 'media-action-container'
+        }, [
+            React.createElement(ImageMetadata, { _src: mediaUrl, fileProps: data }),
+            React.createElement('div', {
+                className: 'media-action-bar',
+                style: {
+                    display: 'flex',
+                    gap: '8px',
+                    marginTop: '8px',
+                    zIndex: 5,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }
+            }, [
+                React.createElement(Clickable, {
+                    tooltip: hideButtonState.tooltip,
+                    icon: hideButtonState.icon,
+                    onClick: hideButtonState.onClick
+                }),
+
+                React.createElement(Clickable, {
+                    tooltip: copyButtonState.tooltip,
+                    tooltipColor: copyButtonState.tooltipColor,
+                    icon: CopyIcon,
+                    disabled: copyButtonState.disabled,
+                    onClick: () => {
+                        if (!copyButtonState.disabled) {
+                            clipboard.SUPPORTS_NATIVE(mediaUrl);
+                            UI.showToast('Link copied to clipboard');
+                        }
+                    }
+                }),
+
+                React.createElement(Clickable, {
+                    tooltip: downloadButtonState.tooltip,
+                    tooltipColor: downloadButtonState.tooltipColor,
+                    icon: Download,
+                    disabled: downloadButtonState.disabled,
+                    onClick: async () => {
+                        if (!downloadButtonState.disabled) {
+                            try {
+                                await downloadImage(mediaUrl, mediaFilename);
+                                UI.showToast(`Downloaded ${mediaFilename}`);
+                            } catch (error) {
+                                UI.showToast('Download failed');
+                                console.error('Download error:', error);
+                            }
+                        }
+                    }
+                }),
+
+                React.createElement(Clickable, {
+                    tooltip: externalButtonState.tooltip,
+                    tooltipColor: externalButtonState.tooltipColor,
+                    icon: OpenExternal,
+                    disabled: externalButtonState.disabled,
+                    onClick: async () => {
+                        if (!externalButtonState.disabled) {
+                            try {
+                                window.open(mediaUrl, 'blank_');
+                                UI.showToast(`Opened ${mediaFilename}`);
+                            } catch (error) {
+                                UI.showToast('Download failed');
+                                console.error('Download error:', error);
+                            }
+                        }
+                    }
+                }),
+            ])
+        ])
+    ]);
+};
+
+const Components = {
+    Dropdown: Webpack.getModule(x => x.render.toString().includes('["options","value","onChange",'), { searchExports: true }),
+    Slider: Webpack.getBySource('initialValueProp', 'getDerivedStateFromProps').i
+}
+
+const baseConfig = {
+    defaultConfig: [
+        {
+            id: 'enableNSFW',
+            component: FormSwitch,
+            type: 'switch',
+            children: 'Enable NSFW Search Engines',
+            note: 'Allow access to search engines that may contain NSFW content',
+            pred: check,
+            value: false
+        },
+        {
+            id: 'defaultSearchEngine',
+            component: Components.Dropdown,
+            type: 'select',
+            title: 'Default Search Engine',
+            note: 'Choose the default search engine for reverse image search',
+            options: [{ label: "Google", value: 'Google' }, { label: "Bing", value: 'Bing' }, { label: "Yandex", value: 'Yandex' }],
+            value: 'Google'
+        },
+        /*{
+            id: 'compressionQuality',
+            component: Components.Slider,
+            type: 'slider',
+            children: 'Compression Quality',
+            note: 'Set the quality level for image compression (higher = better quality)',
+            markers: [0, 0.2, 0.4, 0.6, 0.8, 1],
+            value: 0.8,
+            min: 0,
+            max: 1,
+            step: 0.1
+        },*/
+        {
+            id: 'enableEffects',
+            component: FormSwitch,
+            type: 'switch',
+            children: 'Enable Effects',
+            note: 'Enable image effects and filters',
+            value: true
+        },
+        {
+            id: 'cacheEnabled',
+            component: FormSwitch,
+            type: 'switch',
+            children: 'Enable Caching',
+            note: 'Cache processed images for better performance',
+            value: true
+        },
+        {
+            id: 'enableDebugData',
+            component: FormSwitch,
+            type: 'switch',
+            children: 'Enable Debug Data',
+            note: 'Show additional debug information',
+            value: true
+        }
+    ]
+};
+
+function loadDefaults() {
+    if (!Data.load('settings')) {
+        DataStore.settings = baseConfig.defaultConfig.reduce((acc, setting) => {
+            acc[setting.id] = setting.value;
+            return acc;
+        }, {});
+    }
+}
+
+const config = {
+    ...baseConfig,
+    defaultConfig: baseConfig.defaultConfig.map(setting => ({
+        ...setting,
+        value: DataStore.settings[setting.id]
+    }))
+};
 
 const styles = {
     container: {
@@ -35,6 +348,40 @@ const styles = {
         color: '#a3a6aa'
     }
 };
+
+
+function SettingsPanel({ settings, onSettingsChange }) {
+    const [localSettings, setLocalSettings] = useState(settings);
+
+    const handleSettingChange = (settingId, value) => {
+        const newSettings = {
+            ...localSettings,
+            [settingId]: value
+        };
+        setLocalSettings(newSettings);
+        onSettingsChange(newSettings);
+    };
+
+    return config.defaultConfig
+        .filter(setting => {
+            if (!setting.component) return false;
+            if (setting.pred && !setting?.pred?.()) return false;
+            return true;
+        })
+        .map(setting => {
+            try {
+                return React.createElement(setting.component, {
+                    ...setting,
+                    value: localSettings[setting.id],
+                    onChange: (value) => handleSettingChange(setting.id, value)
+                });
+            } catch (error) {
+                console.error(`Failed to create component for setting ${setting.id}:`, error);
+                return null;
+            }
+        })
+        .filter(Boolean);
+}
 
 const imageData = {}
 const runTimeHash = getByKeys('runtimeHashMessageKey')
@@ -100,8 +447,8 @@ const ImageMetadata = React.memo(({ _src, fileProps }) => {
 });
 
 const TEST_FOR_TYPE = /https:\/\/cdn.discordapp.com\/.*?\.(\w+)\??size=(\d+)?/;
-// const IMAGE_FORMATS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
-// const VIDEO_FORMATS = ['mp4', 'webm', 'mov'];
+
+
 
 const filters = {
     vintage: 'sepia(0.5) hue-rotate(-30deg)',
@@ -156,7 +503,7 @@ const filters = {
 
 const returnType = (img) => {
     try {
-        return TEST_FOR_TYPE.exec(img)[1] // tenor actually sucks.
+        return TEST_FOR_TYPE.exec(img)[1]
     }
     catch (ex) {
         return 'png'
@@ -175,7 +522,7 @@ function generateFaviconURL(website, size = 16) {
     return url.href;
 }
 
-// Stack overflow
+
 async function fetchImageDimensions(url) {
     try {
         const response = await fetch(url);
@@ -297,7 +644,8 @@ class ImageUtilsEnhanced {
         };
 
         this.cache = new Map();
-        this.settings = this.loadSettings();
+        loadDefaults();
+        this.settings = DataStore.settings;
     }
 
 
@@ -316,8 +664,6 @@ class ImageUtilsEnhanced {
             return null;
         }
     }
-
-    check = () => UserStore.getCurrentUser().nsfwAllowed
 
     async getImageDimensions(blob) {
         return new Promise((resolve) => {
@@ -386,7 +732,7 @@ class ImageUtilsEnhanced {
             onClick: async () => {
                 const metadata = await this.getImageMetadata(url);
                 if (!metadata) {
-                    BdApi.showToast("Failed to fetch image information", { type: "error" });
+                    UI.showToast("Failed to fetch image information", { type: "error" });
                     return;
                 }
 
@@ -412,7 +758,7 @@ class ImageUtilsEnhanced {
                             ].join('\n');
 
                             ImageUtils.copy(details)
-                            BdApi.showToast("Image details copied to clipboard!", { type: "success" });
+                            UI.showToast("Image details copied to clipboard!", { type: "success" });
                         }
                     }
                 );
@@ -429,9 +775,9 @@ class ImageUtilsEnhanced {
                 try {
                     const compressedUrl = await this.compressImage(url);
                     this.openModal(compressedUrl, returnType(url));
-                    BdApi.showToast("Image compressed successfully!", { type: "success" });
+                    UI.showToast("Image compressed successfully!", { type: "success" });
                 } catch (error) {
-                    BdApi.showToast("Failed to compress image", { type: "error" });
+                    UI.showToast("Failed to compress image", { type: "error" });
                 }
             }
         };
@@ -457,7 +803,7 @@ class ImageUtilsEnhanced {
                 label: `Copy ${type.charAt(0).toUpperCase() + type.slice(1)}`,
                 onClick: () => {
                     ImageUtils.copyImage(urlToUse);
-                    BdApi.showToast("Copied to clipboard!", { type: "success" });
+                    UI.showToast("Copied to clipboard!", { type: "success" });
                 }
             },
             {
@@ -466,7 +812,7 @@ class ImageUtilsEnhanced {
                 label: `Copy ${type.charAt(0).toUpperCase() + type.slice(1)} Link`,
                 onClick: () => {
                     ImageUtils.copy(urlToUse);
-                    BdApi.showToast("Copied link to clipboard!", { type: "success" });
+                    UI.showToast("Copied link to clipboard!", { type: "success" });
                 }
             },
             {
@@ -487,9 +833,9 @@ class ImageUtilsEnhanced {
                         document.body.removeChild(a);
                         window.URL.revokeObjectURL(blobUrl);
 
-                        BdApi.showToast("Download started!", { type: "success" });
+                        UI.showToast("Download started!", { type: "success" });
                     } catch (error) {
-                        BdApi.showToast("Download failed!", { type: "error" });
+                        UI.showToast("Download failed!", { type: "error" });
                     }
                 }
             }
@@ -523,28 +869,39 @@ class ImageUtilsEnhanced {
 
 
     loadSettings() {
-        return BdApi.Data.load('BetterImageUtils', 'settings') || {
-            enableNSFW: false,
-            defaultSearchEngine: 'Google',
-            compressionQuality: 0.8,
-            enableEffects: true,
-            cacheEnabled: true
-        };
+        return DataStore.settings;
     }
 
     saveSettings() {
-        BdApi.Data.save('BetterImageUtils', 'settings', this.settings);
+        Data.save('settings', this.settings);
+    }
+
+    getIdChangeValue(id, value) {
+        this.settings[id] = value;
+        this.saveSettings();
     }
 
     /**/
 
     async downloadImage(url, filename) {
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = filename;
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
+        try {
+            const response = await Net.fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename || `download.${type === 'video' ? 'mp4' : 'png'}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+
+            UI.showToast("Download started!", { type: "success" });
+        } catch (error) {
+            console.log(error)
+            UI.showToast("Download failed!", { type: "error" });
+        }
     }
 
     createBatchOperationsMenu(images) {
@@ -561,7 +918,7 @@ class ImageUtilsEnhanced {
                         for (const image of images) {
                             await this.downloadImage(image.url, image.filename);
                         }
-                        BdApi.showToast(`Downloaded ${images.length} images!`, { type: "success" });
+                        UI.showToast(`Downloaded ${images.length} images!`, { type: "success" });
                     }
                 },
                 {
@@ -573,7 +930,7 @@ class ImageUtilsEnhanced {
                             images.map(image => this.compressImage(image.url, this.settings.compressionQuality))
                         );
                         this.cache.set('compressedBatch', compressedUrls);
-                        BdApi.showToast(`Compressed ${images.length} images!`, { type: "success" });
+                        UI.showToast(`Compressed ${images.length} images!`, { type: "success" });
                     }
                 }
             ]
@@ -617,7 +974,7 @@ class ImageUtilsEnhanced {
 
 
     addToHistory(imageData) {
-        const history = BdApi.Data.load('BetterImageUtils', 'history') || [];
+        const history = Data.load('history') || [];
 
         const existingIndex = history.findIndex(item => item.url === imageData.url);
 
@@ -632,11 +989,11 @@ class ImageUtilsEnhanced {
 
         if (history.length > 50) history.pop();
 
-        BdApi.Data.save('BetterImageUtils', 'history', history);
+        Data.save('history', history);
     }
 
     getHistoryMenu() {
-        const history = BdApi.Data.load('BetterImageUtils', 'history') || [];
+        const history = Data.load('history') || [];
 
         return {
             type: "submenu",
@@ -776,7 +1133,7 @@ class ImageUtilsEnhanced {
     }
 
     handleMessageContext(res, props) {
-        // TODO: Add Gif Attachments vs Normal Link Support.
+
         if (!props.message) return;
 
         const allImages = [
@@ -797,7 +1154,7 @@ class ImageUtilsEnhanced {
         const items = [
             ...this.getEmbedItems(props.message),
             ...this.getAttachmentItems(props.message),
-            // ...allImages
+
         ];
 
         if (items.length === 0) return;
@@ -845,7 +1202,7 @@ class ImageUtilsEnhanced {
                         const comparisonUrl = await this.compareImages(avatarUrl, bannerUrl);
                         this.openModal(comparisonUrl, 'png');
                     } catch (error) {
-                        BdApi.showToast("Failed to compare images", { type: "error" });
+                        UI.showToast("Failed to compare images", { type: "error" });
                     }
                 }
             });
@@ -889,7 +1246,7 @@ class ImageUtilsEnhanced {
                 }),
                 onClick: () => {
                     if (base.mayContainNSFW) {
-                        BdApi.showConfirmationModal(
+                        UI.showConfirmationModal(
                             "NSFW Content Warning",
                             `The search engine "${engine}" may return NSFW content. Do you want to continue?`,
                             {
@@ -914,7 +1271,7 @@ class ImageUtilsEnhanced {
 
         return [
             ...nonNsfwItems,
-            ...(this.check() ? [{ type: "separator" }, ...nsfwItems] : [])
+            ...(check() ? [{ type: "separator" }, ...nsfwItems] : [])
         ];
     }
 
@@ -1007,7 +1364,7 @@ class ImageUtilsEnhanced {
                         this.openModal(comparisonUrl, 'png');
                     } catch (error) {
                         console.log(error)
-                        BdApi.showToast("Failed to compare images", { type: "error" });
+                        UI.showToast("Failed to compare images", { type: "error" });
                     }
                 }
             });
@@ -1110,17 +1467,17 @@ class ImageUtilsEnhanced {
                                     const bottomText = document.getElementById('meme-bottom-text').value;
 
                                     if (!topText && !bottomText) {
-                                        BdApi.showToast("Please enter at least one line of text", { type: "error" });
+                                        UI.showToast("Please enter at least one line of text", { type: "error" });
                                         return;
                                     }
 
                                     try {
                                         const memeUrl = await this.addMemeText(url, topText, bottomText);
                                         this.openModal(memeUrl, 'png');
-                                        BdApi.showToast("Meme created successfully!", { type: "success" });
+                                        UI.showToast("Meme created successfully!", { type: "success" });
                                     } catch (error) {
                                         console.error("Failed to create meme:", error);
-                                        BdApi.showToast("Failed to create meme", { type: "error" });
+                                        UI.showToast("Failed to create meme", { type: "error" });
                                     }
                                 }
                             }
@@ -1150,9 +1507,9 @@ class ImageUtilsEnhanced {
                                             try {
                                                 const memeUrl = await this.addMemeText(url, top, bottom);
                                                 this.openModal(memeUrl, 'png');
-                                                BdApi.showToast("Meme created successfully!", { type: "success" });
+                                                UI.showToast("Meme created successfully!", { type: "success" });
                                             } catch (error) {
-                                                BdApi.showToast("Failed to create meme", { type: "error" });
+                                                UI.showToast("Failed to create meme", { type: "error" });
                                             }
                                         }
                                     }, template)
@@ -1248,18 +1605,50 @@ class ImageUtilsEnhanced {
         return url
     }
 
+    verifySource(props) {
+        return props.dataSafeSrc
+    }
+
+    returnMetadata(data) {
+        return { ...data }
+    }
+
     start() {
         this.messageContextPatch = ContextMenu.patch("message", this.handleMessageContext.bind(this));
         this.userContextPatch = ContextMenu.patch("user-context", this.handleUserContext.bind(this));
         this.guildContextPatch = ContextMenu.patch("guild-context", this.handleGuildContext.bind(this));
         this.imageContextPatch = ContextMenu.patch("image-context", this.handleImageContext.bind(this));
 
-        Patcher.after('BIU', MediaPatch, 'render', (a, b, res) => {
-            const url = a.props.src;
-            return [React.createElement(ImageMetadata, { key: 'media-patch', _src: this.isThirdParty(a, url), fileProps: a.props }), res]
-        })
+        Patcher.after(Media.prototype, "render", (_, __, ret) => {
+            return React.cloneElement(ret, {
+                children: (...args) => {
+                    const res = ret.props.children(...args);
 
-        DOM.addStyle(`BUI`, `.${MediaClasses.imageContainer} {display: block} .${VideoClasses.mosaicItem} {display: block}`)
+                    const owner = res?._owner;
+                    const data = Utils.findInTree(
+                        owner.return,
+                        x => x?.item,
+                        { walkable: ['return', 'sourceMetadata', 'memoizedProps'] }
+                    )?.item?.originalItem || owner.memoizedProps;
+
+                    return React.createElement(MediaWrapper, {
+                        children: res,
+                        data: data,
+                        returnMetadata: this.returnMetadata.bind(this),
+                        getButtonState: this.getButtonState.bind(this),
+                        downloadImage: this.downloadImage.bind(this)
+                    });
+                }
+            });
+        });
+    }
+
+    getButtonState(defaultTooltip, condition, errorTooltip) {
+        return {
+            disabled: !condition,
+            tooltip: condition ? defaultTooltip : errorTooltip,
+            tooltipColor: condition ? undefined : "red"
+        };
     }
 
     async openModal(url, type) {
@@ -1289,13 +1678,23 @@ class ImageUtilsEnhanced {
         })
     }
 
+    getSettingsPanel() {
+        return React.createElement(SettingsPanel, {
+            settings: this.settings,
+            onSettingsChange: (newSettings) => {
+                this.settings = newSettings;
+                this.saveSettings();
+            }
+        });
+    }
+
     stop() {
         this.messageContextPatch?.();
         this.userContextPatch?.();
         this.guildContextPatch?.();
         this.imageContextPatch?.()
-        Patcher.unpatchAll('BIU')
-        DOM.removeStyle('BIU')
+        Patcher.unpatchAll()
+        //DOM.removeStyle('BIU')
     }
 }
 
