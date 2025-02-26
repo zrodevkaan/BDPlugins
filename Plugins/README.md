@@ -1,60 +1,40 @@
-# BDPlugins
+# BetterDiscord Plugins
 
-I extend my gratitude to Davilarek for their invaluable contributions to these plugins.
+## Voice Hub
 
-## CakeDay
+Ever wondered who’s hanging out in voice channels while you're chatting? **Voice Hub** lets you see who’s in any voice channel at any time, making it super easy to jump into a conversation or connect with friends. No more guessing—stay in the loop with who’s around!
 
-Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes to remembering special dates.
+<div style="display: flex; justify-content: space-around;">
+    <img src="assets/voicehub.png" style="border-radius: 5px; width: 300px;" alt="Voice Hub Screenshot" />
+</div>
 
-## Get Mutuals
+---
 
-Allows you to see blocked/friends in a selected server.
-Currently prints users to your console, CTRL + Shift + I
-Plugin in early making. Trying to find a good way to implement a UI for it. Be patient please ;3 
+## ShowImagesAnyway
 
-## Oneko
+Frustrated by seeing links that don’t show images? **ShowImagesAnyway** has you covered! This plugin allows you to view links or media from users who don’t have permissions to embed them. Now, you can enjoy all the content being shared, no matter the permissions!
 
-A LITTLE KITTY FOLLOWS YOUR MOUSE.... AWHHHHHHHHHHHHHH
-A Vencord plugin port
+<div style="display: flex; justify-content: space-around;">
+    <img src="assets/showimagesanyway.png" style="border-radius: 5px; width: 300px;" alt="Show Images Anyway Screenshot" />
+</div>
 
-## BulkSave
+---
 
-Archiving made easy. BulkSave enables the download of numerous images and videos contained within a single message.
+## GuildProfile
 
-## Inspect Element
+Want to know more about the servers you’re in? **GuildProfile** gives you access to extra information about your guilds, copying emojis, and stickers to other servers!
 
-For users encountering issues, this plugin comes to the rescue. It forcefully opens inspect element, assisting in troubleshooting.
+<div style="display: flex; justify-content: space-around;">
+    <img src="assets/guildprofile.png" style="border-radius: 5px; width: 300px;" alt="Guild Profile Screenshot" />
+</div>
 
-## LastLogin
+---
 
-Witness the moment with LastLogin. This plugin lets you peer into the most recent instance someone was online. Our unique approach involves tracking Discord openings and caching the transition from online to offline, as Discord itself doesn't provide this data.
+## BetterImageUtils
 
-## MemberCountFix
+Take your image game to the next level with **BetterImageUtils**! This powerful plugin gives you control over images in Discord, including profile pictures, banners, and more. Enjoy features like meme text, external editing, recent images, reverse image search, and 40+ filtering options for images. Say goodbye to limitations and hello to creativity!
 
-A solution where complexity met its match. This plugin is a revitalized version of its predecessor, which was abandoned due to intricate issues. Credit goes to SyndiShanX for inspiring its recreation.
-
-## RecordAudio
-
-Unleash your voice with RecordAudio. This plugin empowers desktop users to send voice recordings effortlessly.
-
-## SafeClick (W.I.P)
-
-Safety meets curiosity. SafeClick allows you to cautiously explore links and preview their destinations. Please note, its functionality is a work in progress.
-
-## ScrollToLatest
-
-Navigate conversations seamlessly with ScrollToLatest. It whisks you to the freshest messages in a channel, saving you precious time.
-
-## Unshortener
-
-Long links made simple. Unshortener, powered by an external API ([Unshorten](https://unshorten.me)), expands any shortened URL and lays bare its full original form.
-
-## AboutMeFix
-
-About me's abled to be fully seen. AboutMeFix fixing all of discords weird text wrapping.
-
-## MassUnfollowThreads
-
-Swiftly and quickly leave posts from a click of a button!
-
-**NOTE: This is very likely considered "Self-botting", I am not held liable for your usage of this plugin. It has a 2 second timer on each leave.**
+<div style="display: flex; justify-content: space-around;">
+    <img src="assets/betterimageutils.png" style="border-radius: 5px; width: 350px;" alt="Better Image Utils Screenshot" />
+    <img src="assets/betterimageutils_1.png" style="border-radius: 5px; width: 350px;" alt="Better Image Utils Screenshot 2" />
+</div>
