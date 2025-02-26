@@ -1,7 +1,7 @@
 /**
  * @name ShowImagesAnyway
  * @author kaan
- * @version 1.0.4
+ * @version 1.0.5
  * @description Enhances Discord's image handling by showing hidden image links with safety controls
  */
 
@@ -649,7 +649,7 @@ module.exports = class ShowImagesAnyway {
 
         if (!isHiddenLink && (canEmbedLinks || hasFallbackPermissions)) return;
         
-        return Utils.regex.url.exec(text) || isHiddenLink;
+        return Utils.regex.url.exec(text);
     }
 
     stop() {
