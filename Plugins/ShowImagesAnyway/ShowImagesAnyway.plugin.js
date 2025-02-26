@@ -1,7 +1,7 @@
 /**
  * @name ShowImagesAnyway
  * @author kaan
- * @version 1.0.5
+ * @version 1.0.6
  * @description Enhances Discord's image handling by showing hidden image links with safety controls
  */
 
@@ -13,7 +13,11 @@ const openModal = Webpack.getModule(Webpack.Filters.byStrings("onCloseRequest:nu
 
 const PermissionsBits = Webpack.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
 const PermissionStore = Webpack.getModule(Filters.byKeys("getGuildPermissions"));
-const MessageStore = Webpack.Stores.MessageStore
+const MessageStore = Webpack.getStore('MessageStore')
+const UserStore = Webpack.getStore('UserStore')
+const GuildMemberStore = Webpack.getStore('GuildMemberStore')
+const GuildStore = Webpack.getStore('GuildStore')
+const ChannelStore = Webpack.getStore('ChannelStore')
 const SimpleMarkdownWrapper = Webpack.getModule(m => m.defaultRules && m.parse);
 const CarouselModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
 const SystemDesign = BdApi.Components
@@ -76,13 +80,13 @@ function hasPermission(userId, guildId, permissionName, includeEveryone = true) 
     }
 
     if (userId !== null) {
-        const member = Webpack.Stores.GuildMemberStore.getMember(guildId, userId);
+        const member = GuildMemberStore.getMember(guildId, userId);
 
         if (member) {
             let combinedPermissions = 0n;
 
             member.roles.forEach(roleId => {
-                const role = Webpack.Stores.GuildStore.getRole(guildId, roleId);
+                const role = GuildStore.getRole(guildId, roleId);
                 if (role) {
                     combinedPermissions |= role.permissions;
                 }
@@ -102,7 +106,7 @@ function hasPermission(userId, guildId, permissionName, includeEveryone = true) 
         return false;
     }
 
-    const everyoneRole = Webpack.Stores.GuildStore.getRole(guildId, guildId);
+    const everyoneRole = GuildStore.getRole(guildId, guildId);
 
     if (!everyoneRole) {
         return false;
@@ -631,8 +635,8 @@ module.exports = class ShowImagesAnyway {
     }
 
     match = (text, state) => {
-        const message = Webpack.Stores.MessageStore.getMessage(state.channelId, state.messageId);
-        const channel = Webpack.Stores.ChannelStore.getChannel(state.channelId);
+        const message = MessageStore.getMessage(state.channelId, state.messageId);
+        const channel = ChannelStore.getChannel(state.channelId);
         
         if (!channel || !channel.guild_id) return false;
         if (!message?.author?.id) return false;
@@ -641,7 +645,7 @@ module.exports = class ShowImagesAnyway {
 
         const canEmbedLinks = PermissionStore.can(
             PermissionsBits.EMBED_LINKS,
-            Webpack.Stores.UserStore.getUser(channel.guild_id, message.author.id),
+            UserStore.getUser(channel.guild_id, message.author.id),
             channel
         );
 
