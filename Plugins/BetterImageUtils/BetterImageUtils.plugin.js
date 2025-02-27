@@ -1672,6 +1672,7 @@ class ImageUtilsEnhanced {
         /* Doggy called this disgusting */
 
         Patcher.after(Media.prototype, "render", (_, __, ret) => {
+            if (!DataStore.settings.enableDebugData) return ret
             return React.cloneElement(ret, {
                 children: (...args) => {
                     const res = ret.props.children(...args);
