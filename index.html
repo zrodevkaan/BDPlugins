@@ -1,137 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>imafrogowo Plugins</title>
-    <meta content="ImAFrogOwO" property="og:title" />
-    <meta content="OwO ??? I like otters and that animal that goes *QUACK*, but hey welcome to my BetterDiscord plugins page" property="og:description" />
-    <meta content="https://images.alphacoders.com/656/656662.jpg" property="og:url" />
-    <meta content="#43B581" data-react-helmet="true" name="theme-color" />
-    <meta name="twitter:card" content="summary_large_image">
-    <html>
+    <title>Kaan's BetterDiscord Plugins</title>
+    <style>
+        :root {
+            --bd-blue: #3e82e5;
+            --bd-blue-light: #7289da;
+            --bd-purple: #5865f2;
+            --bd-background: #36393f;
+            --bd-background-dark: #2f3136;
+            --bd-text: #dcddde;
+            --bd-text-muted: #b9bbbe;
+        }
+
+        body {
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bd-background);
+            color: var(--bd-text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--bd-background-dark);
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid var(--bd-blue);
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .plugin-card {
+            background-color: var(--bd-background-dark);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--bd-blue-light);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .plugin-title {
+            color: white;
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        .plugin-description {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .plugin-images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 1.5rem;
+        }
+
+        .plugin-images img {
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .plugin-images img:hover {
+            transform: scale(1.02);
+        }
+
+        .single-image img {
+            max-width: 300px;
+        }
+
+        .multi-image img {
+            max-width: 350px;
+        }
+
+        .full-width-image img {
+            max-width: 90%;
+        }
+
+        strong {
+            color: var(--bd-blue-light);
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background-color: var(--bd-background-dark);
+            margin: 2rem 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: var(--bd-background-dark);
+            color: var(--bd-text-muted);
+            margin-top: 2rem;
+            border-top: 1px solid #222;
+        }
+
+        .bd-logo {
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .plugin-images {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .plugin-images img {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-    <header class="header">
-        <nav class="navbar">
-            <div class="logo">
-                <h1>imafrogowo Plugins</h1>
-            </div>
-        </nav>
-    </header>
+<header>
+    <div class="container">
+        <img src="https://betterdiscord.app/resources/branding/logo_large.svg" alt="Kaan's BetterDiscord Plugins" class="plugin-logo">
+        <h1>Plugins</h1>
+    </div>
+</header>
 
-    <main class="container">
-        <div class="grid">
-
-            <div class="plugin">
-                <h2>CakeDay 🎂</h2>
-                <p>Allowing us to set birthdays – because we're basically the human equivalent of goldfish when it comes
-                    to remembering special dates.</p>
-                <p class="credit">Credit: voidloops - Original Idea.</p>
-                <p class="credit">Credit: knewest - CSS Developer.</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>AmoledTheme</h2>
-                <p>Allows you to switch on Amoled Theme (Android Dark Dark Theme)</p>
-                <a href="https://github.com/ImAFrogOwO/AmoledTheme" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>InspectElement</h2>
-                <p>Allows you to do InspectElement selectively from the message context</p>
-                <a href="https://github.com/ImAFrogOwO/InspectElement" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>AboutMeFix</h2>
-                <p>About me's abled to be fully seen. AboutMeFix fixing all of discords weird text wrapping</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>BulkSave</h2>
-                <p>Archiving made easy. BulkSave enables the download of numerous images and videos contained within a
-                    single message.</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>LastOffline</h2>
-                <p>Witness the moment with LastLogin. This plugin lets you peer into the most recent instance someone
-                    was online. Our unique approach involves tracking Discord openings and caching the transition from
-                    online to offline, as Discord itself doesn't provide this data.</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>MassUnfollowThreads</h2>
-                <p>Swiftly and quickly leave posts from a click of a button!</p>
-                <p class="warning">WARNING: This plugin is VERY MUCH considered SELF-BOTTING. Please use at YOUR OWN
-                    RISK</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>MemberCountFix</h2>
-                <p>A solution where complexity met its match. This plugin is a revitalized version of its predecessor,
-                    which was abandoned due to intricate issues. Credit goes to SyndiShanX for inspiring its recreation.
-                </p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>MemoryHandler</h2>
-                <p>An okay solution to discord memory management.</p>
-                <p class="dep">DEPRECATED: Now considering discord is porting to x64 (64 Bit) applications, this plugin
-                    is now useless.</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>RecordVoice</h2>
-                <p>Unleash your voice with RecordAudio. This plugin empowers desktop users to send voice recordings
-                    effortlessly.</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>SafeClick (W.I.P)</h2>
-                <p>Safety meets curiosity. SafeClick allows you to cautiously explore links and preview their
-                    destinations. Please note, its functionality is a work in progress.</p>
-                <p class="warning">WARNING: No longer works effectively on as Discord implemented their own Safety
-                    system</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>ScrollToLast</h2>
-                <p>Navigate conversations seamlessly with ScrollToLatest. It whisks you to the freshest messages in a
-                    channel, saving you precious time.</p>
-                <p class="credit">Credit: square - Original Developer.</p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
-            <div class="plugin">
-                <h2>Unshortener</h2>
-                <p>Long links made simple. Unshortener, powered by an external API (Unshorten), expands any shortened
-                    URL and lays bare its full original form.</p>
-                <p class="warning">WARNING: This uses an external API which may result in down-time due to API spam.
-                    Uses an library that is not supported by BetterDiscord. Please don't ask for support in said server.
-                </p>
-                <a href="https://github.com/ImAFrogOwO/BDPlugins" class="btn">Download</a>
-            </div>
-
+<main class="container">
+    <div class="plugin-card">
+        <h2 class="plugin-title">Voice Hub</h2>
+        <p class="plugin-description">Ever wondered who's hanging out in voice channels while you're chatting? <strong>Voice Hub</strong> lets you see who's in any voice channel at any time, making it super easy to jump into a conversation or connect with friends. No more guessing—stay in the loop with who's around!</p>
+        <div class="plugin-images single-image">
+            <img src="/Plugins/assets/voicehub.png" alt="Voice Hub Screenshot" />
         </div>
-    </main>
+    </div>
 
-    <footer class="footer">
-        <p>&copy; 2023 ImAFrogOwO</p>
-    </footer>
+    <div class="plugin-card">
+        <h2 class="plugin-title">ShowImagesAnyway</h2>
+        <p class="plugin-description">Frustrated by seeing links that don't show images? <strong>ShowImagesAnyway</strong> has you covered! This plugin allows you to view links or media from users who don't have permissions to embed them. Now, you can enjoy all the content being shared, no matter the permissions!</p>
+        <div class="plugin-images single-image">
+            <img src="/Plugins/assets/showimagesanyway.png" alt="Show Images Anyway Screenshot" />
+        </div>
+    </div>
+
+    <div class="plugin-card">
+        <h2 class="plugin-title">GuildProfile</h2>
+        <p class="plugin-description">Want to know more about the servers you're in? <strong>GuildProfile</strong> gives you access to extra information about your guilds, copying emojis, and stickers to other servers!</p>
+        <div class="plugin-images single-image">
+            <img src="/Plugins/assets/guildprofile.png" alt="Guild Profile Screenshot" />
+        </div>
+    </div>
+
+    <div class="plugin-card">
+        <h2 class="plugin-title">BetterImageUtils</h2>
+        <p class="plugin-description">Take your image game to the next level with <strong>BetterImageUtils</strong>! This powerful plugin gives you control over images in Discord, including profile pictures, banners, and more. Enjoy features like meme text, external editing, recent images, reverse image search, and 40+ filtering options for images. Say goodbye to limitations and hello to creativity!</p>
+        <div class="plugin-images">
+            <div class="multi-image">
+                <img src="/Plugins/assets/betterimageutils.png" alt="Better Image Utils Screenshot" />
+            </div>
+            <div class="multi-image">
+                <img src="/Plugins/assets/betterimageutils_1.png" alt="Better Image Utils Screenshot" />
+            </div>
+            <div class="full-width-image">
+                <img src="/Plugins/assets/betterimageutils_2.png" alt="Better Image Utils Screenshot" />
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>Enhance your Discord experience with BetterDiscord plugins.</p>
+        <p>© 2025 Kaan - Not affiliated with your mom Inc.</p>
+    </div>
+</footer>
 </body>
-
 </html>
