@@ -1,7 +1,7 @@
 /**
  * @name BetterImageUtils
  * @description Image manipulation and tools
- * @version 2.0.2
+ * @version 2.0.3
  * @author Kaan
  */
 
@@ -13,22 +13,34 @@ const GuildStore = Webpack.getModule(m => m.getGuild);
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
 const openImageModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
 const Media = Webpack.getBySource(/let{alt:.{1,3},zoomThumbnailPlaceholder:/).ZP; // Webpack.getModule(a => a?.defaultProps?.readyState, { searchExports: true });
+const ImageAnimated = Webpack.getModule(x=>x.ZP.isSrcAVIF)
 const Clickable = Webpack.getBySource('BaseHeaderBar').ZP.Icon
 const clipboard = {
     SUPPORTS_NATIVE: (text) => window?.DiscordNative ? DiscordNative.clipboard.copy(text) : navigator.clipboard.writeText(text)
 }
 const check = () => UserStore.getCurrentUser().nsfwAllowed
 
+const ModalSystem = Webpack.getMangled(".modalKey?", {
+    openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
+    openModal: Webpack.Filters.byStrings(",instant:"),
+    closeModal: Webpack.Filters.byStrings(".onCloseCallback()"),
+    closeAllModals: Webpack.Filters.byStrings(".getState();for")
+})
+
 const [
     FormSwitch,
+    ModalRoot,
     CopyIcon,
     OpenExternal,
     Download,
+    Dropdown
 ] = Webpack.getBulk(
     { filter: x => x.toString?.().includes('disabledText') && x.toString?.().includes('tooltipNote'), searchExports: true },
+    { filter: Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true },
     { filter: x => x.toString?.().includes('"M3 16a1 1 0 0 1-1-1v-5a8 8 0 0 1 8-8h5a1 1 0 0 1 1 1v.5a.5.5 0 0 1-.5.5H'), searchExports: true },
     { filter: x => x.toString?.().includes('M15 2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V4'), searchExports: true },
     { filter: x => x.toString?.().includes('"M12 2a1 1 0 0 1 1 1v10.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4'), searchExports: true },
+    { filter: x => x.render.toString().includes('["options","value","onChange",'), searchExports: true }
 );
 
 const DataStore = new Proxy(
@@ -256,7 +268,6 @@ const MediaWrapper = (props) => {
 };
 
 const Components = {
-    Dropdown: Webpack.getModule(x => x.render.toString().includes('["options","value","onChange",'), { searchExports: true }),
     Slider: Webpack.getBySource('initialValueProp', 'getDerivedStateFromProps').i
 }
 
@@ -271,15 +282,6 @@ const baseConfig = {
             pred: check,
             value: false
         },
-        {
-            id: 'defaultSearchEngine',
-            component: Components.Dropdown,
-            type: 'select',
-            title: 'Default Search Engine',
-            note: 'Choose the default search engine for reverse image search',
-            options: [{ label: "Google", value: 'Google' }, { label: "Bing", value: 'Bing' }, { label: "Yandex", value: 'Yandex' }],
-            value: 'Google'
-        },
         /*{
             id: 'compressionQuality',
             component: Components.Slider,
@@ -293,29 +295,30 @@ const baseConfig = {
             step: 0.1
         },*/
         {
-            id: 'enableEffects',
-            component: FormSwitch,
-            type: 'switch',
-            children: 'Enable Effects',
-            note: 'Enable image effects and filters',
-            value: true
-        },
-        {
-            id: 'cacheEnabled',
-            component: FormSwitch,
-            type: 'switch',
-            children: 'Enable Caching',
-            note: 'Cache processed images for better performance',
-            value: true
-        },
-        {
             id: 'enableDebugData',
             component: FormSwitch,
             type: 'switch',
             children: 'Enable Debug Data',
             note: 'Show additional debug information',
             value: true
-        }
+        },
+        {
+            id: 'favoriteAnything',
+            component: FormSwitch,
+            type: 'switch',
+            children: 'Enable Favoriting Everything',
+            note: 'Adds the Favorite icon to every image/gif',
+            value: false
+        },
+        // {
+        //     id: 'defaultSearchEngine',
+        //     component: Dropdown,
+        //     type: 'select',
+        //     title: 'Default Search Engine',
+        //     note: 'Choose the default search engine for reverse image search',
+        //     options: [{ label: "Google", value: 'Google' }, { label: "Bing", value: 'Bing' }, { label: "Yandex", value: 'Yandex' }],
+        //     value: 'Google'
+        // }
     ]
 };
 
@@ -396,7 +399,7 @@ const ImageMetadata = React.memo(({ _src, fileProps }) => {
                 if (imageData[src]) {
                     setMetadata(imageData[src]);
                 }
-                const response = await fetch(_src);
+                const response = await Net.fetch(_src);
                 const blob = await response.blob();
                 const img = new Image();
                 const objectUrl = URL.createObjectURL(blob);
@@ -736,7 +739,7 @@ class ImageUtilsEnhanced {
                     return;
                 }
 
-                BdApi.showConfirmationModal(
+                UI.showConfirmationModal(
                     "Image Information",
                     React.createElement("div", null,
                         React.createElement("p", { style: { margin: '5px 0', fontSize: '14px', color: '#ffffff' } }, `Size: ${(metadata.size / 1024).toFixed(2)} KB`),
@@ -794,7 +797,7 @@ class ImageUtilsEnhanced {
                 id: `${baseId}-view`,
                 label: "Open Image",
                 onClick: async () => {
-                    this.openModal(urlToUse, returnType(url));
+                    this.openModal(urlToUse, type == "image" ? 'img' : "video");
                 }
             },
             {
@@ -881,25 +884,48 @@ class ImageUtilsEnhanced {
         this.saveSettings();
     }
 
-    /**/
-
     async downloadImage(url, filename) {
         try {
-            const response = await Net.fetch(url);
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = filename || `download.${type === 'video' ? 'mp4' : 'png'}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(blobUrl);
-
-            UI.showToast("Download started!", { type: "success" });
+            if (url.startsWith('data:')) {
+                const parts = url.split(',');
+                const matches = parts[0].match(/:(.*?);/);
+                const mimeType = matches ? matches[1] : 'image/png';
+                
+                const binary = atob(parts[1]);
+                const array = [];
+                for (let i = 0; i < binary.length; i++) {
+                    array.push(binary.charCodeAt(i));
+                }
+                const blob = new Blob([new Uint8Array(array)], {type: mimeType});
+                
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename || `download.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+                
+                UI.showToast("Download started!", { type: "success" });
+            } else {
+                const response = await Net.fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+    
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename || `download.${type === 'video' ? 'mp4' : 'png'}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+    
+                UI.showToast("Download started!", { type: "success" });
+            }
         } catch (error) {
-            console.log(error)
+            console.log(error);
             UI.showToast("Download failed!", { type: "error" });
         }
     }
@@ -1424,7 +1450,7 @@ class ImageUtilsEnhanced {
                     id: `${baseId}-meme-custom`,
                     label: "Add Custom Text",
                     onClick: () => {
-                        BdApi.showConfirmationModal(
+                        UI.showConfirmationModal(
                             "Add Meme Text",
                             React.createElement("div", null,
                                 React.createElement("div", { style: { marginBottom: '10px' } },
@@ -1489,7 +1515,7 @@ class ImageUtilsEnhanced {
                     id: `${baseId}-meme-templates`,
                     label: "Quick Templates",
                     onClick: () => {
-                        BdApi.showConfirmationModal(
+                        UI.showConfirmationModal(
                             "Quick Meme Templates",
                             React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
                                 ["TOP TEXT / BOTTOM TEXT", "WHEN YOU / BOTTOM TEXT", "ME WHEN THE / BOTTOM TEXT"].map(template =>
@@ -1576,8 +1602,7 @@ class ImageUtilsEnhanced {
             img.src = imageUrl;
         });
     }
-
-
+    
     handleImageContext(res, props) {
         res.props.children.push(ContextMenu.buildItem({
             type: "submenu",
@@ -1591,33 +1616,60 @@ class ImageUtilsEnhanced {
                     onClick: async () => {
                         ImageUtils.copyImage(props.src)
                     }
-                }
+                },
+                {
+                    type: 'button',
+                    id: this.generateMenuId('download-image'),
+                    label: 'Download Image',
+                    onClick: async () => {
+                        const src = props.src
+                        
+                        let fileName = src.split('/').pop();
+                        
+                        if (fileName.includes('?')) {
+                            fileName = fileName.split('?')[0];
+                        }
+                        
+                        if (!fileName || fileName.trim() === '') {
+                            fileName = (Math.random() * 92322323).toString().substring(0, 8) + '.png';
+                        }
+                        await this.downloadImage(src, fileName)
+                    }
+                },
+                {
+                    type: 'submenu',
+                    id: this.generateMenuId('reverse-search'),
+                    label: 'Search Engines',
+                    items: this.getSearchMenuItems(props.src, runTimeHash.runtimeHashMessageKey(props.src))
+                },
             ]
         }))
-    }
-
-    isThirdParty(props, url) {
-        /*if (url.includes('tenor')) {
-            const meta = Utils.findInTree(props,x=>x.message)
-            const data = Utils.findInTree(meta,x=>x.video)
-            return data.video.url;
-        }*/
-        return url
-    }
-
-    verifySource(props) {
-        return props.dataSafeSrc
     }
 
     returnMetadata(data) {
         return { ...data }
     }
 
+    gifRegex = Object.values(ImageAnimated).find(x=>x.toString().includes('gif'))
+
     start() {
         this.messageContextPatch = ContextMenu.patch("message", this.handleMessageContext.bind(this));
         this.userContextPatch = ContextMenu.patch("user-context", this.handleUserContext.bind(this));
         this.guildContextPatch = ContextMenu.patch("guild-context", this.handleGuildContext.bind(this));
         this.imageContextPatch = ContextMenu.patch("image-context", this.handleImageContext.bind(this));
+
+        /* This doesn't pass the check outside of image components. AKA (some) embeds.*/
+        /*this.gifRegex.test = function(a,b,c)
+        {
+            return DataStore.settings.favoriteAnything ? /\.(gif|png|jpe?g|webp)($|\?|#)/i.test(a) : /\.gif($|\?|#)/i.test(a)
+        }*/
+
+        Patcher.instead(ImageAnimated.ZP, "isAnimated", (_, [__], ret) => {
+            ImageAnimated.uo = DataStore.settings.favoriteAnything ? /\.(gif|png|jpe?g|webp)($|\?|#)/i : /\.gif($|\?|#)/i
+            if (!DataStore.settings.favoriteAnything) return ret(__)
+            return true;
+        });
+        /* Doggy called this disgusting */
 
         Patcher.after(Media.prototype, "render", (_, __, ret) => {
             return React.cloneElement(ret, {
