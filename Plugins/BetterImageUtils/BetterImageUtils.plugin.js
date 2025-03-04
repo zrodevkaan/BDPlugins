@@ -7,7 +7,6 @@
 const { React, Data, Utils, Webpack, Patcher, ContextMenu, ReactDOM, DOM, UI, Net } = new BdApi("BetterImageUtils");
 const { useState, useEffect, useRef, useCallback } = React;
 
-const { React, Data, Utils, React: { useState, useEffect }, Webpack, Webpack: { getByKeys, getStore, getBySource }, Patcher, ContextMenu, ReactDOM, DOM, UI, Net } = new BdApi("BetterImageUtils");
 const Modules = {
     UserStore: Webpack.getStore('UserStore'),
     GuildStore: Webpack.getStore('GuildStore'),
