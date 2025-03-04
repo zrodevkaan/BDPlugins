@@ -26,7 +26,6 @@ class Kaan {
 
     async fetchPluginVersion(pluginName) {
         const repoURL = `https://raw.githubusercontent.com/ImAFrogOwO/BDPlugins/main/Plugins/${pluginName}/${pluginName}.plugin.js`;
-        console.log(repoURL)
         return new Promise((resolve, reject) => {
             request.get(repoURL, (error, response, body) => {
                 if (error) {

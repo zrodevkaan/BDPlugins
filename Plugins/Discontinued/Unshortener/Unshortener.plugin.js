@@ -31,7 +31,6 @@ class Unshortener {
             const {
                 message
             } = props;
-            console.log(MessageReturnVal.props.children)
 
             const ButtonGroup = ContextMenu.buildItem({
                 type: 'button',
@@ -40,7 +39,6 @@ class Unshortener {
                     for (const child of MessageReturnVal.props.children) {
                         if (child && child.props && child.props.className) {
                             const className = child.props.className;
-                            console.log(className);
                         }
                     }
                     const links = this.getLinks(message.content);
