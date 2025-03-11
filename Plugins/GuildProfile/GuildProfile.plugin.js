@@ -1,7 +1,7 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 1.0.2
+ * @version 1.0.3
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
 
@@ -167,7 +167,7 @@ async function openMediaModal(url) {
 
 const DEFAULT_COLOR = [[0, 0, 0]];
 
-const OpenImageModal = Webpack.getByStrings('.shouldHideMediaOptions','hasMediaOptions:','numMediaItems:',{searchExports:true})
+const OpenImageModal = Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', { searchExports: true })
 const GuildMemberCountStore = Webpack.getStore("GuildMemberCountStore");
 const ChannelMemberStore = Webpack.getStore("ChannelMemberStore");
 const GuildMemberStore = Webpack.getStore("GuildMemberStore");
@@ -182,7 +182,7 @@ const StickersStore = Webpack.getStore('StickersStore')
 const Sounds = Webpack.getStore('SoundboardStore')
 const UserModal = Webpack.getByKeys('openUserProfileModal')
 const getDefaultAvatar = (id) => Number(BigInt(id) >> 22n) % 6
-
+const {copyImage} = Webpack.getModule(x=>x.copyImage)
 const Endpoints = Webpack.getModule(Filters.byKeys("GUILD_EMOJI", "GUILD_EMOJIS"), { searchExports: true });
 const PermissionsBits = Webpack.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
 const HTTP = Webpack.getModule(m => typeof m === "object" && m.del && m.put, { searchExports: true })
@@ -200,7 +200,7 @@ const MarvinIcons = {
             fill: "var(--interactive-normal)"
         })
     })),
-    SOUNDBOARD: Webpack.getByStrings('"M14.24 1.03a1 1 0 0 1 .73 1.21l-1 4a1 1 0 0 1-1.94-.48l1-4a1 1 0 0 1 1.21',{searchExports: true}),
+    SOUNDBOARD: Webpack.getByStrings('"M14.24 1.03a1 1 0 0 1 .73 1.21l-1 4a1 1 0 0 1-1.94-.48l1-4a1 1 0 0 1 1.21', { searchExports: true }),
     ANIMATED_BANNER: React.memo(props => /*#__PURE__*/React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg",
         viewBox: "0 0 24 24",
@@ -1502,7 +1502,7 @@ function GuildProfile({ guildId, transitionState }) {
             guild,
             features,
             icon: guild.getIconURL(200, true),
-            banner: guild.banner ? `https://cdn.discordapp.com/banners/${guildId}/${guild.banner}.${guild.banner.startsWith("a_") ? "gif" : "webp"}?size=480` : null
+            banner: guild.banner ? `https://cdn.discordapp.com/banners/${guildId}/${guild.banner}.${guild.banner.startsWith("a_") ? "gif" : "webp"}?size=1280` : null
         }
     });
 
@@ -1563,12 +1563,20 @@ function GuildProfile({ guildId, transitionState }) {
                     React.createElement(
                         "foreignObject",
                         { x: "0", y: "0", width: "100%", height: "100%", overflow: "visible", mask: `url(#${id}-${guildId})` },
-                        React.createElement("div", { style: bannerStyles, className: "bd-gp-banner" })
+                        React.createElement("div", { style: bannerStyles, className: "bd-gp-banner", onContextMenu: () => banner && ContextMenu.open(event, ContextMenu.buildMenu([
+                            { label: 'Copy Link', action: () => copy(banner) }, 
+                          ])) })
                     )
                 ),
                 React.createElement(
                     "div",
-                    { className: "bd-gp-icon" },
+                    {
+                        className: "bd-gp-icon", onContextMenu: (event) => {
+                            ContextMenu.open(event, ContextMenu.buildMenu([
+                                { label: 'Copy Link', action: () => copy(icon) }, 
+                              ]))
+                        }
+                    },
                     icon
                         ? React.createElement("img", { src: icon, height: 120, width: 120 })
                         : React.createElement("div", null, guild.acronym)
@@ -1582,14 +1590,14 @@ function GuildProfile({ guildId, transitionState }) {
                     { className: "bd-gp-info", style: { margin: '10px' } },
                     React.createElement('div', { style: { gap: '10px' } },
                         React.createElement("div", { className: "bd-gp-name" }, guild.name),
-                        React.createElement('div', { 
-                            style: { 
-                                display: features.length > 6 ? 'grid' : 'flex', 
-                                gap: '5px', 
+                        React.createElement('div', {
+                            style: {
+                                display: features.length > 6 ? 'grid' : 'flex',
+                                gap: '5px',
                                 gridTemplateColumns: features.length > 6 ? 'repeat(auto-fill, 14px)' : 'none',
                                 gridAutoRows: '14px',
-                                alignItems: 'center' 
-                            } 
+                                alignItems: 'center'
+                            }
                         },
                             Array.from(features).map(feature => {
                                 const Icon = MarvinIcons[feature] ?? MarvinIcons.UNKNOWN;
@@ -1603,7 +1611,7 @@ function GuildProfile({ guildId, transitionState }) {
                                 });
                             })
                         )
-                    ),                    
+                    ),
                     guild.description && React.createElement('span', { className: 'bd-gp-section', style: { color: 'white' } }, guild.description),
                     React.createElement(
                         "div",
