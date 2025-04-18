@@ -1,13 +1,13 @@
 /**
  * @name LastOnline
  * @author kaan
- * @description tracking of user online status and last seen times. This works of caching. Discord does NOT support this data.
- * @version 1.2.0
+ * @description tracking of user online status and last seen times with status change notifications. This plugin only works off cache, Discord does not give any feedback I require.
+ * @version 1.3.1
  */
 
 const { Patcher, Webpack, Utils, React, Data, UI, Components } = new BdApi('LastOnline');
 const DMUser = Webpack.getByStrings("isGDMFacepileEnabled", { defaultExport: false });
-const ActivityClasses = Webpack.getModule(x => x.activityText);
+const ActivityClasses = Webpack.getByKeys('activityStatusText','fullWidth')
 const ChannelStore = Webpack.getStore('ChannelStore');
 const SystemUI = Components
 
@@ -21,6 +21,8 @@ const DEFAULT_SETTINGS = {
     maxTrackAge: 30,
     showOnlyIfRecent: false,
     recentActivityThreshold: 7,
+    showStatusNotifications: false,
+    notificationDuration: 3000,
 };
 
 const config = {
@@ -96,6 +98,28 @@ const config = {
         },
         {
             type: 'category',
+            id: 'notifications',
+            name: 'Notifications',
+            collapsible: true,
+            settings: [
+                {
+                    type: 'switch',
+                    id: 'showStatusNotifications',
+                    name: 'Show Status Change Notifications',
+                    note: 'Show notifications when users go online or offline.',
+                    value: DEFAULT_SETTINGS.showStatusNotifications,
+                },
+                {
+                    type: 'number',
+                    id: 'notificationDuration',
+                    name: 'Notification Duration (ms)',
+                    note: 'Duration to show notifications (in milliseconds).',
+                    value: DEFAULT_SETTINGS.notificationDuration,
+                },
+            ],
+        },
+        {
+            type: 'category',
             id: 'advanced',
             name: 'Advanced Settings',
             collapsible: true,
@@ -138,19 +162,30 @@ class LastOnlineData {
         this.UserStore = Webpack.getStore('UserStore');
         this.PresenceStore = Webpack.getStore('PresenceStore');
         this.RelationshipStore = Webpack.getStore('RelationshipStore');
+
+        this.userStatuses = {};
     }
 
     startTracking() {
         this.presenceListener = (event) => {
-            const update = event.updates[0];
-            if (!update) return;
+            const updates = event.updates;
+            if (!updates || !updates.length) return;
 
-            const { user, status } = update;
-            if (!user || !user.id) return;
+            updates.forEach(update => {
+                const { user, status } = update;
+                if (!user || !user.id) return;
 
-            if (!this.shouldTrackUser(user.id)) return;
+                if (!this.shouldTrackUser(user.id)) return;
 
-            status === 'offline' && this.updateLastOnline(user.id);
+                const prevStatus = this.userStatuses[user.id] || 'unknown';
+                this.userStatuses[user.id] = status;
+
+                if (getSettingById('showStatusNotifications') && prevStatus !== 'unknown') {
+                    this.handleStatusChange(user.id, prevStatus, status);
+                }
+
+                status === 'offline' && this.updateLastOnline(user.id);
+            });
         };
 
         this.presenceModule.subscribe('PRESENCE_UPDATES', this.presenceListener);
@@ -165,6 +200,46 @@ class LastOnlineData {
         };
 
         this.presenceModule.subscribe('MESSAGE_CREATE', this.messageListener);
+
+        this.initializeUserStatuses();
+    }
+
+    initializeUserStatuses() {
+        const users = this.UserStore.getUsers();
+        for (const userId in users) {
+            if (this.shouldTrackUser(userId)) {
+                this.userStatuses[userId] = this.PresenceStore.getStatus(userId);
+            }
+        }
+    }
+
+    animStat = () => Webpack.getBySource('.UNKNOWN?n:null').qE
+
+    convertToDiscord = (id, avatar) => `https://cdn.discordapp.com/avatars/${id}/${avatar}.webp?size=56`
+
+    imageIcon = ({ url }) => {
+        return React.createElement('img', { style: { borderRadius: '50%',width: '24px', height: '24px' }, src: url })
+    }
+
+    handleStatusChange(userId, oldStatus, newStatus) {
+        const user = this.UserStore.getUser(userId);
+        if (!user) return;
+
+        if ((oldStatus === 'offline' && newStatus !== 'offline') ||
+            (oldStatus !== 'offline' && newStatus === 'offline')) {
+
+            const isOnline = newStatus !== 'offline';
+            const statusText = isOnline ? 'online' : 'offline';
+            const statusType = isOnline ? 'success' : 'info';
+
+            UI.showNotification({
+                id: `status-change-${Date.now()}`,
+                title: `${user.username} is now ${statusText}`,
+                icon: () => React.createElement(this.imageIcon, { url: this.convertToDiscord(user.id, user.avatar) }),
+                type: statusType,
+                duration: getSettingById("notificationDuration")
+            });
+        }
     }
 
     shouldTrackUser(userId) {
@@ -352,7 +427,7 @@ const LastSeenComponent = ({ userId }) => {
                 {
                     ...props,
                     style: { fontSize: getSettingById('fontSize'), color: getSettingById('textColor'), width: '22px' },
-                    className: `${ActivityClasses.activityText} smaller-last-seen`,
+                    className: `${ActivityClasses.activityStatusText} smaller-last-seen`,
                 },
                 isOnline ? 'Online' : construct
             )
@@ -390,7 +465,7 @@ class LastOnline {
                         const ChannelId = result.props.children.props.id;
                         const UserId = ChannelStore.getChannel(ChannelId).recipients[0]
 
-                        userObj.children.props.subText = React.createElement(LastSeenComponent, {userId: UserId});
+                        userObj.children.props.subText = React.createElement(LastSeenComponent, { userId: UserId });
                     }
 
                     return childResult;
