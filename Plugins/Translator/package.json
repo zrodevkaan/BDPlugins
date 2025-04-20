@@ -1,0 +1,14 @@
+{
+  "name": "translator",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "deeplx": "0.1.2",
+    "ws": "^8.18.1"
+  }
+}
