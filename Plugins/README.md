@@ -39,3 +39,12 @@ Take your image game to the next level with **BetterImageUtils**! This powerful 
     <img src="assets/betterimageutils_1.png" style="border-radius: 5px; width: 350px;" alt="Better Image Utils Screenshot 2" />
     <img src="assets/betterimageutils_2.png" style="border-radius: 5px; width: 850px;" alt="Better Image Utils Screenshot 3" />
 </div>
+
+
+## LastOnline
+
+Missed when your friend was online? Check this plugin out! Allowing you to see when a friend went offline to see if you can catch them before they are offline for hours!
+
+<div style="display: flex; justify-content: space-around;" align="center">
+    <img src="assets/lastonline.png" style="border-radius: 5px; width: 350px;" alt="LastOnline Screenshot" />
+</div>
