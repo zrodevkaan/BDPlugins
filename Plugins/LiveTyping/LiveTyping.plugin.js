@@ -1,14 +1,13 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description Typing status per user on servers, channels or threads.
  */
 
 const { Webpack, Patcher, React, Components, Data, UI, Utils, DOM } = new BdApi("LiveTyping");
 
 const {
-    getModule,
     getStore,
     getByStrings,
     getByPrototypeKeys,
@@ -16,6 +15,8 @@ const {
     getBulk,
     Filters
 } = Webpack;
+
+const FolderIconComponent = Webpack.getBySource('FolderIconContent')
 
 const getBulkStore = (() => {
     const storeCache = new Map();
@@ -175,26 +176,6 @@ const UserAvatarList = ({ users }) => {
     }, React.createElement(RenderAvatars, { guildId: SelectedGuild, max: 3, users: users_ }))
 };
 
-/*function TypingAvatar({ user }) {
-    return React.createElement('div', {
-        className: 'dm-typing-avatar',
-        style: {
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            marginLeft: '4px',
-            position: 'relative'
-        }
-    },
-        React.createElement(RenderAvatars, {guildId: SelectedGuild, size: 3, users: []}));
-}*/
-
-/* React.createElement(Avatar.Avatar, {
-            src: user?.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=24` : `https://cdn.discordapp.com/embed/avatars/${n(user)}.png`,
-            size: "SIZE_24",
-            status: null
-        }) */
-
 const isEmpty = o => !o || !Object.keys(o).length;
 
 const TypingIndicatorDMBar = React.memo(() => {
@@ -223,7 +204,6 @@ const TypingIndicatorDMBar = React.memo(() => {
     if (isEmpty(typingUsers)) return null;
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
-    const tooltipText = getTypingTooltip(typingUsers);
 
     return React.createElement(Popout, {
         renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
@@ -280,8 +260,6 @@ const TypingIndicator = React.memo(({ channelId }) => {
 });
 
 const GuildTypingIndicator = React.memo(({ guildId }) => {
-    const [showPopout, setShowPopout] = React.useState(false);
-
     const allTypingUsers = useStateFromStores([TypingStore], () => {
         const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
         const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
@@ -310,12 +288,64 @@ const GuildTypingIndicator = React.memo(({ guildId }) => {
     )
 });
 
+const FolderTypingIndicator = React.memo(({ folderNode }) => {
+    const guildIds = folderNode.children.map(x => x.id) || [];
+
+    const allTypingUsers = useStateFromStores([TypingStore], () => {
+        const typingUsers = {};
+    
+        for (let i = 0; i < guildIds.length; i++) {
+            const guildId = guildIds[i];
+            const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
+            const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
+    
+            for (let j = 0; j < allChannels.length; j++) {
+                const { channel } = allChannels[j];
+                if (!channel || !channel.id) continue;
+    
+                const channelTypingUsers = TypingStore.getTypingUsers(channel.id);
+                if (!isEmpty(channelTypingUsers)) {
+                    const userIds = Object.keys(channelTypingUsers);
+                    for (let k = 0; k < userIds.length; k++) {
+                        const userId = userIds[k];
+                        const user = UserStore.getUser(userId);
+                        if (user && userId !== UserStore.getCurrentUser().id) {
+                            typingUsers[userId] = user;
+                        }
+                    }
+                }
+            }
+        }
+    
+        return typingUsers;
+    }, [guildIds.join(',')]);
+
+    if (isEmpty(allTypingUsers)) return null;
+
+    const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE
+
+    return React.createElement('div', {
+        style: {
+            position: 'absolute',
+            zIndex: 2,
+            borderRadius: 'var(--radius-sm)',
+            backgroundColor: '',
+            padding: '16px', // so it centers on the folder div
+            cursor: 'pointer'
+        }
+    }, React.createElement(Spinner, {
+        type: Spinner.Type[indicatorType],
+        animated: true,
+        style: { width: "16px", height: "16px" }
+    }))
+});
 
 class LiveTyping {
     start() {
         this.patchChannelElement();
         this.patchGuildObject();
         this.patchDMTyping();
+        this.patchFolderElement();
         this.injectStyles();
     }
 
@@ -344,6 +374,15 @@ class LiveTyping {
                 100% { transform: scale(1); }
             }
         `);
+    }
+
+    patchFolderElement() {
+        Patcher.after(FolderIconComponent, "Z", (a, [b], res) => {
+            const iconLos = res.props.children.props;
+
+            iconLos.children.unshift(React.createElement(FolderTypingIndicator, { folderNode: b.folderNode }))
+        }
+        )
     }
 
     patchDMTyping() {
