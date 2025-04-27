@@ -110,8 +110,45 @@ const CONFIG = {
             value: DEFAULT_INDICATOR_LOCATION,
             options: INDICATOR_DIRECTIONS.map(dir => ({ label: dir, value: dir })),
             disabled: false,
+        },
+        {
+            id: "ignoreDMs",
+            name: "Ignore All DMs",
+            note: "Disable typing indicators in all direct messages",
+            type: "switch",
+            value: false,
+            disabled: false,
+        },
+        {
+            id: "ignoreServers",
+            name: "Ignore All Servers",
+            note: "Disable typing indicators in all servers",
+            type: "switch",
+            value: false,
+            disabled: false,
+        },
+        {
+            id: "ignoreChannels",
+            name: "Ignore All Channels",
+            note: "Disable typing indicators in all channels",
+            type: "switch",
+            value: false,
+            disabled: false,
+        },
+        {
+            id: "ignoreFolders",
+            name: "Ignore All Folders",
+            note: "Disable typing indicators in all folders",
+            type: "switch",
+            value: false,
+            disabled: false,
         }
     ]
+};
+
+const shouldIgnoreItem = (type) => {
+    const settings = DataStore.settings;
+    return settings[type] // lazy thjing
 };
 
 const DataStore = new Proxy({}, {
@@ -378,8 +415,9 @@ class LiveTyping {
 
     patchFolderElement() {
         Patcher.after(FolderIconComponent, "Z", (a, [b], res) => {
-            const iconLos = res.props.children.props;
+            if (shouldIgnoreItem('ignoreFolders')) return res;
 
+            const iconLos = res.props.children.props;
             iconLos.children.unshift(React.createElement(FolderTypingIndicator, { folderNode: b.folderNode }))
         }
         )
@@ -387,12 +425,16 @@ class LiveTyping {
 
     patchDMTyping() {
         Patcher.after(scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]], "render", (that, [props], res) => {
+            if (shouldIgnoreItem('ignoreDMs')) return res;
+
             res.props.children.props.children.unshift(React.createElement(TypingIndicatorDMBar))
         });
     }
 
     patchChannelElement() {
         Patcher.after(ChannelElement.Z, "render", (_, [props], ret) => {
+            if (shouldIgnoreItem('ignoreChannels')) return ret;
+r
             const channelId = ExtractItemID(props['data-list-item-id']);
             if (!channelId) return;
 
@@ -410,6 +452,8 @@ class LiveTyping {
 
     patchGuildObject() {
         Patcher.after(GuildObject, "L", (_, [props], ret) => {
+            if (shouldIgnoreItem('ignoreServers')) return ret;
+
             const guildId = ExtractItemID(props['data-list-item-id']);
             if (!guildId) return;
 
