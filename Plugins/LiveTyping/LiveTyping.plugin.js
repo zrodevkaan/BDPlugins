@@ -237,7 +237,9 @@ const isEmpty = o => !o || !Object.keys(o).length;
 const TypingIndicatorDMBar = React.memo(() => {
     const [showPopout, setShowPopout] = React.useState(false);
     const privateChannelIds = useStateFromStores([PrivateChannelSortStore], () => PrivateChannelSortStore.getPrivateChannelIds());
-    const currentUserId = UserStore.getCurrentUser().id;
+    const currentUserId = UserStore.getCurrentUser()?.id;
+
+    if (!currentUserId) return;
 
     const typingUsersByChannel = useStateFromStores([TypingStore], () => {
         const result = {};
@@ -478,7 +480,7 @@ class LiveTyping {
     patchGuildObject() {
         Patcher.after(GuildTooltip, "Z", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
-            
+
             const guild = props.guild
 
             const unpatch = Patcher.after(ret.props.text, 'type', (a, b, c) => {
