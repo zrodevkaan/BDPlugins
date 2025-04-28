@@ -434,7 +434,7 @@ class LiveTyping {
     patchChannelElement() {
         Patcher.after(ChannelElement.Z, "render", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreChannels')) return ret;
-r
+
             const channelId = ExtractItemID(props['data-list-item-id']);
             if (!channelId) return;
 
