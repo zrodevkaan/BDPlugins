@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.0.1
+ * @version 1.0.2
  * @description Typing status per user on servers, channels or threads.
  */
 
@@ -237,9 +237,7 @@ const isEmpty = o => !o || !Object.keys(o).length;
 const TypingIndicatorDMBar = React.memo(() => {
     const [showPopout, setShowPopout] = React.useState(false);
     const privateChannelIds = useStateFromStores([PrivateChannelSortStore], () => PrivateChannelSortStore.getPrivateChannelIds());
-    const currentUserId = UserStore.getCurrentUser()?.id;
-
-    if (!currentUserId) return;
+    const currentUserId = useStateFromStores([UserStore], x => UserStore.getCurrentUser().id)
 
     const typingUsersByChannel = useStateFromStores([TypingStore], () => {
         const result = {};
@@ -259,7 +257,7 @@ const TypingIndicatorDMBar = React.memo(() => {
         });
     });
 
-    if (isEmpty(typingUsers)) return null;
+    if (isEmpty(typingUsers) && currentUserId) return null;
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
@@ -465,10 +463,11 @@ class LiveTyping {
             const channelId = ExtractItemID(props['data-list-item-id']);
             if (!channelId) return;
 
-            const children = ret.props.children.props.children[0].props.children;
+            const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children; // BetterChanneList made me do this.......
             const component = React.createElement(TypingIndicator, { channelId });
 
             const location = DataStore.settings.indicatorLocation || DEFAULT_INDICATOR_LOCATION;
+
             if (location === "left") {
                 children.unshift(component);
             } else {
