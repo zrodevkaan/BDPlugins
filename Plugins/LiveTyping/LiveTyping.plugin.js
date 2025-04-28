@@ -81,6 +81,8 @@ const Spinner = Components.Spinner
 const scrollersModule = getBySource(".customTheme)", { raw: true });
 const RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers")
 
+const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip', 'guild'), { raw: true }).exports
+
 const GuildObject = getByStrings('.guildbar.AVATAR_SIZE', 'backgroundStyle', {
     searchExports: true,
     raw: true
@@ -196,21 +198,38 @@ function ExtractItemID(link) {
     return link?.substr(link.lastIndexOf('_') + 1);
 }
 
-const UserAvatarList = ({ users }) => {
+const KeyboardSVG = (props) =>
+    React.createElement(
+        "svg",
+        {
+            xmlns: "http://www.w3.org/2000/svg",
+            width: "24",
+            height: "24",
+            viewBox: "0 0 24 24",
+            fill: "var(--interactive-normal)",
+            ...props,
+        },
+        React.createElement("path", {
+            d: "M20 5a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3zM6 13a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V14a1 1 0 0 0-1-1m12 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V14a1 1 0 0 0-1-1m-7.998 0a1 1 0 0 0-.004 2l4 .01a1 1 0 0 0 .005-2zM6 9a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1m4 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1m4 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1m4 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1",
+        })
+    );
+
+const UserAvatarList = ({ users, guild }) => {
     const SelectedGuild = SelectedGuildStore.getGuildId();
     const users_ = Object.values(users).map(x => x.id).map(x => UserStore.getUser(x))
 
     return React.createElement('div', {
         className: 'live-typing-avatar-list',
         style: {
-            padding: '8px',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '6px',
+            gap: '4px',
+            marginTop: '8px',
             maxWidth: '200px',
-            justifyContent: 'center'
+            justifyContent: 'left',
+            backgroundColor: !guild ? 'var(--background-secondary)' : 'transparent'
         }
-    }, React.createElement(RenderAvatars, { guildId: SelectedGuild, max: 3, users: users_ }))
+    }, [guild && React.createElement(KeyboardSVG), React.createElement(RenderAvatars, { guildId: SelectedGuild, max: 6, users: users_ })])
 };
 
 const isEmpty = o => !o || !Object.keys(o).length;
@@ -305,24 +324,31 @@ const GuildTypingIndicator = React.memo(({ guildId }) => {
 
     if (isEmpty(allTypingUsers)) return null;
 
+    return React.createElement(UserAvatarList, { users: allTypingUsers, guild: true })
+});
+
+const GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
+    const allTypingUsers = useStateFromStores([TypingStore], () => {
+        const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
+        const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
+        return allChannels.reduce((acc, { channel }) => ({ ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) }), {});
+    }, [guildId]);
+
+    if (isEmpty(allTypingUsers)) return null;
+
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
-    return React.createElement(
-        Components.Tooltip,
-        { text: getTypingTooltip(allTypingUsers) },
-        (tooltipProps) => React.createElement(Spinner, {
-            ...tooltipProps,
-            style: {
-                position: 'absolute',
-                zIndex: 2,
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px',
-                cursor: 'pointer'
-            },
-            type: Spinner.Type[indicatorType],
-            animated: true
-        })
-    )
+    return React.createElement(Spinner, {
+        style: {
+            position: 'absolute',
+            zIndex: 2,
+            borderRadius: 'var(--radius-sm)',
+            padding: '2px',
+            cursor: 'pointer'
+        },
+        type: Spinner.Type[indicatorType],
+        animated: true
+    })
 });
 
 const FolderTypingIndicator = React.memo(({ folderNode }) => {
@@ -330,16 +356,16 @@ const FolderTypingIndicator = React.memo(({ folderNode }) => {
 
     const allTypingUsers = useStateFromStores([TypingStore], () => {
         const typingUsers = {};
-    
+
         for (let i = 0; i < guildIds.length; i++) {
             const guildId = guildIds[i];
             const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
             const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
-    
+
             for (let j = 0; j < allChannels.length; j++) {
                 const { channel } = allChannels[j];
                 if (!channel || !channel.id) continue;
-    
+
                 const channelTypingUsers = TypingStore.getTypingUsers(channel.id);
                 if (!isEmpty(channelTypingUsers)) {
                     const userIds = Object.keys(channelTypingUsers);
@@ -353,7 +379,7 @@ const FolderTypingIndicator = React.memo(({ folderNode }) => {
                 }
             }
         }
-    
+
         return typingUsers;
     }, [guildIds.join(',')]);
 
@@ -389,7 +415,6 @@ class LiveTyping {
     injectStyles() {
         DOM.addStyle("LiveTyping", `
             .live-typing-avatar-list {
-                background-color: var(--background-secondary);
                 border-radius: 5px;
             }
             .live-typing-user-item:hover {
@@ -451,6 +476,16 @@ class LiveTyping {
     }
 
     patchGuildObject() {
+        Patcher.after(GuildTooltip, "Z", (_, [props], ret) => {
+            if (shouldIgnoreItem('ignoreServers')) return ret;
+            
+            const guild = props.guild
+
+            const unpatch = Patcher.after(ret.props.text, 'type', (a, b, c) => {
+                unpatch();
+                c.props.children.push(React.createElement(GuildTypingIndicator, { guildId: guild.id }))
+            })
+        })
         Patcher.after(GuildObject, "L", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
 
@@ -461,7 +496,7 @@ class LiveTyping {
                 unpatch();
                 const guild = Utils.findInTree(renderRet, x => x?.['data-list-item-id'], { walkable: ['props', 'children'] });
                 if (guild && guild.children) {
-                    guild.children?.push?.(React.createElement(GuildTypingIndicator, { guildId }));
+                    guild.children?.push?.(React.createElement(GuildTypingIndicatorV2, { guildId }));
                 }
             });
         });
