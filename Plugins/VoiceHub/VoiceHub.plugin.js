@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.4
+ * @version 1.0.5
  * @description Wanna know what people are in VCs? Here ya go.
  */
 
@@ -350,35 +350,8 @@ const VoiceChannelList = () => {
         }))
     ]);
 };
-const VoiceHubButton = ({ onClick }) => {
-    return React.createElement('div', {
-        className: clsx(InteractiveModule.interactive, InteractiveAbove.interactive, InteractiveAbove.linkButton),
-        style: {
-            display: 'flex',
-            alignItems: 'center',
-            padding: '6px 6px',
-            borderRadius: '4px',
-            margin: '2px 0',
-            gap: '8px',
-            marginLeft: '10px',
-            marginRight: '40px',
-            cursor: 'pointer'
-        },
-        onClick
-    }, [
-        React.createElement(VoiceIcon, {
-            width: '22',
-            height: '22',
-            color: 'currentColor'
-        }),
-        React.createElement('span', {
-            style: {
-                fontSize: '16px',
-                fontWeight: '500'
-            }
-        }, 'Voice Hub')
-    ]);
-};
+
+const VoiceHubButton = Webpack.getBySource('PrivateChannelLinkButton').Qj
 
 class VoiceHub {
     start() {
@@ -392,6 +365,8 @@ class VoiceHub {
             if (isExisting) return;
             res.props.children.props.children.unshift(
                 React.createElement(VoiceHubButton, {
+                    icon: VoiceIcon,
+                    text: "Voice Hub",
                     key: 'voice-connect',
                     onClick: () => {
                         openModal(modalProps => {
