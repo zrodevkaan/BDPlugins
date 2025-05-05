@@ -1,11 +1,11 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.0.2
+ * @version 1.1.1
  * @description Typing status per user on servers, channels or threads.
  */
 
-const { Webpack, Patcher, React, Components, Data, UI, Utils, DOM } = new BdApi("LiveTyping");
+const { Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu } = new BdApi("LiveTyping");
 
 const {
     getStore,
@@ -64,16 +64,18 @@ const {
     TypingStore,
     PrivateChannelSortStore,
     GuildChannelStore,
-    SelectedGuildStore
+    SelectedGuildStore,
+    ChannelStore
 } = getBulkStore([
     'UserStore',
     'TypingStore',
     'PrivateChannelSortStore',
     'GuildChannelStore',
-    'SelectedGuildStore'
+    'SelectedGuildStore',
+    'ChannelStore'
 ]);
 
-/* when well Webpack.Stores be merged.... :( */
+/* when will Webpack.Stores be merged.... :( */
 
 const [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: x => x && String(x.Z?.render).includes('.charCode===') && String(x.Z?.render).includes("onKeyPress") }, { filter: Filters.byStrings("Unsupported animation config:"), searchExports: true }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true })
 
@@ -148,9 +150,49 @@ const CONFIG = {
     ]
 };
 
-const shouldIgnoreItem = (type) => {
+const getBlocklists = () => {
+    return {
+        ignoredChannels: DataStore.ignoredChannels || {},
+        ignoredServers: DataStore.ignoredServers || {},
+        ignoredDMs: DataStore.ignoredDMs || {}
+    };
+};
+
+const saveToBlocklist = (type, id, ignore = true) => {
+    const blocklists = getBlocklists();
+    if (ignore) {
+        blocklists[type][id] = true;
+    } else {
+        delete blocklists[type][id];
+    }
+    DataStore[type] = blocklists[type];
+    return blocklists[type];
+};
+
+const isBlocked = (type, id) => {
+    const blocklists = getBlocklists();
+    return !!blocklists[type][id];
+};
+
+const shouldIgnoreItem = (type, id = null) => {
     const settings = DataStore.settings;
-    return settings[type] // lazy thjing
+
+    if (settings[type]) return true;
+
+    if (id) {
+        switch (type) {
+            case 'ignoreChannels':
+                return isBlocked('ignoredChannels', id);
+            case 'ignoreServers':
+                return isBlocked('ignoredServers', id);
+            case 'ignoreDMs':
+                return isBlocked('ignoredDMs', id);
+            default:
+                return false;
+        }
+    }
+
+    return false;
 };
 
 const DataStore = new Proxy({}, {
@@ -162,7 +204,7 @@ const DataStore = new Proxy({}, {
                 return acc;
             }, {});
         }
-        return Data.load(key);
+        return Data.load(key) || (key.startsWith('ignored') ? {} : null);
     },
     set: (_, key, value) => {
         Data.save(key, value);
@@ -174,17 +216,15 @@ const DataStore = new Proxy({}, {
     },
 });
 
-const getTypingTooltip = (users) => {
-    const names = Object.values(users).map(u => u.username).filter(Boolean);
-    const [a, b, c] = names;
-    return !names.length ? '' :
-        names.length === 1 ? `${a} is typing!` :
-            names.length === 2 ? `${a} and ${b} are typing!` :
-                names.length === 3 ? `${a}, ${b}, and ${c} are typing!` :
-                    `${names.length} members are typing!`;
+const getTypingTooltip = u => {
+    const n = Object.values(u).map(u => u.username).filter(Boolean);
+    return !n.length ? '' :
+        n.length > 7 ? "Oh my? Quite the party, huh." :
+            n.length === 1 ? `${n[0]} is typing!` :
+                n.length === 2 ? `${n[0]} and ${n[1]} are typing!` :
+                    n.length === 3 ? `${n[0]}, ${n[1]}, and ${n[2]} are typing!` :
+                        `${n.length} members are typing!`;
 };
-
-const n = (user) => Number(user.discriminator) % 5;
 
 function getTypingUsers(users) {
     const currentUser = UserStore.getCurrentUser();
@@ -220,6 +260,7 @@ const UserAvatarList = ({ users, guild }) => {
 
     return React.createElement('div', {
         className: 'live-typing-avatar-list',
+        key: guild ? 'GuildTypingIndicator' : 'TypingIndicator',
         style: {
             display: 'flex',
             flexWrap: 'wrap',
@@ -229,7 +270,7 @@ const UserAvatarList = ({ users, guild }) => {
             justifyContent: 'left',
             backgroundColor: !guild ? 'var(--background-secondary)' : 'transparent'
         }
-    }, [guild && React.createElement(KeyboardSVG), React.createElement(RenderAvatars, { guildId: SelectedGuild, max: 6, users: users_ })])
+    }, [guild && React.createElement(KeyboardSVG,{key: 'balls'}), React.createElement(RenderAvatars, { key: 'balls_', guildId: SelectedGuild, max: 6, users: users_ })])
 };
 
 const isEmpty = o => !o || !Object.keys(o).length;
@@ -242,6 +283,8 @@ const TypingIndicatorDMBar = React.memo(() => {
     const typingUsersByChannel = useStateFromStores([TypingStore], () => {
         const result = {};
         for (const channelId of privateChannelIds) {
+            if (shouldIgnoreItem('ignoreDMs', channelId)) continue;
+
             const typingUsers = TypingStore.getTypingUsers(channelId);
             if (!isEmpty(typingUsers)) result[channelId] = typingUsers;
         }
@@ -283,6 +326,8 @@ const TypingIndicatorDMBar = React.memo(() => {
 });
 
 const TypingIndicator = React.memo(({ channelId }) => {
+    if (shouldIgnoreItem('ignoreChannels', channelId)) return null;
+
     const [showPopout, setShowPopout] = React.useState(false);
 
     const typingUsers = useStateFromStores([TypingStore], () => getTypingUsers(TypingStore.getTypingUsers(channelId)), [channelId]);
@@ -316,22 +361,32 @@ const TypingIndicator = React.memo(({ channelId }) => {
 });
 
 const GuildTypingIndicator = React.memo(({ guildId }) => {
+    if (shouldIgnoreItem('ignoreServers', guildId)) return null;
+
     const allTypingUsers = useStateFromStores([TypingStore], () => {
         const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
         const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
-        return allChannels.reduce((acc, { channel }) => ({ ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) }), {});
+        return allChannels.reduce((acc, { channel }) => {
+            if (shouldIgnoreItem('ignoreChannels', channel.id)) return acc;
+            return { ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) };
+        }, {});
     }, [guildId]);
 
     if (isEmpty(allTypingUsers)) return null;
 
-    return React.createElement(UserAvatarList, { users: allTypingUsers, guild: true })
+    return React.createElement(UserAvatarList, { key: "UserAvatarList_Main", users: allTypingUsers, guild: true })
 });
 
 const GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
+    if (shouldIgnoreItem('ignoreServers', guildId)) return null;
+
     const allTypingUsers = useStateFromStores([TypingStore], () => {
         const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
         const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
-        return allChannels.reduce((acc, { channel }) => ({ ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) }), {});
+        return allChannels.reduce((acc, { channel }) => {
+            if (shouldIgnoreItem('ignoreChannels', channel.id)) return acc;
+            return { ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) };
+        }, {});
     }, [guildId]);
 
     if (isEmpty(allTypingUsers)) return null;
@@ -359,12 +414,16 @@ const FolderTypingIndicator = React.memo(({ folderNode }) => {
 
         for (let i = 0; i < guildIds.length; i++) {
             const guildId = guildIds[i];
+            if (shouldIgnoreItem('ignoreServers', guildId)) continue;
+
             const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
             const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
 
             for (let j = 0; j < allChannels.length; j++) {
                 const { channel } = allChannels[j];
                 if (!channel || !channel.id) continue;
+
+                if (shouldIgnoreItem('ignoreChannels', channel.id)) continue;
 
                 const channelTypingUsers = TypingStore.getTypingUsers(channel.id);
                 if (!isEmpty(channelTypingUsers)) {
@@ -410,6 +469,7 @@ class LiveTyping {
         this.patchDMTyping();
         this.patchFolderElement();
         this.injectStyles();
+        this.patchContextMenus();
     }
 
     injectStyles() {
@@ -438,13 +498,84 @@ class LiveTyping {
         `);
     }
 
+    patchUserContextMenu(retVal, props) {
+        if (!retVal || !props) return;
+
+        const userId = props.user?.id;
+        if (!userId) return;
+
+        const dmChannel = Object.values(PrivateChannelSortStore.getPrivateChannelIds())
+            .find(channelId => {
+                const channel = ChannelStore.getChannel(channelId);
+                return channel && channel.recipients && channel.recipients.includes(userId);
+            });
+
+        if (dmChannel) {
+            const isIgnored = isBlocked('ignoredDMs', dmChannel);
+            const item = ContextMenu.buildItem({
+                type: "toggle",
+                label: `${isIgnored ? 'Show' : 'Hide'} Typing Indicator`,
+                checked: isIgnored,
+                action: () => {
+                    saveToBlocklist('ignoredDMs', dmChannel, !isIgnored);
+                }
+            });
+
+            retVal.props.children.push(item);
+        }
+    }
+
+    patchChannelContextMenu(retVal, props) {
+        if (!retVal || !props) return;
+
+        const channelId = props.channel?.id;
+        if (!channelId) return;
+
+        const isIgnored = isBlocked('ignoredChannels', channelId);
+        const item = ContextMenu.buildItem({
+            type: "toggle",
+            label: `${isIgnored ? 'Show' : 'Hide'} Typing Indicator`,
+            checked: isIgnored,
+            action: () => {
+                saveToBlocklist('ignoredChannels', channelId, !isIgnored);
+            }
+        });
+
+        retVal.props.children.push(item);
+    }
+
+    patchGuildContextMenu(retVal, props) {
+        if (!retVal || !props) return;
+
+        const guildId = props.guild?.id;
+        if (!guildId) return;
+
+        const isIgnored = isBlocked('ignoredServers', guildId);
+        const item = ContextMenu.buildItem({
+            type: "toggle",
+            label: `${isIgnored ? 'Show' : 'Hide'} Typing Indicator`,
+            checked: isIgnored,
+            action: () => {
+                saveToBlocklist('ignoredServers', guildId, !isIgnored);
+            }
+        });
+
+        retVal.props.children.push(item);
+    }
+
+    patchContextMenus() {
+        ContextMenu.patch('user-context', this.patchUserContextMenu);
+        ContextMenu.patch('channel-context', this.patchChannelContextMenu);
+        ContextMenu.patch('guild-context', this.patchGuildContextMenu);
+    }
+
     patchFolderElement() {
         Patcher.after(FolderIconComponent, "Z", (a, [b], res) => {
-            if (shouldIgnoreItem('ignoreFolders')) return res;
+                if (shouldIgnoreItem('ignoreFolders')) return res;
 
-            const iconLos = res.props.children.props;
-            iconLos.children.unshift(React.createElement(FolderTypingIndicator, { folderNode: b.folderNode }))
-        }
+                const iconLos = res.props.children.props;
+                iconLos.children.unshift(React.createElement(FolderTypingIndicator, { folderNode: b.folderNode }))
+            }
         )
     }
 
@@ -463,6 +594,8 @@ class LiveTyping {
             const channelId = ExtractItemID(props['data-list-item-id']);
             if (!channelId) return;
 
+            if (shouldIgnoreItem('ignoreChannels', channelId)) return ret;
+
             const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children; // BetterChanneList made me do this.......
             const component = React.createElement(TypingIndicator, { channelId });
 
@@ -480,18 +613,36 @@ class LiveTyping {
         Patcher.after(GuildTooltip, "Z", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
 
-            const guild = props.guild
+            const guild = props.guild;
+            if (shouldIgnoreItem('ignoreServers', guild.id)) return ret;
 
-            const unpatch = Patcher.after(ret.props.text, 'type', (a, b, c) => {
-                unpatch();
-                c.props.children.push(React.createElement(GuildTypingIndicator, { guildId: guild.id }))
-            })
-        })
+            const originalType = ret.props.text.type;
+
+            ret.props.text.type = function(...args) { // this stops the GuildTypingIndicator to stop randomly disappearing.
+                const result = originalType.apply(this, args);
+
+                if (result?.props?.children) {
+                    const children = Array.isArray(result.props.children) ? result.props.children : [result.props.children];
+
+                    if (!children.some(child => child?.type === GuildTypingIndicator)) {
+                        children.push(React.createElement(GuildTypingIndicator, { guildId: guild.id }));
+                        result.props.children = children;
+                    }
+                }
+
+                return result;
+            };
+
+            return ret;
+        });
+
         Patcher.after(GuildObject, "L", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
 
             const guildId = ExtractItemID(props['data-list-item-id']);
             if (!guildId) return;
+
+            if (shouldIgnoreItem('ignoreServers', guildId)) return ret;
 
             const unpatch = Patcher.after(ret.type.prototype, "render", (thisObj, _, renderRet) => {
                 unpatch();
@@ -506,6 +657,9 @@ class LiveTyping {
     stop() {
         Patcher.unpatchAll();
         DOM.removeStyle("LiveTyping");
+        ContextMenu.unpatch('user-context', this.patchUserContextMenu);
+        ContextMenu.unpatch('channel-context', this.patchChannelContextMenu);
+        ContextMenu.unpatch('guild-context', this.patchGuildContextMenu);
     }
 
     getSettingsPanel() {
