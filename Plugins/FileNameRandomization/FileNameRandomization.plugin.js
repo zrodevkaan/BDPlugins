@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.1.9
+ * @version 1.2.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 
@@ -39,18 +39,32 @@ const FoodIcon = ({size = 24, color = "var(--interactive-normal)", ...props}) =>
     }));
 };
 
-let fileNameRandomizationEnabled = false;
+const DataStore = new Proxy(
+    {},
+    {
+        get: (_, key) => {
+            return Data.load(key);
+        },
+        set: (_, key, value) => {
+            Data.save(key, value);
+            return true;
+        },
+        deleteProperty: (_, key) => {
+            Data.delete(key);
+            return true;
+        },
+    }
+);
 
 const IncognitoButton = () => {
-    const [enabled, setEnabled] = useState(true);
-
-    fileNameRandomizationEnabled = enabled;
-
+    const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
+    
     const color = enabled ? "var(--interactive-normal)" : 'var(--status-danger)'
 
     return React.createElement(ToolbarButton, {
         tooltip: enabled ? 'Randomization (Enabled)' : 'Randomization (Disabled)', color: enabled, onClick: () => {
             setEnabled(!enabled);
+            DataStore.shouldIncognito = !enabled
         }
     }, React.createElement(FoodIcon, {
         color
@@ -87,7 +101,7 @@ class FileNameRandomization {
     }
 
     handleFileUpload(_, args) {
-        if (!fileNameRandomizationEnabled) return;
+        if (!DataStore.shouldIncognito) return;
 
         for (const file of args[0].uploads) {
             file.filename = this.generateFilename(file.filename);
