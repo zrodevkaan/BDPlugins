@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.2.0
+ * @version 1.2.1
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 
@@ -20,7 +20,7 @@ const {
     FormItem: Webpack.Filters.byStrings('.fieldWrapper:void 0'),
     openModal: Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'onCloseCallback', 'instant', 'backdropStyle')
 })
-const {useState} = React;
+const {useState, useEffect} = React; // Added useEffect
 
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
 const FileUploads = Webpack.getByKeys("uploadFiles")
@@ -39,35 +39,29 @@ const FoodIcon = ({size = 24, color = "var(--interactive-normal)", ...props}) =>
     }));
 };
 
-const DataStore = new Proxy(
-    {},
-    {
-        get: (_, key) => {
-            return Data.load(key);
-        },
-        set: (_, key, value) => {
-            Data.save(key, value);
-            return true;
-        },
-        deleteProperty: (_, key) => {
-            Data.delete(key);
-            return true;
-        },
-    }
-);
+const IncognitoButton = ({ pluginInstance }) => {
+    const [isExempt, setIsExempt] = useState(pluginInstance.isNextUploadExempt);
 
-const IncognitoButton = () => {
-    const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
-    
-    const color = enabled ? "var(--interactive-normal)" : 'var(--status-danger)'
+    useEffect(() => {
+        const updater = () => setIsExempt(pluginInstance.isNextUploadExempt);
+        const unsubscribe = pluginInstance.registerUIUpdater(updater);
+        return unsubscribe; // Cleanup subscription
+    }, [pluginInstance]);
+
+    const handleClick = () => {
+        pluginInstance.toggleExemption();
+    };
+
+    const isRandomizationActive = !isExempt;
+    const iconColor = isRandomizationActive ? "var(--interactive-normal)" : 'var(--status-danger)';
+    const tooltipMessage = isRandomizationActive ? 'Randomization (Enabled)' : 'Randomization (Disabled for next upload)';
 
     return React.createElement(ToolbarButton, {
-        tooltip: enabled ? 'Randomization (Enabled)' : 'Randomization (Disabled)', color: enabled, onClick: () => {
-            setEnabled(!enabled);
-            DataStore.shouldIncognito = !enabled
-        }
+        tooltip: tooltipMessage,
+        active: isRandomizationActive, // Or some other prop ToolbarButton uses
+        onClick: handleClick
     }, React.createElement(FoodIcon, {
-        color
+        color: iconColor
     }));
 };
 
@@ -83,6 +77,31 @@ class FileNameRandomization {
             preserveOriginalName: false,
             caseOption: 'mixed',
         };
+        this.isNextUploadExempt = false; // True if the next upload should skip randomization
+        this.uiUpdateCallbacks = new Set(); // To store UI update callbacks
+    }
+
+    // Method to allow UI components to subscribe to state changes
+    registerUIUpdater(callback) {
+        this.uiUpdateCallbacks.add(callback);
+        return () => this.uiUpdateCallbacks.delete(callback); // Return an unsubscribe function
+    }
+
+    // Method to notify subscribed UI components of a state change
+    notifyUIUpdate() {
+        for (const cb of this.uiUpdateCallbacks) {
+            try {
+                cb();
+            } catch (error) {
+                console.error("FileNameRandomization: Error in UI update callback:", error);
+            }
+        }
+    }
+
+    // Method to toggle the exemption state
+    toggleExemption() {
+        this.isNextUploadExempt = !this.isNextUploadExempt;
+        this.notifyUIUpdate(); // Notify button to re-render
     }
 
     start() {
@@ -90,7 +109,8 @@ class FileNameRandomization {
 
         Patcher.after(Toolbar, 'Z', (_, __, returnValue) => {
             if (returnValue?.props?.actions?.props?.children) {
-                const incognitoButtonElement = React.createElement(IncognitoButton);
+                // Pass the plugin instance to the button
+                const incognitoButtonElement = React.createElement(IncognitoButton, { pluginInstance: this });
                 returnValue.props.actions.props.children.unshift(incognitoButtonElement);
             }
         });
@@ -98,11 +118,18 @@ class FileNameRandomization {
 
     stop() {
         Patcher.unpatchAll();
+        this.uiUpdateCallbacks.clear(); // Clear callbacks on stop
     }
 
     handleFileUpload(_, args) {
-        if (!DataStore.shouldIncognito) return;
+        // Check if the current upload should be exempt
+        if (this.isNextUploadExempt) {
+            this.isNextUploadExempt = false; // Reset the flag for subsequent uploads
+            this.notifyUIUpdate(); // Update the button to show "Enabled" state again
+            return; // Skip randomization for this upload
+        }
 
+        // Proceed with randomization if not exempt
         for (const file of args[0].uploads) {
             file.filename = this.generateFilename(file.filename);
         }
@@ -192,8 +219,14 @@ class FileNameRandomization {
             };
 
             const onLengthChange = (value) => {
-                setRandomLength(value);
-                this.setSetting('randomLength', value);
+                const val = parseInt(value, 10);
+                if (!isNaN(val) && val > 0) {
+                    setRandomLength(val);
+                    this.setSetting('randomLength', val);
+                } else if (value === '') { // Allow clearing the input
+                     setRandomLength('');
+                     // Optionally decide if an empty string should save as default or a specific value
+                }
             };
 
             const onCaseOptionChange = (value) => {
