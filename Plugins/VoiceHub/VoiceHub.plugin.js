@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.5
+ * @version 1.0.6
  * @description Wanna know what people are in VCs? Here ya go.
  */
 
@@ -360,10 +360,10 @@ class VoiceHub {
             display: none;
         }`)
         Patcher.after(Module, 'Z', (_, __, res) => {
-            const isExisting = res.props.children.props.children.find(x => x?.key === "voice-connect") // prevent button duplication?
+            const isExisting = res.props.children.props.children.props.children.find(x => x?.key === "voice-connect") // prevent button duplication?
             // idk how that works.
             if (isExisting) return;
-            res.props.children.props.children.unshift(
+            res.props.children.props.children.props.children.unshift(
                 React.createElement(VoiceHubButton, {
                     icon: VoiceIcon,
                     text: "Voice Hub",
