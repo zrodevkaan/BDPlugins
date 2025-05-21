@@ -984,7 +984,7 @@ const GuildSelector = ({ data, onClose, props }) => {
             )
             .filter(guild =>
                 isSticker ||
-                (guild.getMaxEmojiSlots() > (EmojiStore.getGuilds()[guild.id]?.emojis || [])
+                (guild._emojiMap > (EmojiStore.getGuilds()[guild.id]?.emojis || [])
                     .filter(emoji => emoji.animated === isAnimated && !emoji.managed).length)
             )
             .sort((a, b) => a.name.localeCompare(b.name));
