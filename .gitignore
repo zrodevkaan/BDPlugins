@@ -1,1 +1,4 @@
 Plugins/Translator/bun.lock
+/node_modules
+/Plugins/Translator/node_modules
+.idea
