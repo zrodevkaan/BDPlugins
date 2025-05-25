@@ -1,7 +1,7 @@
 /**
  * @name BetterImageUtils
  * @description Image manipulation and tools
- * @version 2.0.4
+ * @version 2.0.5
  * @author Kaan
  */
 const { React, Data, Utils, Webpack, Patcher, ContextMenu, ReactDOM, DOM, UI, Net } = new BdApi("BetterImageUtils");
@@ -9,13 +9,14 @@ const { useState, useEffect, useRef, useCallback } = React;
 
 const Modules = {
     UserStore: Webpack.getStore('UserStore'),
+    GuildMemberStore: Webpack.getStore('GuildMemberStore'),
     GuildStore: Webpack.getStore('GuildStore'),
 
     ImageUtils: Webpack.getModule(m => m.copyImage),
-    Media: Webpack.getBySource(/let{alt:.{1,3},zoomThumbnailPlaceholder:/).ZP,
+    Media: Webpack.getByPrototypeKeys("renderAttachments", { searchExports: true }).prototype,
     ImageAnimated: Webpack.getModule(x => x.ZP.isSrcAVIF),
 
-    ModalClass: Webpack.getModule(m => m.modal && Object.keys(m).length === 1),
+    ModalClass: Webpack.getModule(m => m.modal && Object.keys(m).length === 3),
     openImageModal: Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true }),
 
     Clickable: Webpack.getBySource('BaseHeaderBar').ZP.Icon
@@ -378,6 +379,7 @@ const ImageZoom = ({
         })
     });
 };
+
 const MediaWrapper = (props) => {
     const { children, data, returnMetadata, getButtonState, downloadImage } = props;
 
@@ -676,15 +678,7 @@ const baseConfig = {
             children: 'Smooth Transitions',
             note: 'Enable smooth transitions when zooming/panning',
             value: true
-        },
-        {
-            id: 'showControls',
-            component: FormSwitch,
-            type: 'switch',
-            children: 'Show Controls',
-            note: 'Show zoom level and help text when viewing images',
-            value: true
-        },
+        }
     ]
 };
 
@@ -1658,7 +1652,7 @@ class ImageUtilsEnhanced {
         ];
 
         if (menuItems.length > 0) {
-            res.props.children.push(
+            res.props.children.props.children.push(
                 ContextMenu.buildItem({ type: "separator" }),
                 ...menuItems,
             );
@@ -1667,12 +1661,12 @@ class ImageUtilsEnhanced {
 
 
     handleUserContext(res, props) {
-        const user = props.user || Modules.UserStore.getUser(props.user.id);
+        const user = Modules.GuildMemberStore.getMember(props.channel.guild_id, props.user.id) ?? Modules.UserStore.getUser(props.user.id);
+        const guild = Modules.GuildStore.getGuild(props.channel.guild_id)
         if (!user) return;
 
-        const items = this.getUserAvatarItems(user);
+        const items = this.getUserAvatarItems(user, guild);
         if (items.length === 0) return;
-
 
         if (user.avatar && user.banner) {
             items.push({
@@ -1680,8 +1674,8 @@ class ImageUtilsEnhanced {
                 id: this.generateMenuId('compare-avatar-banner'),
                 label: "Compare Avatar & Banner",
                 onClick: async () => {
-                    const avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=4096`;
-                    const bannerUrl = `https://cdn.discordapp.com/banners/${user.id}/${user.banner}.png?size=4096`;
+                    const avatarUrl = `https://cdn.discordapp.com/avatars/${props.user.id}/${user.avatar}.png?size=4096`;
+                    const bannerUrl = `https://cdn.discordapp.com/banners/${props.user.id}/${user.banner}.png?size=4096`;
 
                     try {
                         const comparisonUrl = await this.compareImages(avatarUrl, bannerUrl);
@@ -1764,10 +1758,10 @@ class ImageUtilsEnhanced {
         return `iue-${base}`;
     }
 
-    getUserAvatarItems(user) {
-        if (!user) return [];
+    getUserAvatarItems(user_) {
+        const user = {...user_, id: user_.joinedAt ? user_.userId : user_.id}
+        if (!user) return {};
         const items = [];
-
 
         if (user.avatar) {
             const avatarURL = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=4096`;
@@ -1788,8 +1782,8 @@ class ImageUtilsEnhanced {
             }
         }
 
-        if (user.guildMemberAvatar) {
-            const guildAvatarURL = `https://cdn.discordapp.com/guilds/${user.guildId}/users/${user.id}/avatars/${user.guildMemberAvatar}.png?size=4096`;
+        if (user.joinedAt && user.avatar) {
+            const guildAvatarURL = `https://cdn.discordapp.com/guilds/${user.guildId}/users/${user.id}/avatars/${user.avatar}.png?size=4096`;
             items.push(this.createMediaMenuItem(
                 this.generateMenuId('user-guild-avatar'),
                 "Server Profile Picture",
@@ -2190,9 +2184,16 @@ class ImageUtilsEnhanced {
         });
         /* Doggy called this disgusting */
 
-        Patcher.after(Modules.Media.prototype, "render", (_, __, ret) => {
+        Patcher.after(Modules.Media, "renderAttachments", (_, __, ret) => {
             if (!DataStore.settings.enableDebugData) return ret
-            return React.cloneElement(ret, {
+
+            // console.log(_,__,ret)
+            if (!ret) return ret;
+
+            // ret.props.items
+
+            return ret
+            /*return React.cloneElement(ret, {
                 children: (...args) => {
                     const res = ret.props.children(...args);
 
@@ -2211,7 +2212,7 @@ class ImageUtilsEnhanced {
                         downloadImage: this.downloadImage.bind(this)
                     });
                 }
-            });
+            });*/
         });
     }
 
@@ -2253,7 +2254,7 @@ class ImageUtilsEnhanced {
             ModalSystem.openModal(props => {
                 return React.createElement(ModalRoot, {
                     ...props,
-                    className: Modules.ModalClass.modal,
+                    className: "",
                     size: 'dynamic'
                 },
                     React.createElement('div', {
