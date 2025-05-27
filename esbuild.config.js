@@ -42,7 +42,7 @@ for (const dirent of pluginFolders) {
     if (!dirent.isDirectory()) continue;
 
     const pluginName = dirent.name;
-    if (pluginName.endsWith('.ignore')) continue;
+    if (pluginName.endsWith('.ignore')) continue; // VX EasterEgg
 
     const entryFile = path.join(srcDir, pluginName, "index.tsx");
 
