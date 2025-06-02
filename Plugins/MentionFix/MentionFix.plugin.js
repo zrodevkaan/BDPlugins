@@ -1,55 +1,54 @@
 /**
  * @name MentionFix
- * @version 1.0.1
+ * @version 1.1.0
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
-
-const {Webpack, Patcher, Data} = new BdApi('MentionFix')
-
+const {Webpack, Patcher} = new BdApi('MentionFix')
 const [Module, Key] = Webpack.getWithKey(Webpack.Filters.byStrings('viewingChannelId', 'parsedUserId'))
 const UserStore = Webpack.getStore('UserStore')
-
 const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve")})
 
 class MentionFix {
     constructor() {
-        this.unfoundUsers = Data.load('unfoundUsers') || {};
-
-        this.handleUserFetch = this.handleUserFetch.bind(this);
+        this.fetchedUsers = new Set()
     }
 
     start() {
         Patcher.after(Module, Key, (that, [args], res) => {
-            const userId = args.parsedUserId;
-            const doesUserExist = UserStore.getUser(userId);
+            const userId = args.parsedUserId
+            const doesUserExist = UserStore.getUser(userId)
 
-            if (doesUserExist === undefined && !this.unfoundUsers[userId]) {
-                this.handleUserFetch(userId);
+            if (doesUserExist === undefined) {
+                for (var child of res.props.children) {
+                    if (child && child.props) {
+                        const originalOnMouseEnter = child.props.onMouseEnter
+
+                        Object.defineProperty(child.props, 'onMouseEnter', {
+                            value: (e) => {
+                                if (originalOnMouseEnter) {
+                                    originalOnMouseEnter(e)
+                                }
+
+                                if (!this.fetchedUsers.has(userId)) {
+                                    this.fetchedUsers.add(userId)
+                                    FetchModule.fetchUser(userId).catch(error => {
+                                        this.fetchedUsers.delete(userId)
+                                    })
+                                }
+                            },
+                            writable: true,
+                            configurable: true
+                        })
+                    }
+                }
             }
-        });
-
-        Patcher.after(FetchModule, 'fetchUser', (that, [userId], promise) => {
-            promise.catch(error => {
-                this.unfoundUsers[userId] = true;
-                Data.save('unfoundUsers', this.unfoundUsers);
-            });
-
-            return promise;
-        });
-    }
-
-    handleUserFetch(userId) {
-        FetchModule.fetchUser(userId).then(user => {
-            if (!user) {
-                this.unfoundUsers[userId] = true;
-                Data.save('unfoundUsers', this.unfoundUsers);
-            }
-        });
+        })
     }
 
     stop() {
-        Patcher.unpatchAll();
+        Patcher.unpatchAll()
+        this.fetchedUsers.clear()
     }
 }
 
