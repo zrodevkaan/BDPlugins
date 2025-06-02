@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.1.1
+ * @version 1.1.2
  * @description Typing status per user on servers, channels or threads.
  */
 
@@ -270,13 +270,14 @@ const UserAvatarList = ({ users, guild }) => {
             justifyContent: 'left',
             backgroundColor: !guild ? 'var(--background-secondary)' : 'transparent'
         }
-    }, [guild && React.createElement(KeyboardSVG,{key: 'balls'}), React.createElement(RenderAvatars, { key: 'balls_', guildId: SelectedGuild, max: 6, users: users_ })])
+    }, [guild && React.createElement(KeyboardSVG, { key: 'balls' }), React.createElement(RenderAvatars, { key: 'balls_', guildId: SelectedGuild, max: 6, users: users_ })])
 };
 
 const isEmpty = o => !o || !Object.keys(o).length;
 
 const TypingIndicatorDMBar = React.memo(() => {
     const [showPopout, setShowPopout] = React.useState(false);
+    const ref = React.useRef(null)
     const privateChannelIds = useStateFromStores([PrivateChannelSortStore], () => PrivateChannelSortStore.getPrivateChannelIds());
     const currentUserId = useStateFromStores([UserStore], x => UserStore.getCurrentUser().id)
 
@@ -304,28 +305,34 @@ const TypingIndicatorDMBar = React.memo(() => {
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
-    return React.createElement(Popout, {
-        renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
-        position: "left",
-        shouldShow: showPopout,
-        className: 'moreCorners',
-        onRequestClose: () => setShowPopout(false),
-        children: (props) => React.createElement('div', {
-            className: "typing-indicator-dm-container",
-            onMouseEnter: () => setShowPopout(true),
-            onMouseLeave: () => setShowPopout(false),
-            onClick: () => setShowPopout(x => !x),
-            style: { cursor: 'pointer' }
-        }, React.createElement(Spinner, {
-            ...props,
-            type: Spinner.Type[indicatorType],
-            animated: true,
-            style: { gap: 'var(--space-xs)', padding: 'var(--space-0)' }
-        }))
-    });
+    return React.createElement('div', {ref},
+        React.createElement(Popout, {
+            renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
+            position: "left",
+            shouldShow: showPopout,
+            className: 'moreCorners',
+            targetElementRef: ref,
+            onRequestClose: () => setShowPopout(false),
+            children: (props) => React.createElement('div', {
+                className: "typing-indicator-dm-container",
+                onMouseEnter: () => setShowPopout(true),
+                onMouseLeave: () => setShowPopout(false),
+                onClick: () => setShowPopout(x => !x),
+                ref,
+                style: { cursor: 'pointer' }
+            }, React.createElement(Spinner, {
+                ...props,
+                type: Spinner.Type[indicatorType],
+                animated: true,
+                style: { gap: 'var(--space-xs)', padding: 'var(--space-0)' }
+            }))
+        })
+    )
 });
 
 const TypingIndicator = React.memo(({ channelId }) => {
+    const ref = React.useRef(null);
+
     if (shouldIgnoreItem('ignoreChannels', channelId)) return null;
 
     const [showPopout, setShowPopout] = React.useState(false);
@@ -335,29 +342,33 @@ const TypingIndicator = React.memo(({ channelId }) => {
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
-    return React.createElement(Popout, {
-        renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
-        position: "right",
-        shouldShow: showPopout,
-        className: 'moreCorners',
-        onRequestClose: () => setShowPopout(false),
-        children: (props) => React.createElement('div', {
-            onMouseEnter: () => setShowPopout(true),
-            onMouseLeave: () => setShowPopout(false),
-            onClick: () => setShowPopout(x => !x),
-            style: { cursor: 'pointer' }
-        }, React.createElement(
-            Components.Tooltip,
-            { text: getTypingTooltip(typingUsers) },
-            (tooltipProps) => React.createElement(Spinner, {
-                ...tooltipProps,
-                ...props,
-                type: Spinner.Type[indicatorType],
-                animated: true,
-                style: { width: "16px", height: "16px" }
-            })
-        ))
-    });
+    return React.createElement('div', {ref},
+        React.createElement(Popout, {
+            renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
+            position: "right",
+            shouldShow: showPopout,
+            className: 'moreCorners',
+            targetElementRef: ref,
+            onRequestClose: () => setShowPopout(false),
+            children: (props) => React.createElement('div', {
+                onMouseEnter: () => setShowPopout(true),
+                onMouseLeave: () => setShowPopout(false),
+                onClick: () => setShowPopout(x => !x),
+                style: { cursor: 'pointer' },
+                ref
+            }, React.createElement(
+                Components.Tooltip,
+                { text: getTypingTooltip(typingUsers) },
+                (tooltipProps) => React.createElement(Spinner, {
+                    ...tooltipProps,
+                    ...props,
+                    type: Spinner.Type[indicatorType],
+                    animated: true,
+                    style: { width: "16px", height: "16px" }
+                })
+            ))
+        })
+    )
 });
 
 const GuildTypingIndicator = React.memo(({ guildId }) => {
@@ -567,6 +578,7 @@ class LiveTyping {
         ContextMenu.patch('user-context', this.patchUserContextMenu);
         ContextMenu.patch('channel-context', this.patchChannelContextMenu);
         ContextMenu.patch('guild-context', this.patchGuildContextMenu);
+        ContextMenu.patch('gdm-context', this.patchChannelContextMenu);
     }
 
     patchFolderElement() {
@@ -574,7 +586,7 @@ class LiveTyping {
                 if (shouldIgnoreItem('ignoreFolders')) return res;
 
                 const iconLos = res.props.children.props;
-                iconLos.children.unshift(React.createElement(FolderTypingIndicator, { folderNode: b.folderNode }))
+                iconLos.children.unshift(React.createElement('div',{},React.createElement(FolderTypingIndicator, { folderNode: b.folderNode })))
             }
         )
     }
@@ -583,7 +595,7 @@ class LiveTyping {
         Patcher.after(scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]], "render", (that, [props], res) => {
             if (shouldIgnoreItem('ignoreDMs')) return res;
 
-            res.props.children.props.children.unshift(React.createElement(TypingIndicatorDMBar))
+            res.props.children.props.children.unshift(React.createElement('div',{},React.createElement(TypingIndicatorDMBar)))
         });
     }
 
@@ -597,7 +609,7 @@ class LiveTyping {
             if (shouldIgnoreItem('ignoreChannels', channelId)) return ret;
 
             const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children; // BetterChanneList made me do this.......
-            const component = React.createElement(TypingIndicator, { channelId });
+            const component = React.createElement("div",null,React.createElement(TypingIndicator, { channelId }))
 
             const location = DataStore.settings.indicatorLocation || DEFAULT_INDICATOR_LOCATION;
 
@@ -618,14 +630,14 @@ class LiveTyping {
 
             const originalType = ret.props.text.type;
 
-            ret.props.text.type = function(...args) { // this stops the GuildTypingIndicator to stop randomly disappearing.
+            ret.props.text.type = function (...args) { // this stops the GuildTypingIndicator to stop randomly disappearing.
                 const result = originalType.apply(this, args);
 
                 if (result?.props?.children) {
                     const children = Array.isArray(result.props.children) ? result.props.children : [result.props.children];
 
                     if (!children.some(child => child?.type === GuildTypingIndicator)) {
-                        children.push(React.createElement(GuildTypingIndicator, { guildId: guild.id }));
+                        children.push(React.createElement('div',{},React.createElement(GuildTypingIndicator, { guildId: guild.id })));
                         result.props.children = children;
                     }
                 }
@@ -648,7 +660,7 @@ class LiveTyping {
                 unpatch();
                 const guild = Utils.findInTree(renderRet, x => x?.['data-list-item-id'], { walkable: ['props', 'children'] });
                 if (guild && guild.children) {
-                    guild.children?.push?.(React.createElement(GuildTypingIndicatorV2, { guildId }));
+                    guild.children?.push?.(React.createElement('div',{},React.createElement(GuildTypingIndicatorV2, { guildId })));
                 }
             });
         });
@@ -660,6 +672,7 @@ class LiveTyping {
         ContextMenu.unpatch('user-context', this.patchUserContextMenu);
         ContextMenu.unpatch('channel-context', this.patchChannelContextMenu);
         ContextMenu.unpatch('guild-context', this.patchGuildContextMenu);
+        ContextMenu.unpatch('gdm-context', this.patchChannelContextMenu);
     }
 
     getSettingsPanel() {
