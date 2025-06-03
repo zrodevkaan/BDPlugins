@@ -40,8 +40,7 @@ const createDownloadLink = async (url: string, filename: string) => {
 
         const a = Object.assign(document.createElement('a'), {
             href: URL.createObjectURL(blob),
-            download: filename || (url.startsWith('data:') ? 'download.png' : 'download.ogg')
-        });
+            download: filename || 'download.ogg'});
 
         document.body.appendChild(a);
         a.click();
