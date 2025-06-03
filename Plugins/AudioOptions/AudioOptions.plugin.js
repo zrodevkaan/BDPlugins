@@ -24,28 +24,25 @@ const PathIcon = () => {
 };
 const createDownloadLink = async (url, filename) => {
   try {
+    let blob;
     if (url.startsWith("data:")) {
-      const parts = url.split(",");
-      if (!parts[0] || !parts[1]) return "";
-      const matches = parts[0].match(/:(.*?);/);
-      const mimeType = matches ? matches[1] : "image/png";
-      const binary = atob(parts[1]);
-      const array = [];
-      for (let i = 0; i < binary.length; i++) {
-        array.push(binary.charCodeAt(i));
-      }
-      const blob = new Blob([new Uint8Array(array)], { type: mimeType });
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = filename || `download.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-      UI.showToast("Download started!", { type: "success" });
+      const [header, data] = url.split(",");
+      if (!header || !data) return "";
+      const mimeType = header.match(/:(.*?);/)?.[1] || "image/png";
+      const binary = atob(data);
+      blob = new Blob([new Uint8Array([...binary].map((c) => c.charCodeAt(0)))], { type: mimeType });
     } else {
+      blob = await (await Net.fetch(url)).blob();
     }
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(blob),
+      download: filename || (url.startsWith("data:") ? "download.png" : "download.mp3")
+    });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    UI.showToast("Download started!", { type: "success" });
   } catch (error) {
     console.log(error);
     UI.showToast("Download failed!", { type: "error" });
