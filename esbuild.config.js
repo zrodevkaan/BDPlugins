@@ -69,6 +69,10 @@ for (const dirent of pluginFolders) {
             banner: {
                 js: extractMeta(fileContents),
             },
+            loader: {
+                ".js": "jsx",
+                ".css": "css"
+            },
             jsxFactory: "BdApi.React.createElement",
             jsxFragment: "BdApi.React.Fragment",
             // plugins: [screwJSXRuntime],

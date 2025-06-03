@@ -28,7 +28,7 @@ const createDownloadLink = async (url, filename) => {
     if (url.startsWith("data:")) {
       const [header, data] = url.split(",");
       if (!header || !data) return "";
-      const mimeType = header.match(/:(.*?);/)?.[1] || "image/png";
+      const mimeType = header.match(/:(.*?);/)?.[1] || "audio/ogg";
       const binary = atob(data);
       blob = new Blob([new Uint8Array([...binary].map((c) => c.charCodeAt(0)))], { type: mimeType });
     } else {
