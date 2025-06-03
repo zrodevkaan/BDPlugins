@@ -8,7 +8,7 @@
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils} = new BdApi('AudioOptions')
 
 const IconBase = Webpack.getModule(x => x.Icon)
-const VoiceMessagePlayer = Webpack.getBySource('.ZP.getPlaybackRate(')
+const VoiceMessagePlayer = Webpack.getBySource('.ZP.getPlaybackRate(', { searchDefault: false })
 
 const PathIcon = () => {
     return React.createElement(
@@ -69,7 +69,6 @@ class AudioOptions {
     }
 
     showOptionsMenu(props, e) {
-        console.log(e, props)
         const audioElement: HTMLAudioElement | null = document.querySelector('[class^="audioElement"]');
         const audioUrl = props.item.downloadUrl;
         const fileName = props.item.originalItem.filename || `voice-message-${Date.now()}.ogg`;
