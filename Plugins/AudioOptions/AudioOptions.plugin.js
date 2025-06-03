@@ -68,7 +68,7 @@ class AudioOptions {
   showOptionsMenu(e, props) {
     const audioElement = document.querySelector('[class^="audioElement"]');
     const audioUrl = props.item.downloadUrl;
-    const fileName = props.item.originalItem.filename || `voice-message-${Date.now()}.mp3`;
+    const fileName = props.item.originalItem.filename || `voice-message-${Date.now()}.ogg`;
     const menuItems = [
       {
         id: "download",
