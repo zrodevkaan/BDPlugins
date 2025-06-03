@@ -54,6 +54,10 @@ const createDownloadLink = async (url: string, filename: string) => {
     }
 }
 
+const AudioButton = ({showOptionsMenu}) => {
+    return (<IconBase.Icon icon={PathIcon} tooltip="Audio Options" className="audio-options-button" tooltipPosition="right" onClick={(e) => showOptionsMenu(e)}/>)
+};
+
 class AudioOptions {
     start() {
         this.patchAudioPlayer();
@@ -61,20 +65,12 @@ class AudioOptions {
 
     patchAudioPlayer() {
         Patcher.after(VoiceMessagePlayer.Z, 'type', (_, [props], res) => {
-            const AudioButton = React.createElement(IconBase.Icon, {
-                key: "audio-options-button",
-                icon: PathIcon,
-                tooltip: "Audio Options",
-                className: "audio-options-button",
-                tooltipPosition: "right",
-                onClick: (e) => this.showOptionsMenu(e, props)
-            });
-
-            res.props.children.push(AudioButton);
+            res.props.children.push(<AudioButton showOptionsMenu={this.showOptionsMenu.bind(this, props)}/>);
         })
     }
 
-    showOptionsMenu(e, props) {
+    showOptionsMenu(props, e) {
+        console.log(e, props)
         const audioElement: HTMLAudioElement | null = document.querySelector('[class^="audioElement"]');
         const audioUrl = props.item.downloadUrl;
         const fileName = props.item.originalItem.filename || `voice-message-${Date.now()}.ogg`;

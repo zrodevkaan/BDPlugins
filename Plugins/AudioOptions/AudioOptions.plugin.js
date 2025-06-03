@@ -48,24 +48,20 @@ const createDownloadLink = async (url, filename) => {
     UI.showToast("Download failed!", { type: "error" });
   }
 };
+const AudioButton = ({ showOptionsMenu }) => {
+  return /* @__PURE__ */ BdApi.React.createElement(IconBase.Icon, { icon: PathIcon, tooltip: "Audio Options", className: "audio-options-button", tooltipPosition: "right", onClick: (e) => showOptionsMenu(e) });
+};
 class AudioOptions {
   start() {
     this.patchAudioPlayer();
   }
   patchAudioPlayer() {
     Patcher.after(VoiceMessagePlayer.Z, "type", (_, [props], res) => {
-      const AudioButton = React.createElement(IconBase.Icon, {
-        key: "audio-options-button",
-        icon: PathIcon,
-        tooltip: "Audio Options",
-        className: "audio-options-button",
-        tooltipPosition: "right",
-        onClick: (e) => this.showOptionsMenu(e, props)
-      });
-      res.props.children.push(AudioButton);
+      res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(AudioButton, { showOptionsMenu: this.showOptionsMenu.bind(this, props) }));
     });
   }
-  showOptionsMenu(e, props) {
+  showOptionsMenu(props, e) {
+    console.log(e, props);
     const audioElement = document.querySelector('[class^="audioElement"]');
     const audioUrl = props.item.downloadUrl;
     const fileName = props.item.originalItem.filename || `voice-message-${Date.now()}.ogg`;
