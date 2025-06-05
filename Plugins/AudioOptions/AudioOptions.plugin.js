@@ -1,14 +1,16 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 0.0.0
- * @description Adds a options button next to voice messages.
+ * @version 1.0.0
+ * @description Adds an option button next to voice messages.
  */
 "use strict";
-const { Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils } = new BdApi("AudioOptions");
-const IconBase = Webpack.getModule((x) => x.Icon);
-const VoiceMessagePlayer = Webpack.getBySource(".ZP.getPlaybackRate(");
-const PathIcon = () => {
+
+// src/AudioOptions/index.tsx
+var { Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils } = new BdApi("AudioOptions");
+var IconBase = Webpack.getModule((x) => x.Icon);
+var VoiceMessagePlayer = Webpack.getBySource(".ZP.getPlaybackRate(", { searchDefault: false });
+var PathIcon = () => {
   return React.createElement(
     "svg",
     {
@@ -22,7 +24,7 @@ const PathIcon = () => {
     })
   );
 };
-const createDownloadLink = async (url, filename) => {
+var createDownloadLink = async (url, filename) => {
   try {
     let blob;
     if (url.startsWith("data:")) {
@@ -48,10 +50,10 @@ const createDownloadLink = async (url, filename) => {
     UI.showToast("Download failed!", { type: "error" });
   }
 };
-const AudioButton = ({ showOptionsMenu }) => {
+var AudioButton = ({ showOptionsMenu }) => {
   return /* @__PURE__ */ BdApi.React.createElement(IconBase.Icon, { icon: PathIcon, tooltip: "Audio Options", className: "audio-options-button", tooltipPosition: "right", onClick: (e) => showOptionsMenu(e) });
 };
-class AudioOptions {
+var AudioOptions = class {
   start() {
     this.patchAudioPlayer();
   }
@@ -61,7 +63,6 @@ class AudioOptions {
     });
   }
   showOptionsMenu(props, e) {
-    console.log(e, props);
     const audioElement = document.querySelector('[class^="audioElement"]');
     const audioUrl = props.item.downloadUrl;
     const fileName = props.item.originalItem.filename || `voice-message-${Date.now()}.ogg`;
@@ -102,5 +103,5 @@ class AudioOptions {
   stop() {
     Patcher.unpatchAll();
   }
-}
+};
 module.exports = AudioOptions;

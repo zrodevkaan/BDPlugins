@@ -1,8 +1,8 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 0.0.0
- * @description Adds a options button next to voice messages.
+ * @version 1.0.0
+ * @description Adds an option button next to voice messages.
  */
 
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils} = new BdApi('AudioOptions')
