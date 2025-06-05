@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.1.2
+ * @version 1.1.3
  * @description Typing status per user on servers, channels or threads.
  */
 
@@ -15,8 +15,6 @@ const {
     getBulk,
     Filters
 } = Webpack;
-
-const FolderIconComponent = Webpack.getBySource('FolderIconContent')
 
 const getBulkStore = (() => {
     const storeCache = new Map();
@@ -139,14 +137,6 @@ const CONFIG = {
             value: false,
             disabled: false,
         },
-        {
-            id: "ignoreFolders",
-            name: "Ignore All Folders",
-            note: "Disable typing indicators in all folders",
-            type: "switch",
-            value: false,
-            disabled: false,
-        }
     ]
 };
 
@@ -417,68 +407,11 @@ const GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
     })
 });
 
-const FolderTypingIndicator = React.memo(({ folderNode }) => {
-    const guildIds = folderNode.children.map(x => x.id) || [];
-
-    const allTypingUsers = useStateFromStores([TypingStore], () => {
-        const typingUsers = {};
-
-        for (let i = 0; i < guildIds.length; i++) {
-            const guildId = guildIds[i];
-            if (shouldIgnoreItem('ignoreServers', guildId)) continue;
-
-            const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
-            const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
-
-            for (let j = 0; j < allChannels.length; j++) {
-                const { channel } = allChannels[j];
-                if (!channel || !channel.id) continue;
-
-                if (shouldIgnoreItem('ignoreChannels', channel.id)) continue;
-
-                const channelTypingUsers = TypingStore.getTypingUsers(channel.id);
-                if (!isEmpty(channelTypingUsers)) {
-                    const userIds = Object.keys(channelTypingUsers);
-                    for (let k = 0; k < userIds.length; k++) {
-                        const userId = userIds[k];
-                        const user = UserStore.getUser(userId);
-                        if (user && userId !== UserStore.getCurrentUser().id) {
-                            typingUsers[userId] = user;
-                        }
-                    }
-                }
-            }
-        }
-
-        return typingUsers;
-    }, [guildIds.join(',')]);
-
-    if (isEmpty(allTypingUsers)) return null;
-
-    const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE
-
-    return React.createElement('div', {
-        style: {
-            position: 'absolute',
-            zIndex: 2,
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: '',
-            padding: '16px', // so it centers on the folder div
-            cursor: 'pointer'
-        }
-    }, React.createElement(Spinner, {
-        type: Spinner.Type[indicatorType],
-        animated: true,
-        style: { width: "16px", height: "16px" }
-    }))
-});
-
 class LiveTyping {
     start() {
         this.patchChannelElement();
         this.patchGuildObject();
         this.patchDMTyping();
-        this.patchFolderElement();
         this.injectStyles();
         this.patchContextMenus();
     }
@@ -579,16 +512,6 @@ class LiveTyping {
         ContextMenu.patch('channel-context', this.patchChannelContextMenu);
         ContextMenu.patch('guild-context', this.patchGuildContextMenu);
         ContextMenu.patch('gdm-context', this.patchChannelContextMenu);
-    }
-
-    patchFolderElement() {
-        Patcher.after(FolderIconComponent, "Z", (a, [b], res) => {
-                if (shouldIgnoreItem('ignoreFolders')) return res;
-
-                const iconLos = res.props.children.props;
-                iconLos.children.unshift(React.createElement('div',{},React.createElement(FolderTypingIndicator, { folderNode: b.folderNode })))
-            }
-        )
     }
 
     patchDMTyping() {
