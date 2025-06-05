@@ -31,10 +31,10 @@ function getBetterDiscordPath() {
             return path.join(homeDir, 'AppData', 'Roaming', 'BetterDiscord', 'plugins');
         case 'darwin': // macOS
             return path.join(homeDir, 'Library', 'Application Support', 'BetterDiscord', 'plugins');
-        case 'linux': // (TheLazySquid is a weirdo)
+        case 'linux':
             const xdgConfigHome = process.env.XDG_CONFIG_HOME || path.join(homeDir, '.config');
             return path.join(xdgConfigHome, 'BetterDiscord', 'plugins');
-        default: // dont insult my commit messages.
+        default:
             return path.join(homeDir, 'AppData', 'Roaming', 'BetterDiscord', 'plugins');
     }
 }
@@ -45,7 +45,6 @@ async function getPluginFolders() {
         if (!dirent.isDirectory()) return false;
         if (dirent.name.endsWith('.ignore')) return false;
         return !(specificPlugin && dirent.name !== specificPlugin);
-
     });
 }
 
@@ -69,7 +68,7 @@ async function createBuildConfig(pluginName) {
 
     return {
         entryPoints: [entryFile],
-        bundle: false,
+        bundle: true,
         format: "cjs",
         outfile: outFile,
         banner: {
@@ -77,11 +76,16 @@ async function createBuildConfig(pluginName) {
         },
         loader: {
             ".js": "jsx",
+            ".jsx": "jsx",
+            ".ts": "tsx",
+            ".tsx": "tsx",
             ".css": "css"
         },
+        resolveExtensions: ['.tsx', '.ts', '.jsx', '.js'],
         jsxFactory: "BdApi.React.createElement",
         jsxFragment: "BdApi.React.Fragment",
         logLevel: "info",
+        external: ['discord-types/*', 'discord-types/other'],
         plugins: [{
             name: "build-notifier",
             setup(build) {
@@ -90,6 +94,9 @@ async function createBuildConfig(pluginName) {
                         console.log(`Successfully built ${pluginName}`);
                     } else {
                         console.log(`Build failed for ${pluginName}`);
+                        result.errors.forEach(error => {
+                            console.error(error);
+                        });
                     }
                 });
             }
