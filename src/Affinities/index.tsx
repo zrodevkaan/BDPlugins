@@ -23,10 +23,10 @@ const ModalSystem = Webpack.getMangled(".modalKey?", {
     closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
 
-const AffinityStore = Webpack.Stores.UserAffinitiesV2Store || Webpack.getStore("UserAffinitiesV2Store");
-const UserStore = Webpack.Stores.UserStore || Webpack.getStore("UserStore");
-const RelationshipStore = Webpack.Stores.RelationshipStore || Webpack.getStore("RelationshipStore");
-const GuildAffinitiesStore = Webpack.Stores.GuildAffinitiesStore || Webpack.getStore("GuildAffinitiesStore");
+const AffinityStore = Webpack?.Stores?.UserAffinitiesV2Store || Webpack.getStore("UserAffinitiesV2Store");
+const UserStore = Webpack?.Stores?.UserStore || Webpack.getStore("UserStore");
+const RelationshipStore = Webpack?.Stores?.RelationshipStore || Webpack.getStore("RelationshipStore");
+const GuildAffinitiesStore = Webpack?.Stores?.GuildAffinitiesStore || Webpack.getStore("GuildAffinitiesStore");
 
 const getAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
 
