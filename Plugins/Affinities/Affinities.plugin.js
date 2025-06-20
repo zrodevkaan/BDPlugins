@@ -46,10 +46,10 @@ var ModalSystem = Webpack.getMangled(".modalKey?", {
   closeModal: Webpack.Filters.byStrings(".onCloseCallback()"),
   closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
-var AffinityStore = Webpack.Stores.UserAffinitiesV2Store || Webpack.getStore("UserAffinitiesV2Store");
-var UserStore = Webpack.Stores.UserStore || Webpack.getStore("UserStore");
-var RelationshipStore = Webpack.Stores.RelationshipStore || Webpack.getStore("RelationshipStore");
-var GuildAffinitiesStore = Webpack.Stores.GuildAffinitiesStore || Webpack.getStore("GuildAffinitiesStore");
+var AffinityStore = Webpack?.Stores?.UserAffinitiesV2Store || Webpack.getStore("UserAffinitiesV2Store");
+var UserStore = Webpack?.Stores?.UserStore || Webpack.getStore("UserStore");
+var RelationshipStore = Webpack?.Stores?.RelationshipStore || Webpack.getStore("RelationshipStore");
+var GuildAffinitiesStore = Webpack?.Stores?.GuildAffinitiesStore || Webpack.getStore("GuildAffinitiesStore");
 var getAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
 function forceUpdateApp() {
   const appMount = document.getElementById("app-mount");
@@ -352,7 +352,7 @@ var Affinities = class {
           const LowQualityStore = /* @__PURE__ */ BdApi.React.createElement(Components.Text, { style: {
             margin: "10px",
             color: "var(--text-muted)"
-          } }, guildScore.score.toFixed());
+          } }, guildScore?.score.toFixed() || "None");
           header.props.children.splice(1, 0, LowQualityStore);
           return [ret];
         }
@@ -365,5 +365,6 @@ var Affinities = class {
   }
   stop() {
     Patcher.unpatchAll();
+    forceUpdateApp();
   }
 };
