@@ -26,9 +26,7 @@ var {
   openModal: Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "onCloseCallback", "instant", "backdropStyle")
 });
 var { useState } = React;
-var CloudUpload = Webpack.getByStrings("uploadFileToCloud", { searchExports: true }).prototype;
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
-var FileUploads = Webpack.getByKeys("uploadFiles");
 var Margins = Webpack.getByKeys("marginBottom40", "marginTop4");
 var ToolbarButton = Webpack.getByStrings("actionBarIcon");
 var FoodIcon = ({ size = 24, color = "var(--interactive-normal)", ...props }) => {

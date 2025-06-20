@@ -22,10 +22,7 @@ const {
 })
 const {useState} = React;
 
-const CloudUpload = Webpack.getByStrings("uploadFileToCloud", { searchExports: true }).prototype
-
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
-const FileUploads = Webpack.getByKeys("uploadFiles")
 const Margins = Webpack.getByKeys('marginBottom40', 'marginTop4');
 
 const ToolbarButton = Webpack.getByStrings('actionBarIcon')
