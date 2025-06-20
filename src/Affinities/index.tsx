@@ -411,5 +411,6 @@ export default class Affinities {
 
     stop() {
         Patcher.unpatchAll();
+        forceUpdateApp();
     }
 }
