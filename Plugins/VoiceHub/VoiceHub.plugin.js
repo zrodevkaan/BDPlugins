@@ -22,14 +22,16 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/VoiceHub/index.tsx
 var index_exports = {};
 __export(index_exports, {
   default: () => index_default
 });
 module.exports = __toCommonJS(index_exports);
-const { Patcher, Webpack, React, DOM, Data } = new BdApi("VoiceHub");
-const Module = Webpack.getBySource("ConnectedPrivateChannelsList");
-const [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdApi.Webpack.getBulk(
+var { Patcher, Webpack, React, DOM, Data } = new BdApi("VoiceHub");
+var Module = Webpack.getBySource("ConnectedPrivateChannelsList");
+var [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdApi.Webpack.getBulk(
   { filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "instant", "backdropStyle"), searchExports: true },
@@ -37,7 +39,7 @@ const [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdA
   { filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings("dI3q4u"), searchExports: true }
 );
-const Eye = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
+var Eye = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
   "svg",
   {
     viewBox: "0 0 1200 1200",
@@ -53,7 +55,7 @@ const Eye = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
     }
   )
 );
-const EyeClose = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
+var EyeClose = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
   "svg",
   {
     xmlns: "http://www.w3.org/2000/svg",
@@ -70,7 +72,7 @@ const EyeClose = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElemen
     }
   )
 );
-const DataStore = new Proxy(
+var DataStore = new Proxy(
   {},
   {
     get: (_, key) => {
@@ -86,20 +88,20 @@ const DataStore = new Proxy(
     }
   }
 );
-const InteractiveModule = Webpack.getByKeys("interactive", "muted", "selected");
-const InteractiveAbove = Webpack.getByKeys("channel", "interactiveSystemDM", "interactiveSelected");
-const InputModule = Webpack.getByKeys("autocompleteQuerySymbol");
-const VoiceStateStore = Webpack.getStore("VoiceStateStore");
-const GuildStore = Webpack.getStore("GuildStore");
-const ChannelStore = Webpack.getStore("ChannelStore");
-const GuildMemberStore = Webpack.getStore("GuildMemberStore");
-const UserStore = Webpack.getStore("UserStore");
-const VoiceModule = Webpack.getModule((x) => x.Z?.handleVoiceConnect?.toString?.().includes?.("async"));
-const UserModal = Webpack.getByKeys("openUserProfileModal");
-const UserContextMenu = Webpack.getByStrings(".isGroupDM()", { searchExports: true });
-const getAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
-const clsx = (...args) => [...args].join(" ");
-const SearchBar = ({ value, onChange }) => {
+var InteractiveModule = Webpack.getByKeys("interactive", "muted", "selected");
+var InteractiveAbove = Webpack.getByKeys("channel", "interactiveSystemDM", "interactiveSelected");
+var InputModule = Webpack.getByKeys("autocompleteQuerySymbol");
+var VoiceStateStore = Webpack.getStore("VoiceStateStore");
+var GuildStore = Webpack.getStore("GuildStore");
+var ChannelStore = Webpack.getStore("ChannelStore");
+var GuildMemberStore = Webpack.getStore("GuildMemberStore");
+var UserStore = Webpack.getStore("UserStore");
+var VoiceModule = Webpack.getModule((x) => x.Z?.handleVoiceConnect?.toString?.().includes?.("async"));
+var UserModal = Webpack.getByKeys("openUserProfileModal");
+var UserContextMenu = Webpack.getByStrings(".isGroupDM()", { searchExports: true });
+var getAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
+var clsx = (...args) => [...args].join(" ");
+var SearchBar = ({ value, onChange }) => {
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: { position: "relative", marginBottom: "12px" } }, /* @__PURE__ */ BdApi.React.createElement(
     "input",
     {
@@ -112,7 +114,7 @@ const SearchBar = ({ value, onChange }) => {
     }
   ));
 };
-const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
+var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
   const users = Object.entries(voiceStates).filter(([_, state]) => state.channelId === channel.id).map(([userId]) => UserStore.getUser(userId));
   const handleChannelClick = () => {
     VoiceModule.Z.handleVoiceConnect({
@@ -224,7 +226,7 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
     }))
   );
 };
-const VoiceChannelList = () => {
+var VoiceChannelList = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterType, setFilterType] = React.useState("all");
   const guilds = GuildStore.getGuilds();
@@ -342,8 +344,8 @@ const VoiceChannelList = () => {
     })
   ));
 };
-const VoiceHubButton = Webpack.getBySource("PrivateChannelLinkButton").Qj;
-class VoiceHub {
+var VoiceHubButton = Webpack.getBySource("PrivateChannelLinkButton").Qj;
+var VoiceHub = class {
   start() {
     DOM.addStyle(
       "voiceHub",
@@ -381,5 +383,5 @@ class VoiceHub {
     DOM.removeStyle("voiceHub");
     Patcher.unpatchAll();
   }
-}
+};
 var index_default = VoiceHub;
