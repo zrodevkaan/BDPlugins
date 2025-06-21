@@ -50,6 +50,7 @@ var DataStore = new Proxy(
     }
   }
 );
+var UsernameLocation = Webpack.getBySource("isGDMFacepileEnabled", "avatarDecorationSrc");
 var BlockedSVG = () => {
   return /* @__PURE__ */ BdApi.React.createElement(
     "svg",
@@ -77,6 +78,26 @@ var RemoveAnnoyingUsers = class {
   }
   start() {
     this.patchContextMenus();
+    Patcher.after(UsernameLocation, "ZP", (_, __, res) => {
+      Patcher.after(res, "type", (_2, __2, res2) => {
+        const orig = res2.props.children.props?.children;
+        if (!orig) return;
+        res2.props.children.props.children = new Proxy(orig, {
+          apply(target, thisArg, args) {
+            const ret = Reflect.apply(target, thisArg, args);
+            const found = Utils.findInTree(ret?.[0]?.props?.children?.[1]?.props?.children?.[1], (x) => x?.to, { walkable: ["props", "children"] });
+            if (!found) return [ret];
+            const channel = Webpack.Stores.ChannelStore.getChannel(found.to.split("/").pop());
+            const user = Webpack.Stores.UserStore.getUser(channel.recipients[0]);
+            const nameProps = found?.children?.props?.name?.props;
+            if (RelationshipStore.isBlocked(user.id) || DataStore.blockedUsers[user.id]) {
+              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(BlockedSVG, null), " ", nameProps.children)];
+            }
+            return [ret];
+          }
+        });
+      });
+    });
     Patcher.after(MessageModule.ZP, "type", (_, [__], result) => {
       const user = __.message.author;
       if (RelationshipStore.isBlocked(user.id) || DataStore.blockedUsers[user.id]) return null;
@@ -88,14 +109,15 @@ var RemoveAnnoyingUsers = class {
   }
   patchContextMenus() {
     this.CMPatches.push(ContextMenu.patch("user-context", (res, props) => {
+      const isBlocked = DataStore.blockedUsers[props.user.id];
       res.props.children.push(React.createElement(ContextMenu.Item, {
-        label: "Soft Block User",
+        label: !isBlocked ? "Soft Block User" : "Soft Unblock User",
         id: "soft-block-user",
         icon: React.createElement(BlockedSVG),
         action: () => {
           const user = props.user;
           const currentBlocked = DataStore.blockedUsers || {};
-          currentBlocked[user.id] = true;
+          currentBlocked[user.id] = !isBlocked;
           DataStore.blockedUsers = currentBlocked;
         }
       }));

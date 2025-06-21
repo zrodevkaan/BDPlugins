@@ -28,6 +28,8 @@ const DataStore = new Proxy(
     }
 );
 
+const UsernameLocation = Webpack.getBySource('isGDMFacepileEnabled', 'avatarDecorationSrc')
+
 const BlockedSVG = () => {
     return <svg xmlns="http://www.w3.org/2000/svg" fill="var(--interactive-normal)" width="20px" height="20px" viewBox="0 0 32 32"
                 version="1.1">
@@ -46,6 +48,29 @@ export default class RemoveAnnoyingUsers {
     start() {
         this.patchContextMenus();
 
+        Patcher.after(UsernameLocation, 'ZP', (_, __, res) => {
+            Patcher.after(res, 'type', (_, __, res) => {
+                const orig = res.props.children.props?.children;
+                if (!orig) return;
+                res.props.children.props.children = new Proxy(orig, {
+                    apply(target, thisArg, args) {
+                        const ret = Reflect.apply(target, thisArg, args);
+                        const found = Utils.findInTree(ret?.[0]?.props?.children?.[1]?.props?.children?.[1], x => x?.to, {walkable: ['props', 'children']});
+                        if (!found) return [ret]
+                        const channel = Webpack.Stores.ChannelStore.getChannel(found.to.split('/').pop())
+                        const user = Webpack.Stores.UserStore.getUser(channel.recipients[0])
+                        const nameProps = found?.children?.props?.name?.props;
+
+                        if (RelationshipStore.isBlocked(user.id) || DataStore.blockedUsers[user.id]) {
+                            nameProps.children = [<div style={{display: 'flex', gap: '5px'}}>
+                                <BlockedSVG/> {nameProps.children}</div>];
+                        }
+                        return [ret];
+                    }
+                });
+            });
+        });
+
         Patcher.after(MessageModule.ZP, 'type', (_, [__], result) => {
             const user = __.message.author
             if (RelationshipStore.isBlocked(user.id) || DataStore.blockedUsers[user.id]) return null
@@ -59,14 +84,15 @@ export default class RemoveAnnoyingUsers {
 
     patchContextMenus() {
         this.CMPatches.push(ContextMenu.patch('user-context', (res, props) => {
+            const isBlocked = DataStore.blockedUsers[props.user.id]
             res.props.children.push(React.createElement(ContextMenu.Item, {
-                label: 'Soft Block User',
+                label: !isBlocked ? 'Soft Block User' : "Soft Unblock User",
                 id: 'soft-block-user',
                 icon: React.createElement(BlockedSVG),
                 action: () => {
                     const user = props.user
                     const currentBlocked = DataStore.blockedUsers || {};
-                    currentBlocked[user.id] = true;
+                    currentBlocked[user.id] = !isBlocked;
                     DataStore.blockedUsers = currentBlocked;
                 }
             }))
