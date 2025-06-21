@@ -30,6 +30,7 @@ interface Birthday {
 
 interface DataStoreType {
     Birthdays: Record<string, Birthday>;
+
     [key: string]: any;
 }
 
@@ -55,12 +56,11 @@ declare const BdApi: new (pluginName: string) => BdApi;
 
 const {Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components} = new BdApi('CakeDay');
 
-const DMAvi = Webpack.getBySource('isGDMFacepileEnabled', 'avatarDecorationSrc');
 const Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
-const ModalRoot = Webpack.getModule(Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), {searchExports: true});
 
 const ConfettiContext = Object.values(Confetti).find((m: any) => typeof m === "object");
 const Badges = Webpack.getBySource('action:"PRESS_BADGE"');
+const UsernameLocation = Webpack.getBySource('isGDMFacepileEnabled', 'avatarDecorationSrc')
 
 /*
 const ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -71,14 +71,26 @@ const ModalSystem = Webpack.getMangled(".modalKey?", {
 });
 */
 
-function CakeWithConfetti(): React.JSX.Element {
-    const {createMultipleConfettiAt} = React.use(ConfettiContext);
+function CakeWithConfetti({data, type}): React.JSX.Element {
+    const Methods = React.use(ConfettiContext);
 
-    return <div onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
+    return <div {...data} onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
         const t = e.currentTarget.getBoundingClientRect();
-        createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2);
+        Methods.createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2, type && {
+            velocity: {
+                type: "static-random",
+                minValue: {
+                    x: -180,
+                    y: -180
+                },
+                maxValue: {
+                    x: 180,
+                    y: 180
+                }
+            }
+        });
     }}>
-        <CakeSVG/>
+        <CakeSVG {...data}/>
     </div>;
 }
 
@@ -108,7 +120,7 @@ const CakeSVG = (): React.JSX.Element => {
 };
 
 const DataStore: DataStoreType = new Proxy({} as DataStoreType, {
-    get: (_: any, key: string) => {
+    get: (target: any, key: string) => {
         return Data.load(key);
     },
     set: (_: any, key: string, value: any): boolean => {
@@ -129,7 +141,9 @@ const TextInput = ({user, birthday}: TextInputProps): React.JSX.Element => {
             onChange={(e: string) => {
                 birthday.date = e;
                 birthday.shouldShow = true;
-                DataStore.Birthdays[user.id] = birthday;
+                const births = DataStore.Birthdays;
+                births[user.id] = birthday;
+                DataStore.Birthdays = births;
             }}
         />
     </div>;
@@ -179,11 +193,33 @@ export default class CakeDay {
                 res.props.children.unshift(
                     <Components.Tooltip text="Cake Day">
                         {(data: any) => <div {...data}>
-                            <CakeWithConfetti/>
+                            <CakeWithConfetti {...data}/>
                         </div>}
                     </Components.Tooltip>
                 );
             }
+        });
+
+        Patcher.after(UsernameLocation, 'ZP', (_, __, res) => {
+            Patcher.after(res, 'type', (_, __, res) => {
+                const orig = res.props.children.props?.children;
+                if (!orig) return;
+                res.props.children.props.children = new Proxy(orig, {
+                    apply(target, thisArg, args) {
+                        const ret = Reflect.apply(target, thisArg, args);
+                        const found = Utils.findInTree(ret?.props?.children?.[1]?.props?.children?.[1], x => x?.to, {walkable: ['props', 'children']});
+                        const channel = Webpack.Stores.ChannelStore.getChannel(found.to.split('/').pop())
+                        const user = Webpack.Stores.UserStore.getUser(channel.recipients[0])
+                        const nameProps = found?.children?.props?.name?.props;
+
+                        if (checkDate(DataStore.Birthdays[user.id]?.date)) {
+                            nameProps.children = [<div style={{display: 'flex', gap: '5px'}}>
+                                <CakeWithConfetti type={true}/> {nameProps.children}</div>];
+                        }
+                        return [ret];
+                    }
+                });
+            });
         });
 
         ContextMenu.patch('user-context', this.patchUserContextMenu);
@@ -201,13 +237,15 @@ export default class CakeDay {
         const ButtonGroup = ContextMenu.buildItem({
             type: 'submenu',
             label: 'Cake Day',
+            iconLeft: CakeSVG,
             items: [
                 {
                     type: 'button',
                     label: 'Set Date',
                     action: () => {
                         // im lazy....
-                        UI.showConfirmationModal(`Set ${user.username}'s Birthday`, <TextInput user={user} birthday={birthday}/>);
+                        UI.showConfirmationModal(`Set ${user.username}'s Birthday`, <TextInput user={user}
+                                                                                               birthday={birthday}/>);
                     }
                 },
                 {

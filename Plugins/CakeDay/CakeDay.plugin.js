@@ -30,17 +30,17 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 var { Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components } = new BdApi("CakeDay");
-var DMAvi = Webpack.getBySource("isGDMFacepileEnabled", "avatarDecorationSrc");
 var Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
-var ModalRoot = Webpack.getModule(Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), { searchExports: true });
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
 var Badges = Webpack.getBySource('action:"PRESS_BADGE"');
-function CakeWithConfetti() {
-  const { createMultipleConfettiAt } = React.use(ConfettiContext);
-  return /* @__PURE__ */ BdApi.React.createElement("div", { onMouseOver: (e) => {
+var UsernameLocation = Webpack.getBySource("isGDMFacepileEnabled", "avatarDecorationSrc");
+function CakeWithConfetti({ data }) {
+  const Methods = React.use(ConfettiContext);
+  console.log(Methods);
+  return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: (e) => {
     const t = e.currentTarget.getBoundingClientRect();
-    createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2);
-  } }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, null));
+    Methods.createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2);
+  } }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { ...data }));
 }
 var CakeSVG = () => {
   return /* @__PURE__ */ BdApi.React.createElement(
@@ -99,7 +99,7 @@ var CakeSVG = () => {
   );
 };
 var DataStore = new Proxy({}, {
-  get: (_, key) => {
+  get: (target, key) => {
     return Data.load(key);
   },
   set: (_, key, value) => {
@@ -120,7 +120,9 @@ var TextInput = ({ user, birthday }) => {
       onChange: (e) => {
         birthday.date = e;
         birthday.shouldShow = true;
-        DataStore.Birthdays[user.id] = birthday;
+        const births = DataStore.Birthdays;
+        births[user.id] = birthday;
+        DataStore.Birthdays = births;
       }
     }
   ));
@@ -151,9 +153,27 @@ var CakeDay = class {
       const isBirthday = checkDate(birthday.date);
       if (isBirthday) {
         res.props.children.unshift(
-          /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Cake Day" }, (data) => /* @__PURE__ */ BdApi.React.createElement("div", { ...data }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, null)))
+          /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Cake Day" }, (data) => /* @__PURE__ */ BdApi.React.createElement("div", { ...data }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { ...data })))
         );
       }
+    });
+    Patcher.after(UsernameLocation, "ZP", (_, __, res) => {
+      Patcher.after(res, "type", (_2, __2, res2) => {
+        const orig = res2.props.children.props?.children;
+        if (!orig) return;
+        res2.props.children.props.children = new Proxy(orig, {
+          apply(target, thisArg, args) {
+            const ret = Reflect.apply(target, thisArg, args);
+            const found = Utils.findInTree(ret?.props?.children?.[1]?.props?.children?.[1], (x) => x?.to, { walkable: ["props", "children"] });
+            const user = found?.children?.props?.subText?.props?.user;
+            const nameProps = found?.children?.props?.name?.props;
+            if (checkDate(DataStore.Birthdays[user?.id]?.date)) {
+              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, null), " ", nameProps.children)];
+            }
+            return [ret];
+          }
+        });
+      });
     });
     ContextMenu.patch("user-context", this.patchUserContextMenu);
   }
@@ -167,12 +187,19 @@ var CakeDay = class {
     const ButtonGroup = ContextMenu.buildItem({
       type: "submenu",
       label: "Cake Day",
+      iconLeft: CakeSVG,
       items: [
         {
           type: "button",
           label: "Set Date",
           action: () => {
-            UI.showConfirmationModal(`Set ${user.username}'s Birthday`, /* @__PURE__ */ BdApi.React.createElement(TextInput, { user, birthday }));
+            UI.showConfirmationModal(`Set ${user.username}'s Birthday`, /* @__PURE__ */ BdApi.React.createElement(
+              TextInput,
+              {
+                user,
+                birthday
+              }
+            ));
           }
         },
         {
