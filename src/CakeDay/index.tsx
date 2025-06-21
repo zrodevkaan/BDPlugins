@@ -62,36 +62,180 @@ const ConfettiContext = Object.values(Confetti).find((m: any) => typeof m === "o
 const Badges = Webpack.getBySource('action:"PRESS_BADGE"');
 const UsernameLocation = Webpack.getBySource('isGDMFacepileEnabled', 'avatarDecorationSrc')
 
-/*
-const ModalSystem = Webpack.getMangled(".modalKey?", {
-    openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
-    openModal: Webpack.Filters.byStrings(",instant:"),
-    closeModal: Webpack.Filters.byStrings(".onCloseCallback()"),
-    closeAllModals: Webpack.Filters.byStrings(".getState();for")
-});
-*/
+const velocityConfigs = [
+    {
+        type: "static",
+        value: {
+            x: 100,
+            y: -50,
+            z: 0
+        },
+        uniformVectorValues: false
+    },
+    {
+        type: "static-random",
+        minValue: {
+            x: -180,
+            y: -180,
+            z: 0
+        },
+        maxValue: {
+            x: 180,
+            y: 180,
+            z: 0
+        },
+        uniformVectorValues: false
+    },
+    {
+        type: "linear",
+        value: {
+            x: 100,
+            y: -50,
+            z: 0
+        },
+        addValue: {
+            x: 10,
+            y: 5,
+            z: 0
+        },
+        uniformVectorValues: false
+    },
+    {
+        type: "linear-random",
+        minValue: {
+            x: 50,
+            y: -100,
+            z: 0
+        },
+        maxValue: {
+            x: 150,
+            y: 0,
+            z: 0
+        },
+        minAddValue: {
+            x: 5,
+            y: 2,
+            z: 0
+        },
+        maxAddValue: {
+            x: 15,
+            y: 8,
+            z: 0
+        },
+        uniformVectorValues: false
+    },
+    {
+        type: "oscillating",
+        value: {
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        start: {
+            x: -100,
+            y: -100,
+            z: 0
+        },
+        final: {
+            x: 100,
+            y: 100,
+            z: 0
+        },
+        duration: {
+            x: 2000,
+            y: 2000,
+            z: 2000
+        },
+        direction: {
+            x: 1,
+            y: 10,
+            z: 1
+        },
+        easingFunction: (t: number) => t * t,
+        uniformVectorValues: false
+    },
+    {
+        type: "oscillating-random",
+        minValue: {
+            x: 0.2,
+            y: 0.2,
+            z: 0
+        },
+        maxValue: {
+            x: -1.2,
+            y: -1.2,
+            z: 0
+        },
+        minStart: {
+            x: 1,
+            y: -6,
+            z: 0
+        },
+        maxStart: {
+            x: -10,
+            y: 10,
+            z: 0
+        },
+        minFinal: {
+            x: -10,
+            y: 10,
+            z: 0
+        },
+        maxFinal: {
+            x: 10,
+            y: -10,
+            z: 0
+        },
+        minDuration: {
+            x: 3000,
+            y: 3000,
+            z: 3000
+        },
+        maxDuration: {
+            x: 6000,
+            y: 6000,
+            z: 6000
+        },
+        minDirection: {
+            x: -0.5,
+            y: -0.5,
+            z: -0.5
+        },
+        maxDirection: {
+            x: 0.5,
+            y: 0.5,
+            z: 0.5
+        },
+        easingFunctions: [
+            (t: number) => Math.sin(t * Math.PI * 4) * 0.7 + 0.3,
+            (t: number) => t * t * (3 - 2 * t),
+            (t: number) => Math.sin(t * Math.PI * 3) * 0.4 + 0.6
+        ],
+        uniformVectorValues: false
+    }
+];
 
 function CakeWithConfetti({data, type}): React.JSX.Element {
     const Methods = React.use(ConfettiContext);
 
-    return <div {...data} onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
         const t = e.currentTarget.getBoundingClientRect();
-        Methods.createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2, type && {
-            velocity: {
-                type: "static-random",
-                minValue: {
-                    x: -180,
-                    y: -180
-                },
-                maxValue: {
-                    x: 180,
-                    y: 180
-                }
-            }
+
+        const currentType = DataStore?.confettiType || type || 'static-random';
+
+        const centerX = t.left + t.width / 2;
+        const centerY = t.top + t.height / 2;
+
+        Methods.createMultipleConfettiAt(centerX, centerY, {
+            velocity: velocityConfigs.find(x => x.type === currentType),
         });
-    }}>
-        <CakeSVG {...data}/>
-    </div>;
+    };
+
+    return (
+        <div {...data} onMouseOver={handleMouseOver}>
+            <CakeSVG {...data}/>
+        </div>
+    );
 }
 
 const CakeSVG = (): React.JSX.Element => {
@@ -193,7 +337,7 @@ export default class CakeDay {
                 res.props.children.unshift(
                     <Components.Tooltip text="Cake Day">
                         {(data: any) => <div {...data}>
-                            <CakeWithConfetti {...data}/>
+                            <CakeWithConfetti {...data} type={'static-random'}/>
                         </div>}
                     </Components.Tooltip>
                 );
@@ -214,7 +358,8 @@ export default class CakeDay {
 
                         if (checkDate(DataStore.Birthdays[user.id]?.date)) {
                             nameProps.children = [<div style={{display: 'flex', gap: '5px'}}>
-                                <CakeWithConfetti type={true}/> {nameProps.children}</div>];
+                                <CakeWithConfetti
+                                    type={DataStore?.confettiType || 'static-random'}/> {nameProps.children}</div>];
                         }
                         return [ret];
                     }

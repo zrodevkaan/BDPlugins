@@ -34,24 +34,170 @@ var Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
 var Badges = Webpack.getBySource('action:"PRESS_BADGE"');
 var UsernameLocation = Webpack.getBySource("isGDMFacepileEnabled", "avatarDecorationSrc");
+var velocityConfigs = [
+  {
+    type: "static",
+    value: {
+      x: 100,
+      y: -50,
+      z: 0
+    },
+    uniformVectorValues: false
+  },
+  {
+    type: "static-random",
+    minValue: {
+      x: -180,
+      y: -180,
+      z: 0
+    },
+    maxValue: {
+      x: 180,
+      y: 180,
+      z: 0
+    },
+    uniformVectorValues: false
+  },
+  {
+    type: "linear",
+    value: {
+      x: 100,
+      y: -50,
+      z: 0
+    },
+    addValue: {
+      x: 10,
+      y: 5,
+      z: 0
+    },
+    uniformVectorValues: false
+  },
+  {
+    type: "linear-random",
+    minValue: {
+      x: 50,
+      y: -100,
+      z: 0
+    },
+    maxValue: {
+      x: 150,
+      y: 0,
+      z: 0
+    },
+    minAddValue: {
+      x: 5,
+      y: 2,
+      z: 0
+    },
+    maxAddValue: {
+      x: 15,
+      y: 8,
+      z: 0
+    },
+    uniformVectorValues: false
+  },
+  {
+    type: "oscillating",
+    value: {
+      x: 0,
+      y: 0,
+      z: 0
+    },
+    start: {
+      x: -100,
+      y: -100,
+      z: 0
+    },
+    final: {
+      x: 100,
+      y: 100,
+      z: 0
+    },
+    duration: {
+      x: 2e3,
+      y: 2e3,
+      z: 2e3
+    },
+    direction: {
+      x: 1,
+      y: 10,
+      z: 1
+    },
+    easingFunction: (t) => t * t,
+    uniformVectorValues: false
+  },
+  {
+    type: "oscillating-random",
+    minValue: {
+      x: 0.2,
+      y: 0.2,
+      z: 0
+    },
+    maxValue: {
+      x: -1.2,
+      y: -1.2,
+      z: 0
+    },
+    minStart: {
+      x: 1,
+      y: -6,
+      z: 0
+    },
+    maxStart: {
+      x: -10,
+      y: 10,
+      z: 0
+    },
+    minFinal: {
+      x: -10,
+      y: 10,
+      z: 0
+    },
+    maxFinal: {
+      x: 10,
+      y: -10,
+      z: 0
+    },
+    minDuration: {
+      x: 3e3,
+      y: 3e3,
+      z: 3e3
+    },
+    maxDuration: {
+      x: 6e3,
+      y: 6e3,
+      z: 6e3
+    },
+    minDirection: {
+      x: -0.5,
+      y: -0.5,
+      z: -0.5
+    },
+    maxDirection: {
+      x: 0.5,
+      y: 0.5,
+      z: 0.5
+    },
+    easingFunctions: [
+      (t) => Math.sin(t * Math.PI * 4) * 0.7 + 0.3,
+      (t) => t * t * (3 - 2 * t),
+      (t) => Math.sin(t * Math.PI * 3) * 0.4 + 0.6
+    ],
+    uniformVectorValues: false
+  }
+];
 function CakeWithConfetti({ data, type }) {
   const Methods = React.use(ConfettiContext);
-  return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: (e) => {
+  const handleMouseOver = (e) => {
     const t = e.currentTarget.getBoundingClientRect();
-    Methods.createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2, type && {
-      velocity: {
-        type: "static-random",
-        minValue: {
-          x: -180,
-          y: -180
-        },
-        maxValue: {
-          x: 180,
-          y: 180
-        }
-      }
+    const currentType = DataStore?.confettiType || type || "static-random";
+    const centerX = t.left + t.width / 2;
+    const centerY = t.top + t.height / 2;
+    Methods.createMultipleConfettiAt(centerX, centerY, {
+      velocity: velocityConfigs.find((x) => x.type === currentType)
     });
-  } }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { ...data }));
+  };
+  return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: handleMouseOver }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { ...data }));
 }
 var CakeSVG = () => {
   return /* @__PURE__ */ BdApi.React.createElement(
@@ -164,7 +310,7 @@ var CakeDay = class {
       const isBirthday = checkDate(birthday.date);
       if (isBirthday) {
         res.props.children.unshift(
-          /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Cake Day" }, (data) => /* @__PURE__ */ BdApi.React.createElement("div", { ...data }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { ...data })))
+          /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Cake Day" }, (data) => /* @__PURE__ */ BdApi.React.createElement("div", { ...data }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { ...data, type: "static-random" })))
         );
       }
     });
@@ -180,7 +326,12 @@ var CakeDay = class {
             const user = Webpack.Stores.UserStore.getUser(channel.recipients[0]);
             const nameProps = found?.children?.props?.name?.props;
             if (checkDate(DataStore.Birthdays[user.id]?.date)) {
-              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { type: true }), " ", nameProps.children)];
+              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(
+                CakeWithConfetti,
+                {
+                  type: DataStore?.confettiType || "static-random"
+                }
+              ), " ", nameProps.children)];
             }
             return [ret];
           }
