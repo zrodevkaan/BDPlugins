@@ -63,14 +63,16 @@ const {
     PrivateChannelSortStore,
     GuildChannelStore,
     SelectedGuildStore,
-    ChannelStore
+    ChannelStore,
+    UserGuildSettingsStore
 } = getBulkStore([
     'UserStore',
     'TypingStore',
     'PrivateChannelSortStore',
     'GuildChannelStore',
     'SelectedGuildStore',
-    'ChannelStore'
+    'ChannelStore',
+    'UserGuildSettingsStore'
 ]);
 
 /* when will Webpack.Stores be merged.... :( */
@@ -322,6 +324,10 @@ const TypingIndicatorDMBar = React.memo(() => {
 
 const TypingIndicator = React.memo(({ channelId }) => {
     const ref = React.useRef(null);
+    const isMuted = useStateFromStores([UserGuildSettingsStore, SelectedGuildStore], (a,b) => {
+        const isMuted = UserGuildSettingsStore.isChannelMuted(SelectedGuildStore.getGuildId(), channelId)
+        return isMuted
+    }, [channelId]);
 
     if (shouldIgnoreItem('ignoreChannels', channelId)) return null;
 
@@ -332,7 +338,7 @@ const TypingIndicator = React.memo(({ channelId }) => {
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
-    return React.createElement('div', {ref},
+    return !isMuted && React.createElement('div', {ref},
         React.createElement(Popout, {
             renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
             position: "right",
