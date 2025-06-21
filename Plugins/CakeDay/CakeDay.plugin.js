@@ -34,12 +34,23 @@ var Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
 var Badges = Webpack.getBySource('action:"PRESS_BADGE"');
 var UsernameLocation = Webpack.getBySource("isGDMFacepileEnabled", "avatarDecorationSrc");
-function CakeWithConfetti({ data }) {
+function CakeWithConfetti({ data, type }) {
   const Methods = React.use(ConfettiContext);
-  console.log(Methods);
   return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: (e) => {
     const t = e.currentTarget.getBoundingClientRect();
-    Methods.createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2);
+    Methods.createMultipleConfettiAt(t.left + t.width / 2, t.top + t.height / 2, type && {
+      velocity: {
+        type: "static-random",
+        minValue: {
+          x: -180,
+          y: -180
+        },
+        maxValue: {
+          x: 180,
+          y: 180
+        }
+      }
+    });
   } }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { ...data }));
 }
 var CakeSVG = () => {
@@ -165,10 +176,11 @@ var CakeDay = class {
           apply(target, thisArg, args) {
             const ret = Reflect.apply(target, thisArg, args);
             const found = Utils.findInTree(ret?.props?.children?.[1]?.props?.children?.[1], (x) => x?.to, { walkable: ["props", "children"] });
-            const user = found?.children?.props?.subText?.props?.user;
+            const channel = Webpack.Stores.ChannelStore.getChannel(found.to.split("/").pop());
+            const user = Webpack.Stores.UserStore.getUser(channel.recipients[0]);
             const nameProps = found?.children?.props?.name?.props;
-            if (checkDate(DataStore.Birthdays[user?.id]?.date)) {
-              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, null), " ", nameProps.children)];
+            if (checkDate(DataStore.Birthdays[user.id]?.date)) {
+              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { type: true }), " ", nameProps.children)];
             }
             return [ret];
           }
