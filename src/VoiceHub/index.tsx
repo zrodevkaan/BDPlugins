@@ -218,6 +218,8 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
     );
 };
 
+const useStateFromStore = Webpack.getModule(m => m.toString?.().includes("useStateFromStores"), {searchExports:true});
+
 const VoiceChannelList = () => {
     const [searchQuery, setSearchQuery] = React.useState('');
     const [filterType, setFilterType] = React.useState('all'); // deprecated/useless idea. dont mind this.
@@ -306,7 +308,7 @@ const VoiceChannelList = () => {
                     }} />
                 ) : (
                     filteredGuilds.map(guild => {
-                        const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
+                        const voiceStates = useStateFromStore([VoiceStateStore], () => VoiceStateStore.getVoiceStates(guild.id))
                         const activeChannels = [...new Set(Object.values(voiceStates).map(state => state.channelId))]
                             .map(channelId => ChannelStore.getChannel(channelId))
                             .filter(Boolean);
@@ -323,7 +325,7 @@ const VoiceChannelList = () => {
                                     <img
                                         src={
                                             guild?.icon
-                                                ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=1280&quality=lossless`
+                                                ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=4096&quality=lossless`
                                                 : `https://cdn.discordapp.com/embed/avatars/${getAvatar(guild.id)}.png`
                                         }
                                         style={{

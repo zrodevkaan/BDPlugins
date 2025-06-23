@@ -226,6 +226,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
     }))
   );
 };
+var useStateFromStore = Webpack.getModule((m) => m.toString?.().includes("useStateFromStores"), { searchExports: true });
 var VoiceChannelList = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterType, setFilterType] = React.useState("all");
@@ -295,7 +296,7 @@ var VoiceChannelList = () => {
       backgroundImage: "url(/assets/99ad5845cf7de1c326e2.svg)",
       margin: "auto"
     } }) : filteredGuilds.map((guild) => {
-      const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
+      const voiceStates = useStateFromStore([VoiceStateStore], () => VoiceStateStore.getVoiceStates(guild.id));
       const activeChannels = [...new Set(Object.values(voiceStates).map((state) => state.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
       return /* @__PURE__ */ BdApi.React.createElement(
         "div",
@@ -312,7 +313,7 @@ var VoiceChannelList = () => {
           /* @__PURE__ */ BdApi.React.createElement(
             "img",
             {
-              src: guild?.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=1280&quality=lossless` : `https://cdn.discordapp.com/embed/avatars/${getAvatar(guild.id)}.png`,
+              src: guild?.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=4096&quality=lossless` : `https://cdn.discordapp.com/embed/avatars/${getAvatar(guild.id)}.png`,
               style: {
                 width: "20px",
                 height: "20px",
