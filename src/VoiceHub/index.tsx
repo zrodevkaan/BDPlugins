@@ -373,7 +373,7 @@ const VoiceChannelList = () => {
     );
 };
 
-const VoiceHubButton = Webpack.getBySource('PrivateChannelLinkButton').Qj;
+const VoiceHubButton = Webpack.getByStrings('refresh_sm','linkButtonIcon',{searchExports:true});
 
 class VoiceHub {
     start() {

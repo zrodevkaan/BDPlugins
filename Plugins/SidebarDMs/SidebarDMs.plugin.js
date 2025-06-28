@@ -53,16 +53,36 @@ function forceUpdateApp() {
     container.stateNode.forceUpdate();
   });
 }
+var convertToDiscord = (id, avatar) => `https://cdn.discordapp.com/avatars/${id}/${avatar}.webp?size=1024`;
+var SidebarDMsComponent = () => {
+  const privateChannels = useStateFromStores([PrivateChannelSortStore], () => PrivateChannelSortStore.getSortedChannels());
+  return /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    bottom: "-60px",
+    padding: "15px",
+    margin: "10px -5px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "60px"
+  } }, privateChannels[1].map((x) => {
+    const UserId = ChannelStore.getChannel(x.channelId).recipients[0];
+    const User = UserStore.getUser(UserId);
+    const presence = User && useStateFromStores([PresenceStore], () => PresenceStore.getStatus(User.id));
+    return presence && /* @__PURE__ */ BdApi.React.createElement(
+      FriendListModule.qE,
+      {
+        key: x.channelId,
+        status: presence,
+        size: "SIZE_24",
+        src: convertToDiscord(UserId, User.avatar)
+      }
+    );
+  }));
+};
 var SidebarDMs = class {
   start() {
     forceUpdateApp();
     Patcher.after(AppModule, "Z", (that, args, res) => {
-      const findSidebar = Utils.findInTree(res, (x) => x?.className?.includes("content"), { walkable: ["props", "children"] });
-      const toPatch = findSidebar[1];
-      const unpatch = Patcher.after(toPatch, "type", (_, __, res2) => {
-        unpatch();
-        console.log(res2);
-      });
+      res.props.children.splice(1, 0, /* @__PURE__ */ BdApi.React.createElement(SidebarDMsComponent, null));
     });
   }
   stop() {

@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.6
+ * @version 1.0.7
  * @description Wanna know what people are in VCs? Here ya go.
  */
 "use strict";
@@ -345,7 +345,7 @@ var VoiceChannelList = () => {
     })
   ));
 };
-var VoiceHubButton = Webpack.getBySource("PrivateChannelLinkButton").Qj;
+var VoiceHubButton = Webpack.getByStrings("refresh_sm", "linkButtonIcon", { searchExports: true });
 var VoiceHub = class {
   start() {
     DOM.addStyle(
