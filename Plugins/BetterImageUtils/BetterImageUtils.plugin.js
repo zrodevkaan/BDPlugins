@@ -14,7 +14,7 @@ const Modules = {
 
     ImageUtils: Webpack.getModule(m => m.copyImage),
     Media: Webpack.getByPrototypeKeys("renderAttachments", { searchExports: true }).prototype,
-    ImageAnimated: Webpack.getModule(x => x.ZP.isSrcAVIF),
+    ImageAnimated: Webpack.getByKeys('isAnimated','isSrcPNG',{raw:true}),
 
     ModalClass: Webpack.getModule(m => m.modal && Object.keys(m).length === 3),
     openImageModal: Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true }),
