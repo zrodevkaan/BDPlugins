@@ -1770,7 +1770,7 @@ const css = `
   display: flex;
   height: 120px;
   width: 120px;
-  background: var(--background-secondary-alt);
+  background: var(--background-base-lower-alt);
   background-color: var(--bg-mod-faint);
   align-items: center;
   justify-content: center;
@@ -1836,7 +1836,7 @@ const css = `
     align-items: center;
     padding: 8px;
     border-radius: 4px;
-    background: var(--background-secondary);
+    background: var(--background-base-lower);
     cursor: pointer;
 }
 
@@ -1873,14 +1873,14 @@ const css = `
     padding: 8px;
     border-radius: 4px;
     border: none;
-    background: var(--background-secondary);
+    background: var(--background-base-lower);
     color: var(--text-normal);
     font-size: 14px;
 }
 
 .bd-gp-search-input:focus {
     outline: none;
-    background: var(--background-tertiary);
+    background: var(--background-base-lowest);
 }
 
 .bd-gp-emoji-grid {
@@ -1909,7 +1909,7 @@ const css = `
 }
 
 .bd-gp-emoji-item:hover {
-    background: var(--background-tertiary);
+    background: var(--background-base-lowest);
 }
 
 .bd-gp-emoji-image {

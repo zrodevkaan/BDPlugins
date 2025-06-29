@@ -1,7 +1,7 @@
 /**
  * @name Affinities
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description Allows you to checkout whom you interact with the most in categories like communication, direct messages, voice chat, server messages, and probabilities!
  */
 "use strict";
@@ -158,7 +158,7 @@ var RankIcons = {
 var TabSystem = ({ activeTab, setActiveTab, tabs }) => {
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: {
     display: "flex",
-    borderBottom: "1px solid var(--background-modifier-accent)",
+    borderBottom: "1px solid var(--border-subtle)",
     marginBottom: "16px",
     flex: "space-between"
   } }, tabs.map((tab) => /* @__PURE__ */ BdApi.React.createElement(
@@ -171,7 +171,7 @@ var TabSystem = ({ activeTab, setActiveTab, tabs }) => {
         background: "transparent",
         border: "none",
         borderBottom: activeTab === tab.id ? "2px solid var(--brand-experiment)" : "2px solid transparent",
-        color: activeTab === tab.id ? "var(--text-normal)" : "var(--text-muted)",
+        color: activeTab === tab.id ? "var(--text-default)" : "var(--text-muted)",
         cursor: "pointer",
         fontSize: "14px",
         fontWeight: activeTab === tab.id ? "600" : "500",
@@ -254,7 +254,7 @@ var FriendList = ({ friends, sortKey, showProbability = false }) => {
           ));
         },
         style: {
-          backgroundColor: "var(--background-secondary)",
+          backgroundColor: "var(--background-base-lower)",
           display: "flex",
           alignItems: "center",
           gap: "10px",

@@ -260,7 +260,7 @@ const UserAvatarList = ({ users, guild }) => {
             marginTop: '8px',
             maxWidth: '200px',
             justifyContent: 'left',
-            backgroundColor: !guild ? 'var(--background-secondary)' : 'transparent'
+            backgroundColor: !guild ? 'var(--background-base-lower)' : 'transparent'
         }
     }, [guild && React.createElement(KeyboardSVG, { key: 'balls' }), React.createElement(RenderAvatars, { key: 'balls_', guildId: SelectedGuild, max: 6, users: users_ })])
 };

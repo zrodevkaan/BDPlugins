@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.7
+ * @version 1.0.8
  * @description Wanna know what people are in VCs? Here ya go.
  */
 "use strict";
@@ -148,7 +148,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
         display: "flex",
         flexDirection: "column",
         gap: "4px",
-        borderLeft: "2px solid var(--background-modifier-accent)",
+        borderLeft: "2px solid var(--border-subtle)",
         transition: "background-color 0.2s ease",
         ":hover": {
           backgroundColor: "var(--background-modifier-hover)"
@@ -198,7 +198,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
             gap: "4px",
             padding: "2px 6px",
             borderRadius: "3px",
-            backgroundColor: "var(--background-secondary)",
+            backgroundColor: "var(--background-base-lower)",
             transition: "background-color 0.2s ease",
             ":hover": {
               backgroundColor: "var(--background-modifier-active)"
