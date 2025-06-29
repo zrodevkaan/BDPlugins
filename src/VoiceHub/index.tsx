@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.8
+ * @version 1.0.9
  * @description Wanna know what people are in VCs? Here ya go.
  */
 
