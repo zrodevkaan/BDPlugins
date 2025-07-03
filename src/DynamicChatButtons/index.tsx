@@ -24,7 +24,7 @@ const DataStore = new Proxy(
     }
 );
 
-const Buttons = Webpack.getBySource("type", "channel", "showAllButtons")
+const Buttons = Webpack.getBySource("showAllButtons")
 
 export default class DynamicChatButtons {
     protected allKnownButtons: any[];
