@@ -64,15 +64,13 @@ export default class DynamicChatButtons {
                 return DataStore[key] !== true;
             });
 
-            const reactTree = {
+            return {
                 ...originalResult,
                 props: {
                     ...originalResult.props,
                     children: filteredButtons
                 }
-            };
-
-            return reactTree
+            }
         };
 
         ContextMenu.patch('textarea-context', this.patchSlate);

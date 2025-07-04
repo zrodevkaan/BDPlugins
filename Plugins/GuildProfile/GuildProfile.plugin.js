@@ -1,12 +1,12 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 1.0.4
+ * @version 1.0.5
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
 
-const { Webpack, Webpack: { Filters }, ContextMenu, DOM, React, Components, UI } = BdApi;
-const { useState, useId, useRef, useLayoutEffect, useMemo, useReducer, useEffect } = React
+const {Webpack, Webpack: {Filters}, ContextMenu, DOM, React, Components, UI} = BdApi;
+const {useState, useId, useRef, useLayoutEffect, useMemo, useReducer, useEffect} = React
 
 const [
     VoiceIcon,
@@ -19,20 +19,35 @@ const [
     ServerOwnerIconClasses,
     InviteData
 ] = BdApi.Webpack.getBulk(
-    { filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'instant', 'backdropStyle'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('dI3q4u'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('"M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byKeys('ownerIcon', 'icon') },
-    { filter: BdApi.Webpack.Filters.byKeys('GuildTemplateName', 'Info', 'Data') }
+    {
+        filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'),
+        searchExports: true
+    },
+    {filter: BdApi.Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true},
+    {
+        filter: BdApi.Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'instant', 'backdropStyle'),
+        searchExports: true
+    },
+    {
+        filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'),
+        searchExports: true
+    },
+    {
+        filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'),
+        searchExports: true
+    },
+    {filter: BdApi.Webpack.Filters.byStrings('dI3q4u'), searchExports: true},
+    {
+        filter: BdApi.Webpack.Filters.byStrings('"M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04'),
+        searchExports: true
+    },
+    {filter: BdApi.Webpack.Filters.byKeys('ownerIcon', 'icon')},
+    {filter: BdApi.Webpack.Filters.byKeys('GuildTemplateName', 'Info', 'Data')}
 );
 
 
-const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve") })
-
+const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve")})
+const getGuildIconURL = BdApi.Webpack.getByKeys('getGuildIconURL').getGuildIconURL
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
 const Section = Webpack.getByStrings("cancelAnimationFrame(", "text-xs/semibold", ".useReducedMotion)")
 const snowflakeUtils = Webpack.getByKeys('extractTimestamp')
@@ -126,9 +141,10 @@ const Utils = {
             width = height * aspectRatio;
         }
 
-        return { width, height };
+        return {width, height};
     },
 };
+
 async function openMediaModal(url) {
     const isVideo = Utils.regex.video.test(url);
     let dimensions, type;
@@ -167,7 +183,7 @@ async function openMediaModal(url) {
 
 const DEFAULT_COLOR = [[0, 0, 0]];
 
-const OpenImageModal = Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', { searchExports: true })
+const OpenImageModal = Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', {searchExports: true})
 const GuildMemberCountStore = Webpack.getStore("GuildMemberCountStore");
 const ChannelMemberStore = Webpack.getStore("ChannelMemberStore");
 const GuildMemberStore = Webpack.getStore("GuildMemberStore");
@@ -182,11 +198,11 @@ const StickersStore = Webpack.getStore('StickersStore')
 const Sounds = Webpack.getStore('SoundboardStore')
 const UserModal = Webpack.getByKeys('openUserProfileModal')
 const getDefaultAvatar = (id) => Number(BigInt(id) >> 22n) % 6
-const {copyImage} = Webpack.getModule(x=>x.copyImage)
-const Endpoints = Webpack.getModule(Filters.byKeys("GUILD_EMOJI", "GUILD_EMOJIS"), { searchExports: true });
-const PermissionsBits = Webpack.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
-const HTTP = Webpack.getModule(m => typeof m === "object" && m.del && m.put, { searchExports: true })
-const useStateFromStores = Webpack.getByStrings('useStateFromStores', { searchExports: true })
+const {copyImage} = Webpack.getModule(x => x.copyImage)
+const Endpoints = Webpack.getModule(Filters.byKeys("GUILD_EMOJI", "GUILD_EMOJIS"), {searchExports: true});
+const PermissionsBits = Webpack.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), {searchExports: true});
+const HTTP = Webpack.getModule(m => typeof m === "object" && m.del && m.put, {searchExports: true})
+const useStateFromStores = Webpack.getByStrings('useStateFromStores', {searchExports: true})
 const copy = (text) => window?.DiscordNative ? DiscordNative.clipboard.copy(text) : navigator.clipboard.writeText(text)
 
 /* From old guild-profile powercord icons. Thanks Marvin :) */
@@ -200,7 +216,7 @@ const MarvinIcons = {
             fill: "var(--interactive-normal)"
         })
     })),
-    SOUNDBOARD: Webpack.getByStrings('"M14.24 1.03a1 1 0 0 1 .73 1.21l-1 4a1 1 0 0 1-1.94-.48l1-4a1 1 0 0 1 1.21', { searchExports: true }),
+    SOUNDBOARD: Webpack.getByStrings('"M14.24 1.03a1 1 0 0 1 .73 1.21l-1 4a1 1 0 0 1-1.94-.48l1-4a1 1 0 0 1 1.21', {searchExports: true}),
     ANIMATED_BANNER: React.memo(props => /*#__PURE__*/React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg",
         viewBox: "0 0 24 24",
@@ -838,7 +854,8 @@ class InternalStore {
         InternalStore.stores.add(this);
     }
 
-    initialize() { }
+    initialize() {
+    }
 
     static displayName;
     displayName;
@@ -935,7 +952,10 @@ const focusStore = new class FocusStore extends InternalStore {
         window.addEventListener("blur", () => this.emit());
     }
 
-    get hasFocus() { return document.hasFocus(); }
+    get hasFocus() {
+        return document.hasFocus();
+    }
+
     useFocus() {
         const [hasFocus, setFocus] = useState(() => document.hasFocus());
 
@@ -963,7 +983,7 @@ const markdownWrapper = Webpack.getByKeys("parse", "defaultRules", "parseTopic")
 
 function Markdown(props) {
     const parsed = useMemo(() => {
-        const state = Object.assign({}, { allowLinks: true }, props.state);
+        const state = Object.assign({}, {allowLinks: true}, props.state);
 
         return markdownWrapper.parse(props.text, state);
     }, [props.text, props.state]);
@@ -971,15 +991,15 @@ function Markdown(props) {
     return React.createElement('div', {}, parsed);
 }
 
-const GuildSelector = ({ data, onClose, props }) => {
+const GuildSelector = ({data, onClose, props}) => {
     const validGuilds = useMemo(() => {
-        const { id } = UserStore.getCurrentUser();
+        const {id} = UserStore.getCurrentUser();
         const isSticker = data.type === 2;
         const isAnimated = "isAnimated" in data ? data.isAnimated : false;
 
         return Object.values(GuildStore.getGuilds())
             .filter(guild =>
-                (PermissionStore.getGuildPermissions({ id: guild.id }) & PermissionsBits.CREATE_GUILD_EXPRESSIONS) === PermissionsBits.CREATE_GUILD_EXPRESSIONS
+                (PermissionStore.getGuildPermissions({id: guild.id}) & PermissionsBits.CREATE_GUILD_EXPRESSIONS) === PermissionsBits.CREATE_GUILD_EXPRESSIONS
                 || guild.ownerId === id
             )
             .filter(guild =>
@@ -1016,15 +1036,15 @@ const GuildSelector = ({ data, onClose, props }) => {
     };
 
     return React.createElement(ModalRoot, {
-        size: "medium",
-        className: "bd-gp-guild-selector",
-        ...props
-    },
-        React.createElement("div", { className: "bd-gp-guild-selector-content" },
-            React.createElement("h2", { className: "bd-gp-guild-selector-title" },
+            size: "medium",
+            className: "bd-gp-guild-selector",
+            ...props
+        },
+        React.createElement("div", {className: "bd-gp-guild-selector-content"},
+            React.createElement("h2", {className: "bd-gp-guild-selector-title"},
                 `Save ${data.type === 2 ? 'Sticker' : 'Emoji'} to Server`
             ),
-            React.createElement("div", { className: "bd-gp-guild-selector-name" },
+            React.createElement("div", {className: "bd-gp-guild-selector-name"},
                 React.createElement("input", {
                     type: "text",
                     value: customName,
@@ -1033,23 +1053,28 @@ const GuildSelector = ({ data, onClose, props }) => {
                     className: "bd-gp-search-input"
                 })
             ),
-            React.createElement("div", { className: "bd-gp-guild-list" },
+            React.createElement("div", {className: "bd-gp-guild-list"},
                 validGuilds.map(guild =>
                     React.createElement("div", {
-                        key: guild.id,
-                        className: `bd-gp-guild-item ${selectedGuild?.id === guild.id ? 'selected' : ''}`,
-                        onClick: () => setSelectedGuild(guild)
-                    },
+                            key: guild.id,
+                            className: `bd-gp-guild-item ${selectedGuild?.id === guild.id ? 'selected' : ''}`,
+                            onClick: () => setSelectedGuild(guild)
+                        },
                         React.createElement("img", {
-                            src: guild.getIconURL(40, true),
+                            src: getGuildIconURL({
+                                id: guild.id,
+                                icon: guild.icon,
+                                size: 40,
+                                isAnimated: true
+                            }),
                             className: "bd-gp-guild-icon",
                             alt: guild.name
                         }),
-                        React.createElement("div", { className: "bd-gp-guild-name" }, guild.name)
+                        React.createElement("div", {className: "bd-gp-guild-name"}, guild.name)
                     )
                 )
             ),
-            React.createElement("div", { className: "bd-gp-guild-selector-buttons" },
+            React.createElement("div", {className: "bd-gp-guild-selector-buttons"},
                 React.createElement(Components.Button, {
                     className: "bd-gp-button cancel",
                     onClick: props.onClose,
@@ -1065,60 +1090,60 @@ const GuildSelector = ({ data, onClose, props }) => {
     );
 };
 
-function AboutTab({ guild }) {
+function AboutTab({guild}) {
     return React.createElement(
         "div",
-        { className: "bd-gp-emoji-grid" },
+        {className: "bd-gp-emoji-grid"},
         React.createElement(
             Section,
-            { heading: "Created At" },
-            React.createElement("span", { className: "bd-gp-section" }, dateToNode(snowflakeUtils.extractTimestamp(guild.id)))
+            {heading: "Created At"},
+            React.createElement("span", {className: "bd-gp-section"}, dateToNode(snowflakeUtils.extractTimestamp(guild.id)))
         ),
         React.createElement(
             Section,
-            { heading: "Joined At" },
-            React.createElement("span", { className: "bd-gp-section" }, dateToNode(guild.joinedAt))
+            {heading: "Joined At"},
+            React.createElement("span", {className: "bd-gp-section"}, dateToNode(guild.joinedAt))
         ),
         React.createElement(
             Section,
-            { heading: "Verification Level" },
-            React.createElement("span", { className: "bd-gp-section" }, guild.verificationLevel)
+            {heading: "Verification Level"},
+            React.createElement("span", {className: "bd-gp-section"}, guild.verificationLevel)
         ),
         React.createElement(
             Section,
-            { heading: "Explicit Media Content Filter" },
-            React.createElement("span", { className: "bd-gp-section" }, guild.explicitContentFilter)
+            {heading: "Explicit Media Content Filter"},
+            React.createElement("span", {className: "bd-gp-section"}, guild.explicitContentFilter)
         ),
         React.createElement(
             Section,
-            { heading: "Server Boost Count" },
-            React.createElement("span", { className: "bd-gp-section" }, guild.premiumSubscriberCount)
+            {heading: "Server Boost Count"},
+            React.createElement("span", {className: "bd-gp-section"}, guild.premiumSubscriberCount)
         ),
         React.createElement(
             Section,
-            { heading: "Server Boost Level" },
-            React.createElement("span", { className: "bd-gp-section" }, guild.premiumTier)
+            {heading: "Server Boost Level"},
+            React.createElement("span", {className: "bd-gp-section"}, guild.premiumTier)
         ),
         React.createElement(
             Section,
-            { heading: "Preferred Locale" },
-            React.createElement("span", { className: "bd-gp-section" }, guild.preferredLocale)
+            {heading: "Preferred Locale"},
+            React.createElement("span", {className: "bd-gp-section"}, guild.preferredLocale)
         ),
         React.createElement(
             Section,
-            { heading: "NSFW Level" },
-            React.createElement("span", { className: "bd-gp-section" }, guild.nsfwLevel)
+            {heading: "NSFW Level"},
+            React.createElement("span", {className: "bd-gp-section"}, guild.nsfwLevel)
         ),
         guild.vanityURLCode &&
         React.createElement(
             Section,
-            { heading: "Vanity URL" },
-            React.createElement(Markdown, { text: `https://discord.gg/${guild.vanityURLCode}` })
+            {heading: "Vanity URL"},
+            React.createElement(Markdown, {text: `https://discord.gg/${guild.vanityURLCode}`})
         )
     );
 }
 
-const EmptyState = ({ style }) => {
+const EmptyState = ({style}) => {
     return React.createElement("div", {
         style: {
             flex: "0 1 auto",
@@ -1131,7 +1156,7 @@ const EmptyState = ({ style }) => {
     });
 };
 
-function StickersTab({ guild }) {
+function StickersTab({guild}) {
     const [stickers, setStickers] = useState(StickersStore.getAllGuildStickers().get(guild.id));
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -1144,10 +1169,10 @@ function StickersTab({ guild }) {
 
     return React.createElement(
         'div',
-        { className: 'bd-gp-emojis-container' },
+        {className: 'bd-gp-emojis-container'},
         React.createElement(
             'div',
-            { className: 'bd-gp-emoji-search' },
+            {className: 'bd-gp-emoji-search'},
             React.createElement('input', {
                 type: 'text',
                 placeholder: 'Search stickers...',
@@ -1161,7 +1186,7 @@ function StickersTab({ guild }) {
             :
             React.createElement(
                 'div',
-                { className: 'bd-gp-emoji-grid-emojis' },
+                {className: 'bd-gp-emoji-grid-emojis'},
                 filteredStickers.map(sticker =>
                     React.createElement(
                         'div',
@@ -1178,24 +1203,24 @@ function StickersTab({ guild }) {
                                         downloadURI(`https://media.discordapp.net/stickers/${sticker.id}.png?size=1280${sticker.isAnimated ? `&passthrough=true` : ""}`, sticker.name)
                                     }
                                 },
-                                {
-                                    label: 'Save to Guild',
-                                    action: () => {
-                                        openModal((props) =>
-                                            React.createElement(GuildSelector, {
-                                                data: { ...sticker, type: 2 },
-                                                props: props
-                                            })
-                                        );
-                                    }
-                                },
-                                {
-                                    label: 'Copy Link',
-                                    action: () => {
-                                        const link = `https://media.discordapp.net/stickers/${sticker.id}.png?size=1280${sticker.isAnimated}` ? `&passthrough=true` : ""
-                                        copy(link)
-                                    }
-                                }]))
+                                    {
+                                        label: 'Save to Guild',
+                                        action: () => {
+                                            openModal((props) =>
+                                                React.createElement(GuildSelector, {
+                                                    data: {...sticker, type: 2},
+                                                    props: props
+                                                })
+                                            );
+                                        }
+                                    },
+                                    {
+                                        label: 'Copy Link',
+                                        action: () => {
+                                            const link = `https://media.discordapp.net/stickers/${sticker.id}.png?size=1280${sticker.isAnimated}` ? `&passthrough=true` : ""
+                                            copy(link)
+                                        }
+                                    }]))
                             }
                         },
                         React.createElement('img', {
@@ -1203,14 +1228,14 @@ function StickersTab({ guild }) {
                             alt: sticker.name,
                             className: 'bd-gp-emoji-image'
                         }),
-                        React.createElement('div', { className: 'bd-gp-emoji-name' }, sticker.name)
+                        React.createElement('div', {className: 'bd-gp-emoji-name'}, sticker.name)
                     )
                 )
             )
     );
 }
 
-function SoundItem({ sound, onPlay, onContextMenu }) {
+function SoundItem({sound, onPlay, onContextMenu}) {
     const username = UserStore.getUser(sound.userId)?.username || 'Unknown';
 
     const renderEmoji = () => {
@@ -1218,11 +1243,11 @@ function SoundItem({ sound, onPlay, onContextMenu }) {
             return React.createElement('img', {
                 src: `https://cdn.discordapp.com/emojis/${sound.emojiId}.webp?size=1280`,
                 alt: "Sound emoji",
-                style: { width: '24px', height: '24px', marginRight: '8px', display: 'inline-block' }
+                style: {width: '24px', height: '24px', marginRight: '8px', display: 'inline-block'}
             });
         } else if (sound.emojiName) {
             return React.createElement('span', {
-                style: { fontSize: '24px', marginRight: '8px' }
+                style: {fontSize: '24px', marginRight: '8px'}
             }, sound.emojiName);
         }
         return null;
@@ -1237,19 +1262,19 @@ function SoundItem({ sound, onPlay, onContextMenu }) {
         },
         React.createElement(
             'div',
-            { className: 'bd-gp-sound-info', style: { display: 'flex', alignItems: 'center' } },
+            {className: 'bd-gp-sound-info', style: {display: 'flex', alignItems: 'center'}},
             renderEmoji(),
             React.createElement(
                 'div',
                 null,
-                React.createElement('div', { className: 'bd-gp-sound-name' }, sound.name),
-                React.createElement('div', { className: 'bd-gp-sound-user' }, 'Added by ' + username)
+                React.createElement('div', {className: 'bd-gp-sound-name'}, sound.name),
+                React.createElement('div', {className: 'bd-gp-sound-user'}, 'Added by ' + username)
             )
         )
     );
 }
 
-function SoundsTab({ guild }) {
+function SoundsTab({guild}) {
     const [sounds, setSounds] = useState(Sounds.getSounds().get(guild.id));
     const [_sound, setSound] = useState(null);
 
@@ -1259,10 +1284,10 @@ function SoundsTab({ guild }) {
 
     return React.createElement(
         'div',
-        { className: 'bd-gp-sounds-container' },
+        {className: 'bd-gp-sounds-container'},
         React.createElement(
             'div',
-            { className: 'bd-gp-sounds-grid' },
+            {className: 'bd-gp-sounds-grid'},
             sounds.map(sound =>
                 React.createElement(
                     SoundItem,
@@ -1282,12 +1307,12 @@ function SoundsTab({ guild }) {
                                     downloadURI(GetAudioCDN(sound.soundId), sound.name)
                                 }
                             },
-                            {
-                                label: 'Copy Link',
-                                action: () => {
-                                    copy(GetAudioCDN(sound.soundId))
-                                }
-                            }]))
+                                {
+                                    label: 'Copy Link',
+                                    action: () => {
+                                        copy(GetAudioCDN(sound.soundId))
+                                    }
+                                }]))
                         }
                     }
                 )
@@ -1296,7 +1321,7 @@ function SoundsTab({ guild }) {
     );
 }
 
-function EmojiTab({ guild }) {
+function EmojiTab({guild}) {
     const [emojis, setEmojis] = useState(EmojiStore.getGuilds()[guild.id]);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -1309,10 +1334,10 @@ function EmojiTab({ guild }) {
 
     return React.createElement(
         'div',
-        { className: 'bd-gp-emojis-container' },
+        {className: 'bd-gp-emojis-container'},
         React.createElement(
             'div',
-            { className: 'bd-gp-emoji-search' },
+            {className: 'bd-gp-emoji-search'},
             React.createElement('input', {
                 type: 'text',
                 placeholder: 'Search emojis...',
@@ -1326,7 +1351,7 @@ function EmojiTab({ guild }) {
             :
             React.createElement(
                 'div',
-                { className: 'bd-gp-emoji-grid-emojis' },
+                {className: 'bd-gp-emoji-grid-emojis'},
                 filteredEmojis.map(emoji =>
                     React.createElement(
                         'div',
@@ -1343,22 +1368,22 @@ function EmojiTab({ guild }) {
                                         downloadURI(`https://media.discordapp.net/emojis/${emoji.id}.${emoji.animated ? "gif" : `webp`}?size=1280${emoji.animated ? "?animated=true" : `&quality=lossless`}`, emoji.name)
                                     }
                                 },
-                                {
-                                    label: 'Save to Guild',
-                                    action: () => {
-                                        openModal((props) =>
-                                            React.createElement(GuildSelector, {
-                                                data: { ...emoji, type: 1 },
-                                                props: props
-                                            })
-                                        );
-                                    }
-                                }, {
-                                    label: 'Copy Link', action: () => {
-                                        const link = `https://media.discordapp.net/emojis/${emoji.id}.${emoji.animated ? "gif" : `webp`}?size=1280${emoji.animated ? "?animated=true" : `&quality=lossless`}`
-                                        copy(link)
-                                    }
-                                }]))
+                                    {
+                                        label: 'Save to Guild',
+                                        action: () => {
+                                            openModal((props) =>
+                                                React.createElement(GuildSelector, {
+                                                    data: {...emoji, type: 1},
+                                                    props: props
+                                                })
+                                            );
+                                        }
+                                    }, {
+                                        label: 'Copy Link', action: () => {
+                                            const link = `https://media.discordapp.net/emojis/${emoji.id}.${emoji.animated ? "gif" : `webp`}?size=1280${emoji.animated ? "?animated=true" : `&quality=lossless`}`
+                                            copy(link)
+                                        }
+                                    }]))
                             }
                         },
                         React.createElement('img', {
@@ -1366,14 +1391,14 @@ function EmojiTab({ guild }) {
                             alt: emoji.name,
                             className: 'bd-gp-emoji-image'
                         }),
-                        React.createElement('div', { className: 'bd-gp-emoji-name' }, emoji.name)
+                        React.createElement('div', {className: 'bd-gp-emoji-name'}, emoji.name)
                     )
                 )
             )
     );
 }
 
-function UserItem({ userId, guildId }) {
+function UserItem({userId, guildId}) {
     const user = useStateFromStores([UserStore], () => UserStore.getUser(userId));
     const member = useStateFromStores([GuildMemberStore], () => GuildMemberStore.getMember(guildId, userId));
     const friendNickName = useStateFromStores([RelationshipStore], () => RelationshipStore.isFriend(userId) && RelationshipStore.getNickname(userId));
@@ -1391,7 +1416,7 @@ function UserItem({ userId, guildId }) {
 
     return React.createElement(
         "div",
-        { className: "bd-gp-user", onClick: () => UserModal.openUserProfileModal({ userId: user.id, guildId: guildId }) },
+        {className: "bd-gp-user", onClick: () => UserModal.openUserProfileModal({userId: user.id, guildId: guildId})},
         React.createElement(
             "div",
             {
@@ -1403,36 +1428,40 @@ function UserItem({ userId, guildId }) {
         ),
         React.createElement(
             "div",
-            { className: "bd-gp-user-info" },
+            {className: "bd-gp-user-info"},
             React.createElement(
                 "div",
-                { className: "bd-gp-user-title" },
+                {className: "bd-gp-user-title"},
                 [
                     member?.nick || friendNickName || (user)?.globalName || user?.username || userId,
-                    guild.ownerId == userId && React.createElement(Components.Tooltip, { text: "Server Owner" }, (props) => {
-                        return React.createElement(ServerOwnerIcon, { ...props, color: 'currentColor', className: ServerOwnerIconClasses.ownerIcon })
+                    guild.ownerId == userId && React.createElement(Components.Tooltip, {text: "Server Owner"}, (props) => {
+                        return React.createElement(ServerOwnerIcon, {
+                            ...props,
+                            color: 'currentColor',
+                            className: ServerOwnerIconClasses.ownerIcon
+                        })
                     })
                 ]
             ),
             hasNickname &&
             React.createElement(
                 "div",
-                { className: "bd-gp-user-sub" },
+                {className: "bd-gp-user-sub"},
                 (user)?.globalName || user?.username || userId
             ),
         ),
     );
 }
 
-function FriendsTab({ guild }) {
+function FriendsTab({guild}) {
     const ids = inCommonStore.useFriendIds(guild.id);
 
     return React.createElement(
         "div",
-        { className: "bd-gp-users" },
+        {className: "bd-gp-users"},
         ids.length
             ? ids.map((userId) =>
-                React.createElement(UserItem, { key: userId, userId, guildId: guild.id })
+                React.createElement(UserItem, {key: userId, userId, guildId: guild.id})
             )
             : React.createElement("div", {
                 style: {
@@ -1446,15 +1475,15 @@ function FriendsTab({ guild }) {
     );
 }
 
-function IgnoredTab({ guild }) {
+function IgnoredTab({guild}) {
     const ids = inCommonStore.useIgnoredIds(guild.id)
 
     return React.createElement(
         "div",
-        { className: "bd-gp-users" },
+        {className: "bd-gp-users"},
         ids.length
             ? ids.map((userId) =>
-                React.createElement(UserItem, { key: userId, userId, guildId: guild.id })
+                React.createElement(UserItem, {key: userId, userId, guildId: guild.id})
             )
             : React.createElement("div", {
                 style: {
@@ -1468,15 +1497,15 @@ function IgnoredTab({ guild }) {
     );
 }
 
-function BlockedTab({ guild }) {
+function BlockedTab({guild}) {
     const ids = inCommonStore.useBlockedIds(guild.id);
 
     return React.createElement(
         "div",
-        { className: "bd-gp-users" },
+        {className: "bd-gp-users"},
         ids.length
             ? ids.map((userId) =>
-                React.createElement(UserItem, { key: userId, userId, guildId: guild.id })
+                React.createElement(UserItem, {key: userId, userId, guildId: guild.id})
             )
             : React.createElement("div", {
                 style: {
@@ -1490,18 +1519,23 @@ function BlockedTab({ guild }) {
     );
 }
 
-function GuildProfile({ guildId, transitionState }) {
+function GuildProfile({guildId, transitionState}) {
     const id = useId();
     const [tab, setTab] = useState(Tabs.ABOUT);
     const ref = useRef(null);
 
-    const { guild, features, icon, banner } = useStateFromStores([GuildStore], () => {
+    const {guild, features, icon, banner} = useStateFromStores([GuildStore], () => {
         const guild = GuildStore.getGuild(guildId);
         const features = guild.features;
         return {
             guild,
             features,
-            icon: guild.getIconURL(200, true),
+            icon: getGuildIconURL({
+                id: guild.id,
+                icon: guild.icon,
+                size: 200,
+                isAnimated: true
+            }),
             banner: guild.banner ? `https://cdn.discordapp.com/banners/${guildId}/${guild.banner}.${guild.banner.startsWith("a_") ? "gif" : "webp"}?size=1280` : null
         }
     });
@@ -1519,7 +1553,7 @@ function GuildProfile({ guildId, transitionState }) {
     }, [icon]);
 
     const onlineCount = useStateFromStores([ChannelMemberStore], () => {
-        const { groups } = ChannelMemberStore.getProps(guildId, SelectedChannelStore.getChannelId());
+        const {groups} = ChannelMemberStore.getProps(guildId, SelectedChannelStore.getChannelId());
         return groups
             .filter((group) => group.id && group.id !== 'offline')
             .map((group) => group.count)
@@ -1544,28 +1578,45 @@ function GuildProfile({ guildId, transitionState }) {
 
     return React.createElement(
         ModalRoot,
-        { transitionState, size: "small", hideShadow: true, className: "bd-gp-root" },
+        {transitionState, size: "small", hideShadow: true, className: "bd-gp-root"},
         React.createElement(
             "div",
-            { className: "bd-gp-modal", style: { "--banner-height": `${bannerHeight}px` } },
+            {className: "bd-gp-modal", style: {"--banner-height": `${bannerHeight}px`}},
             React.createElement(
                 "header",
-                { "data-has-banner": Boolean(banner).toString() },
+                {"data-has-banner": Boolean(banner).toString()},
                 React.createElement(
                     "svg",
-                    { viewBox: `0 0 600 ${bannerHeight}`, style: { minHeight: bannerHeight, width: 600 } },
+                    {viewBox: `0 0 600 ${bannerHeight}`, style: {minHeight: bannerHeight, width: 600}},
                     React.createElement(
                         "mask",
-                        { id: `${id}-${guildId}` },
-                        React.createElement("rect", { x: 0, y: 0, width: "100%", height: "100%", fill: "var(--interactive-normal)" }),
-                        React.createElement("circle", { cx: 84, cy: bannerHeight - 5, r: 68, fill: "currentColor" })
+                        {id: `${id}-${guildId}`},
+                        React.createElement("rect", {
+                            x: 0,
+                            y: 0,
+                            width: "100%",
+                            height: "100%",
+                            fill: "var(--interactive-normal)"
+                        }),
+                        React.createElement("circle", {cx: 84, cy: bannerHeight - 5, r: 68, fill: "currentColor"})
                     ),
                     React.createElement(
                         "foreignObject",
-                        { x: "0", y: "0", width: "100%", height: "100%", overflow: "visible", mask: `url(#${id}-${guildId})` },
-                        React.createElement("div", { style: bannerStyles, className: "bd-gp-banner", onContextMenu: () => banner && ContextMenu.open(event, ContextMenu.buildMenu([
-                            { label: 'Copy Link', action: () => copy(banner) }, 
-                          ])) })
+                        {
+                            x: "0",
+                            y: "0",
+                            width: "100%",
+                            height: "100%",
+                            overflow: "visible",
+                            mask: `url(#${id}-${guildId})`
+                        },
+                        React.createElement("div", {
+                            style: bannerStyles,
+                            className: "bd-gp-banner",
+                            onContextMenu: () => banner && ContextMenu.open(event, ContextMenu.buildMenu([
+                                {label: 'Copy Link', action: () => copy(banner)},
+                            ]))
+                        })
                     )
                 ),
                 React.createElement(
@@ -1573,59 +1624,65 @@ function GuildProfile({ guildId, transitionState }) {
                     {
                         className: "bd-gp-icon", onContextMenu: (event) => {
                             ContextMenu.open(event, ContextMenu.buildMenu([
-                                { label: 'Copy Link', action: () => copy(icon) }, 
-                              ]))
+                                {label: 'Copy Link', action: () => copy(icon)},
+                            ]))
                         }
                     },
                     icon
-                        ? React.createElement("img", { src: icon, height: 120, width: 120 })
+                        ? React.createElement("img", {src: icon, height: 120, width: 120})
                         : React.createElement("div", null, guild.acronym)
                 ),
             ),
             React.createElement(
                 "div",
-                { className: "bd-gp-body" },
+                {className: "bd-gp-body"},
                 React.createElement(
                     "div",
-                    { className: "bd-gp-info", style: { margin: '10px' } },
-                    React.createElement('div', { style: { gap: '10px' } },
-                        React.createElement("div", { className: "bd-gp-name" }, guild.name),
+                    {className: "bd-gp-info", style: {margin: '10px'}},
+                    React.createElement('div', {style: {gap: '10px'}},
+                        React.createElement("div", {className: "bd-gp-name"}, guild.name),
                         React.createElement('div', {
-                            style: {
-                                display: features.length > 6 ? 'grid' : 'flex',
-                                gap: '5px',
-                                gridTemplateColumns: features.length > 6 ? 'repeat(auto-fill, 14px)' : 'none',
-                                gridAutoRows: '14px',
-                                alignItems: 'center'
-                            }
-                        },
+                                style: {
+                                    display: features.length > 6 ? 'grid' : 'flex',
+                                    gap: '5px',
+                                    gridTemplateColumns: features.length > 6 ? 'repeat(auto-fill, 14px)' : 'none',
+                                    gridAutoRows: '14px',
+                                    alignItems: 'center'
+                                }
+                            },
                             Array.from(features).map(feature => {
                                 const Icon = MarvinIcons[feature] ?? MarvinIcons.UNKNOWN;
-                                return React.createElement(Components.Tooltip, { text: feature }, (props) => {
+                                return React.createElement(Components.Tooltip, {text: feature}, (props) => {
                                     return React.createElement(Icon, {
                                         ...props,
                                         width: 14,
                                         height: 14,
-                                        style: { color: 'gray', maxWidth: '14px', maxHeight: '14px' }
+                                        style: {color: 'gray', maxWidth: '14px', maxHeight: '14px'}
                                     });
                                 });
                             })
                         )
                     ),
-                    guild.description && React.createElement('span', { className: 'bd-gp-section', style: { color: 'white' } }, guild.description),
+                    guild.description && React.createElement('span', {
+                        className: 'bd-gp-section',
+                        style: {color: 'white'}
+                    }, guild.description),
                     React.createElement(
                         "div",
-                        { className: "bd-gp-stats", style: { padding: '10px' } },
-                        React.createElement(InviteData.Data, { members: Number(memberCount), membersOnline: Number(onlineCount) })
+                        {className: "bd-gp-stats", style: {padding: '10px'}},
+                        React.createElement(InviteData.Data, {
+                            members: Number(memberCount),
+                            membersOnline: Number(onlineCount)
+                        })
                     )
                 ),
-                React.createElement(UserItem, { guildId: guild.id, userId: guild.ownerId }),
+                React.createElement(UserItem, {guildId: guild.id, userId: guild.ownerId}),
                 React.createElement(
                     "div",
-                    { className: "bd-gp-content", "data-tab-id": tab?.toString?.() ?? "fall-back" },
+                    {className: "bd-gp-content", "data-tab-id": tab?.toString?.() ?? "fall-back"},
                     React.createElement(
                         "div",
-                        { className: "bd-gp-tabs" },
+                        {className: "bd-gp-tabs"},
                         React.createElement(
                             "div",
                             {
@@ -1727,16 +1784,16 @@ function GuildProfile({ guildId, transitionState }) {
                     ),
                     React.createElement(
                         "div",
-                        { className: "bd-gp-page", ref: ref },
+                        {className: "bd-gp-page", ref: ref},
                         tab === Tabs.ABOUT
-                            ? React.createElement(AboutTab, { guild })
+                            ? React.createElement(AboutTab, {guild})
                             : tab === Tabs.FRIENDS
-                                ? React.createElement(FriendsTab, { guild })
+                                ? React.createElement(FriendsTab, {guild})
                                 : tab === Tabs.EMOJIS
-                                    ? React.createElement(EmojiTab, { guild })
+                                    ? React.createElement(EmojiTab, {guild})
                                     : tab == Tabs.SOUNDS
-                                        ? React.createElement(SoundsTab, { guild })
-                                        : tab == Tabs.STICKERS ? React.createElement(StickersTab, { guild }) : tab == Tabs.IGNORE ? React.createElement(IgnoredTab, { guild }) : React.createElement(BlockedTab, { guild })
+                                        ? React.createElement(SoundsTab, {guild})
+                                        : tab == Tabs.STICKERS ? React.createElement(StickersTab, {guild}) : tab == Tabs.IGNORE ? React.createElement(IgnoredTab, {guild}) : React.createElement(BlockedTab, {guild})
                     )
                 )
             )
@@ -1746,8 +1803,8 @@ function GuildProfile({ guildId, transitionState }) {
 
 function openGuildProfileModal(guildId) {
     openModal((props) =>
-        React.createElement(GuildProfile, { guildId: guildId, ...props }),
-        { modalKey: `bd-guild-profile-${guildId}` }
+            React.createElement(GuildProfile, {guildId: guildId, ...props}),
+        {modalKey: `bd-guild-profile-${guildId}`}
     );
 }
 
