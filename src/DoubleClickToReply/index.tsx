@@ -3,7 +3,7 @@
  * @author Kaan
  * @description Allows you to double click an message and reply to it :)
  */
-const {ContextMenu, UI, Data, Webpack, React, Components: {Tooltip}, Patcher, DOM} = new BdApi('WebTranslator')
+const {ContextMenu, UI, Data, Webpack, React, Components: {Tooltip}, Patcher, DOM} = new BdApi('DoubleClickToReply')
 const MessageContent = Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'))
 const StartEdit = Webpack.getByStrings('showMentionToggle', 'FOCUS_CHANNEL_TEXT_AREA', {searchExports: true})
 const ChannelStore = Webpack.getStore('ChannelStore')

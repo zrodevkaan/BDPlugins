@@ -28,7 +28,7 @@ __export(index_exports, {
   default: () => DoubleClickToReply
 });
 module.exports = __toCommonJS(index_exports);
-var { ContextMenu, UI, Data, Webpack, React, Components: { Tooltip }, Patcher, DOM } = new BdApi("WebTranslator");
+var { ContextMenu, UI, Data, Webpack, React, Components: { Tooltip }, Patcher, DOM } = new BdApi("DoubleClickToReply");
 var MessageContent = Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'));
 var StartEdit = Webpack.getByStrings("showMentionToggle", "FOCUS_CHANNEL_TEXT_AREA", { searchExports: true });
 var ChannelStore = Webpack.getStore("ChannelStore");
