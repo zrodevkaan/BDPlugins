@@ -251,7 +251,7 @@ var MemberListComponent = React.memo(({ channel }) => {
   const members = UseStateFromStores([GuildMemberStore], () => GuildMemberStore.getMembers(channel.guild_id));
   const containerRef = React.useRef(null);
   const ROW_HEIGHT = 42;
-  const originalScrollHandler = window.arven.Webpack.getById(941028).TV;
+  const originalScrollHandler = window.arven.Webpack.getById(941028).exports.TV;
   const handleScroll = React.useCallback(() => {
     if (!containerRef.current) return;
     const { scrollTop: y, clientHeight: height } = containerRef.current;

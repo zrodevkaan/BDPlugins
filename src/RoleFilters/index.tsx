@@ -324,7 +324,7 @@ const MemberListComponent = React.memo(({channel}: { channel: Channel }) => {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const ROW_HEIGHT = 42;
 
-    const originalScrollHandler = window.arven.Webpack.getById(941028).TV;
+    const originalScrollHandler = window.arven.Webpack.getById(941028).exports.TV;
 
     const handleScroll = React.useCallback(() => {
         if (!containerRef.current) return;
