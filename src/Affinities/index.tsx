@@ -402,7 +402,7 @@ export default class Affinities {
             })
         })
 
-        Patcher.after(Module, "T", (a, args, res) => {
+        Patcher.after(Module, "TF", (a, args, res) => {
             const yes = res.props.children[2].props.children[0].props.children
 
             yes.unshift(Component)
