@@ -33,7 +33,6 @@ var { Patcher, Webpack, React, Data, UI, Utils, ContextMenu } = new BdApi("RoleF
 var GatewayStore = Webpack.getStore("GatewayConnectionStore");
 var GuildRoleStore = Webpack.getStore("GuildRoleStore");
 var PresenceStore = Webpack.getStore("PresenceStore");
-var ChannelStore = Webpack.getStore("ChannelStore");
 var TypingStore = Webpack.getStore("TypingStore");
 var GuildStore = Webpack.getStore("GuildStore");
 var GuildMemberStore = Webpack.getStore("GuildMemberStore");
@@ -41,45 +40,6 @@ var UserStore = Webpack.getStore("UserStore");
 var UseStateFromStores = Webpack.getModule((m) => m.toString?.().includes("useStateFromStores"), { searchExports: true });
 var MemberList = Webpack.getBySource(`.Z.MEMBER_LIST)`, "updateMaxContentFeedRowSeen");
 var MemberListItemComponent = Webpack.getBySource("shouldAnimateStatus", "onClickPremiumGuildIcon").Z;
-var DataStore = {
-  getSettings() {
-    return Data.load("roleFilters") || {
-      collapsedRoles: {},
-      hiddenRoles: {}
-    };
-  },
-  saveSettings(settings) {
-    Data.save("roleFilters", settings);
-  },
-  toggleRoleCollapse(guildId, roleName) {
-    const settings = this.getSettings();
-    if (!settings.collapsedRoles?.[guildId]) {
-      settings.collapsedRoles[guildId] = {};
-    }
-    const newState = !settings.collapsedRoles[guildId][roleName];
-    settings.collapsedRoles[guildId][roleName] = newState;
-    this.saveSettings(settings);
-    return newState;
-  },
-  isRoleCollapsed(guildId, roleName) {
-    const settings = this.getSettings();
-    return settings.collapsedRoles[guildId]?.[roleName] || false;
-  },
-  toggleRoleHidden(guildId, roleName) {
-    const settings = this.getSettings();
-    if (!settings.hiddenRoles?.[guildId]) {
-      settings.hiddenRoles[guildId] = {};
-    }
-    const newState = !settings.hiddenRoles[guildId][roleName];
-    settings.hiddenRoles[guildId][roleName] = newState;
-    this.saveSettings(settings);
-    return newState;
-  },
-  isRoleHidden(guildId, roleName) {
-    const settings = this.getSettings();
-    return settings.hiddenRoles?.[guildId]?.[roleName] || false;
-  }
-};
 var ChevronIcon = React.memo(({ isExpanded }) => /* @__PURE__ */ BdApi.React.createElement(
   "svg",
   {
@@ -149,8 +109,29 @@ var MemberItemComponent = React.memo(({ member, user, channel }) => {
 }, (prevProps, nextProps) => {
   return prevProps.member.userId === nextProps.member.userId && prevProps.member.nick === nextProps.member.nick && prevProps.channel.id === nextProps.channel.id;
 });
+var useDataStore = (guildId, roleId) => {
+  const [state, setState] = React.useState(() => ({
+    isCollapsed: DataStore.isRoleCollapsed(guildId, roleId),
+    isHidden: DataStore.isRoleHidden(guildId, roleId),
+    settings: DataStore.getSettings()
+  }));
+  React.useEffect(() => {
+    const updateState = () => {
+      setState({
+        isCollapsed: DataStore.isRoleCollapsed(guildId, roleId),
+        isHidden: DataStore.isRoleHidden(guildId, roleId),
+        settings: DataStore.getSettings()
+      });
+    };
+    DataStore.addChangeListener(updateState);
+    return () => {
+      DataStore.removeChangeListener(updateState);
+    };
+  }, [guildId, roleId]);
+  return state;
+};
 var RoleItemComponent = React.memo(({ members, role, channel }) => {
-  const [settings, setSettings] = React.useState(DataStore.getSettings());
+  const { isCollapsed, isHidden } = useDataStore(channel.guild_id, role.id);
   const membersToRender = React.useMemo(() => {
     const result = [];
     for (let i = 0; i < Math.min(members.length, 50); i++) {
@@ -172,34 +153,52 @@ var RoleItemComponent = React.memo(({ members, role, channel }) => {
   }, [members, channel]);
   const isItJustTheAtEveryoneRole = role.name === "@everyone";
   const roleData = GuildRoleStore.getRole(channel.guild_id, role.id);
-  return /* @__PURE__ */ BdApi.React.createElement("div", { key: role.id }, /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    color: "var(--text-muted)",
-    marginBottom: "8px",
-    marginTop: "16px",
-    padding: "0 8px",
-    cursor: "pointer",
-    borderRadius: "4px",
-    transition: "background-color 0.2s ease"
-  } }, /* @__PURE__ */ BdApi.React.createElement("h3", { style: {
-    fontFamily: "var(--font-primary)",
-    fontSize: "14px",
-    fontWeight: "400",
-    lineHeight: "1.2857142857142858",
-    margin: 0,
-    display: "flex",
-    gap: "8px"
-  } }, roleData?.unicodeEmoji ? /* @__PURE__ */ BdApi.React.createElement("div", null, roleData?.unicodeEmoji) : roleData.icon && /* @__PURE__ */ BdApi.React.createElement(
-    "img",
+  const handleToggleCollapse = React.useCallback(() => {
+    DataStore.toggleRoleCollapse(channel.guild_id, role.id);
+  }, [channel.guild_id, role.id]);
+  return /* @__PURE__ */ BdApi.React.createElement("div", { key: role.id }, /* @__PURE__ */ BdApi.React.createElement(
+    "div",
     {
-      style: { width: "16px", height: "16px" },
-      src: `https://cdn.discordapp.com/role-icons/${roleData.id}/${roleData.icon}.webp?size=16&quality=lossless`
-    }
-  ) || null, /* @__PURE__ */ BdApi.React.createElement("span", null, !isItJustTheAtEveryoneRole ? role.name : "Others", " - ", members.length))), !settings.hiddenRoles?.[channel.guild_id]?.[role.id] && membersToRender);
-}, (prevProps, nextProps) => {
-  return prevProps.role.id === nextProps.role.id && prevProps.members.length === nextProps.members.length && prevProps.channel.id === nextProps.channel.id;
+      onClick: handleToggleCollapse,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        color: "var(--text-muted)",
+        marginBottom: "8px",
+        marginTop: "16px",
+        padding: "0 8px",
+        cursor: "pointer",
+        borderRadius: "4px",
+        transition: "background-color 0.2s ease"
+      },
+      onMouseEnter: (e) => {
+        e.currentTarget.style.backgroundColor = "var(--background-modifier-hover)";
+      },
+      onMouseLeave: (e) => {
+        e.currentTarget.style.backgroundColor = "transparent";
+      }
+    },
+    /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center" } }, /* @__PURE__ */ BdApi.React.createElement(ChevronIcon, { isExpanded: !isCollapsed }), /* @__PURE__ */ BdApi.React.createElement("h3", { style: {
+      fontFamily: "var(--font-primary)",
+      fontSize: "14px",
+      fontWeight: "400",
+      lineHeight: "1.2857142857142858",
+      margin: 0,
+      display: "flex",
+      alignItems: "center",
+      gap: "8px"
+    } }, roleData?.unicodeEmoji ? /* @__PURE__ */ BdApi.React.createElement("div", null, roleData?.unicodeEmoji) : roleData.icon && /* @__PURE__ */ BdApi.React.createElement(
+      "img",
+      {
+        style: { width: "16px", height: "16px" },
+        src: `https://cdn.discordapp.com/role-icons/${roleData.id}/${roleData.icon}.webp?size=16&quality=lossless`
+      }
+    ) || null, /* @__PURE__ */ BdApi.React.createElement("span", null, !isItJustTheAtEveryoneRole ? role.name : "Others", " - ", members.length)))
+  ), !isHidden && !isCollapsed && /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    transition: "opacity 0.2s ease, max-height 0.2s ease",
+    overflow: "hidden"
+  } }, membersToRender));
 });
 var InternalStore = class _InternalStore {
   static stores = /* @__PURE__ */ new Set();
@@ -246,9 +245,59 @@ var InternalStore = class _InternalStore {
     return _InternalStore.getStoreId(this);
   }
 };
+var DataStoreA = class extends InternalStore {
+  getSettings() {
+    return Data.load("roleFilters") || {
+      collapsedRoles: {},
+      hiddenRoles: {}
+    };
+  }
+  saveSettings(settings) {
+    Data.save("roleFilters", settings);
+    this.emit();
+  }
+  toggleRoleCollapse(guildId, roleId) {
+    const settings = this.getSettings();
+    if (!settings.collapsedRoles?.[guildId]) {
+      settings.collapsedRoles[guildId] = {};
+    }
+    const newState = !settings.collapsedRoles[guildId][roleId];
+    settings.collapsedRoles[guildId][roleId] = newState;
+    this.saveSettings(settings);
+    return newState;
+  }
+  isRoleCollapsed(guildId, roleId) {
+    const settings = this.getSettings();
+    return settings.collapsedRoles[guildId]?.[roleId] || false;
+  }
+  toggleRoleHidden(guildId, roleId) {
+    const settings = this.getSettings();
+    if (!settings.hiddenRoles?.[guildId]) {
+      settings.hiddenRoles[guildId] = {};
+    }
+    const newState = !settings.hiddenRoles[guildId][roleId];
+    settings.hiddenRoles[guildId][roleId] = newState;
+    this.saveSettings(settings);
+    return newState;
+  }
+  isRoleHidden(guildId, roleId) {
+    const settings = this.getSettings();
+    return settings.hiddenRoles?.[guildId]?.[roleId] || false;
+  }
+};
+var DataStore = new DataStoreA();
 var MemberListComponent = React.memo(({ channel }) => {
-  const [settings, setSettings] = React.useState(DataStore.getSettings());
   const members = UseStateFromStores([GuildMemberStore], () => GuildMemberStore.getMembers(channel.guild_id));
+  const [settings, setSettings] = React.useState(() => DataStore.getSettings());
+  React.useEffect(() => {
+    const updateSettings = () => {
+      setSettings(DataStore.getSettings());
+    };
+    DataStore.addChangeListener(updateSettings);
+    return () => {
+      DataStore.removeChangeListener(updateSettings);
+    };
+  }, []);
   const containerRef = React.useRef(null);
   const ROW_HEIGHT = 42;
   const originalScrollHandler = window.arven.Webpack.getById(941028).exports.TV;
@@ -309,7 +358,7 @@ var MemberListComponent = React.memo(({ channel }) => {
       );
     }
     return result;
-  }, [sortedRoleGroups, channel]);
+  }, [sortedRoleGroups, channel, settings]);
   return /* @__PURE__ */ BdApi.React.createElement("div", { className: "container_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("aside", { className: "membersWrap_c8ffbb hiddenMembers_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("div", { ref: containerRef, onScroll: handleScroll, style: { overflow: "scroll", paddingRight: "0px" }, className: "members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c" }, /* @__PURE__ */ BdApi.React.createElement("div", { role: "list", className: "content__99f8c", style: { height: "90000px" } }, reactMembers))));
 }, (prevProps, nextProps) => {
   return prevProps.channel.id === nextProps.channel.id;
