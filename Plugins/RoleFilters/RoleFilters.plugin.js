@@ -359,7 +359,7 @@ var MemberListComponent = React.memo(({ channel }) => {
     }
     return result;
   }, [sortedRoleGroups, channel, settings]);
-  return /* @__PURE__ */ BdApi.React.createElement("div", { className: "container_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("aside", { className: "membersWrap_c8ffbb hiddenMembers_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("div", { ref: containerRef, onScroll: handleScroll, style: { overflow: "scroll", paddingRight: "0px" }, className: "members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c" }, /* @__PURE__ */ BdApi.React.createElement("div", { role: "list", className: "content__99f8c", style: { height: "90000px" } }, reactMembers))));
+  return /* @__PURE__ */ BdApi.React.createElement("div", { className: "container_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("aside", { className: "membersWrap_c8ffbb hiddenMembers_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("div", { ref: containerRef, onScroll: handleScroll, style: { overflow: "scroll", paddingRight: "0px" }, className: "members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c" }, /* @__PURE__ */ BdApi.React.createElement("div", { role: "list", className: "content__99f8c", style: { height: "fit-content" } }, reactMembers))));
 }, (prevProps, nextProps) => {
   return prevProps.channel.id === nextProps.channel.id;
 });

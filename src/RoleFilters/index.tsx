@@ -454,7 +454,7 @@ const MemberListComponent = React.memo(({ channel }: { channel: Channel }) => {
         <div className={'container_c8ffbb'}>
             <aside className={'membersWrap_c8ffbb hiddenMembers_c8ffbb'}>
                 <div ref={containerRef} onScroll={handleScroll} style={{ overflow: 'scroll', paddingRight: '0px' }} className={'members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c'}>
-                    <div role={'list'} className={'content__99f8c'} style={{ height: '90000px' }}>
+                    <div role={'list'} className={'content__99f8c'} style={{ height: 'fit-content' }}>
                         {reactMembers}
                     </div>
                 </div>
