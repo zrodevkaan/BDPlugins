@@ -5,16 +5,16 @@
  * @description Allows you to checkout whom you interact with the most in categories like communication, direct messages, voice chat, server messages, and probabilities!
  */
 
-import type {ContextMenuSetup} from "betterdiscord";
+import type { ContextMenuSetup } from "betterdiscord";
 
-const {Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu} = new BdApi("Index");
-const {useState} = React;
+const { Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu } = new BdApi("Index");
+const { useState } = React;
 
-const UseStateFromStores: Function = Webpack.getModule(m => m.toString?.().includes("useStateFromStores"), {searchExports: true});
-const ModalRoot = Webpack.getModule(Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), {searchExports: true});
+const UseStateFromStores: Function = Webpack.getModule(m => m.toString?.().includes("useStateFromStores"), { searchExports: true });
+const ModalRoot = Webpack.getModule(Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), { searchExports: true });
 const UserModal = Webpack.getByKeys('openUserProfileModal')
 const Module = Webpack.getBySource('.PlatformTypes.WINDOWS&&(0,')
-const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve")})
+const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve") })
 
 const ModalSystem = Webpack.getMangled(".modalKey?", {
     openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
@@ -41,7 +41,7 @@ function forceUpdateApp() {
         container = container.child;
     }
 
-    const {render} = container.stateNode;
+    const { render } = container.stateNode;
 
     if (render.toString().includes("null")) return;
 
@@ -60,7 +60,7 @@ Array.prototype.pushIf = function (predicate, ...items) {
     return this;
 };
 
-export const FriendsterIcon = ({size = 24, color = 'currentColor', ...props}) => (
+export const FriendsterIcon = ({ size = 24, color = 'currentColor', ...props }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 464 448"
@@ -70,11 +70,11 @@ export const FriendsterIcon = ({size = 24, color = 'currentColor', ...props}) =>
         {...props}
     >
         <path xmlns="http://www.w3.org/2000/svg" fill={color}
-              d="M190 41q24 20 32.5 52.5T222 156q-10 27-43.5 27T135 155q-10-27-5-59.5T155 41q20-18 35 0zm83-35q-35 17-33 90q8 73 47 74q49-20 35-108q-3-23-15.5-41T273 6zm162 53q-42-9-52 15q-11 21-26 81t-36 87q-24 29-58.5 44.5T193 296q-42-6-64-41q-12-20-27.5-72T68 108q-24-12-37.5-6t-20 15t-8 26.5T2 171t2 18v2q9 56 17 70q33 69 108.5 100T279 371q78-22 129.5-93.5T462 122q0-50-27-63z"/>
+            d="M190 41q24 20 32.5 52.5T222 156q-10 27-43.5 27T135 155q-10-27-5-59.5T155 41q20-18 35 0zm83-35q-35 17-33 90q8 73 47 74q49-20 35-108q-3-23-15.5-41T273 6zm162 53q-42-9-52 15q-11 21-26 81t-36 87q-24 29-58.5 44.5T193 296q-42-6-64-41q-12-20-27.5-72T68 108q-24-12-37.5-6t-20 15t-8 26.5T2 171t2 18v2q9 56 17 70q33 69 108.5 100T279 371q78-22 129.5-93.5T462 122q0-50-27-63z" />
     </svg>
 );
 
-export const UserIcon = ({size = 16, color = 'currentColor', ...props}) => (
+export const UserIcon = ({ size = 16, color = 'currentColor', ...props }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -84,12 +84,12 @@ export const UserIcon = ({size = 16, color = 'currentColor', ...props}) => (
         {...props}
     >
         <path xmlns="http://www.w3.org/2000/svg" fill={color}
-              d="M5 5a5 5 0 0 1 10 0v2A5 5 0 0 1 5 7V5zM0 16.68A19.9 19.9 0 0 1 10 14c3.64 0 7.06.97 10 2.68V20H0v-3.32z"/>
+            d="M5 5a5 5 0 0 1 10 0v2A5 5 0 0 1 5 7V5zM0 16.68A19.9 19.9 0 0 1 10 14c3.64 0 7.06.97 10 2.68V20H0v-3.32z" />
     </svg>
 );
 
 
-export const CrownIcon = ({size = 24, color = 'currentColor', ...props}) => (
+export const CrownIcon = ({ size = 24, color = 'currentColor', ...props }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -109,7 +109,7 @@ export const CrownIcon = ({size = 24, color = 'currentColor', ...props}) => (
     </svg>
 );
 
-export const FriendIcon = ({size = 24, color = 'currentColor', ...props}) => (
+export const FriendIcon = ({ size = 24, color = 'currentColor', ...props }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 819 622"
@@ -118,18 +118,18 @@ export const FriendIcon = ({size = 24, color = 'currentColor', ...props}) => (
         {...props}
     >
         <path xmlns="http://www.w3.org/2000/svg"
-              fill={color}
-              d="M552.664 491c41 23 64 61 60 100c-2 24-1 24-32 28c-19 2-140 3-263 3c-140 0-286-1-297-4c-41-11-17-87 37-123c43-27 130-69 154-74c33-7 37-28 0-91c-8-15-17-58-18-104c-1-74 12-124 77-149c12-4 26-6 39-6c43 0 83 24 100 59c23 47 12 170-12 215c-29 51-26 67 6 75c20 5 86 36 149 71zm219-63c32 17 50 48 47 78c-1 18-1 19-25 22c-12 2-75 3-149 3c-13-31-38-59-72-77c-39-22-85-45-120-60c23-11 43-20 52-22c25-6 28-20 0-70c-7-12-15-46-16-82c-1-58 12-98 62-117c10-3 21-5 31-5c33 0 64 18 77 46c17 37 9 133-9 169c-22 40-20 52 5 58c16 4 67 29 117 57z"/>
+            fill={color}
+            d="M552.664 491c41 23 64 61 60 100c-2 24-1 24-32 28c-19 2-140 3-263 3c-140 0-286-1-297-4c-41-11-17-87 37-123c43-27 130-69 154-74c33-7 37-28 0-91c-8-15-17-58-18-104c-1-74 12-124 77-149c12-4 26-6 39-6c43 0 83 24 100 59c23 47 12 170-12 215c-29 51-26 67 6 75c20 5 86 36 149 71zm219-63c32 17 50 48 47 78c-1 18-1 19-25 22c-12 2-75 3-149 3c-13-31-38-59-72-77c-39-22-85-45-120-60c23-11 43-20 52-22c25-6 28-20 0-70c-7-12-15-46-16-82c-1-58 12-98 62-117c10-3 21-5 31-5c33 0 64 18 77 46c17 37 9 133-9 169c-22 40-20 52 5 58c16 4 67 29 117 57z" />
     </svg>
 );
 
 const RankIcons = {
-    1: {icon: <CrownIcon size={16} color={'#e2de50'}/>},
-    2: {icon: <CrownIcon size={16} color={'#7d7a7a'}/>},
-    3: {icon: <CrownIcon size={16} color={'#9f6f53'}/>},
+    1: { icon: <CrownIcon size={16} color={'#e2de50'} /> },
+    2: { icon: <CrownIcon size={16} color={'#7d7a7a'} /> },
+    3: { icon: <CrownIcon size={16} color={'#9f6f53'} /> },
 }
 
-const TabSystem = ({activeTab, setActiveTab, tabs}) => {
+const TabSystem = ({ activeTab, setActiveTab, tabs }) => {
     return (
         <div style={{
             display: 'flex',
@@ -160,7 +160,7 @@ const TabSystem = ({activeTab, setActiveTab, tabs}) => {
     );
 };
 
-const FriendList = ({friends, sortKey, showProbability = false}) => {
+const FriendList = ({ friends, sortKey, showProbability = false }) => {
     const [searchQuery, setSearchQuery] = React.useState('');
     const [onlyFriends, setOnlyFriends] = React.useState(false);
 
@@ -196,14 +196,14 @@ const FriendList = ({friends, sortKey, showProbability = false}) => {
 
     return (
         <div>
-            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Components.TextInput
                     placeholder={"Search friends..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e)}
                 />
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                    <FriendIcon color={onlyFriends ? '#28952f' : '#FF0000'}/>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FriendIcon color={onlyFriends ? '#28952f' : '#FF0000'} />
                     <Components.SwitchInput
                         value={onlyFriends}
                         onChange={(e) => setOnlyFriends(e)}
@@ -237,30 +237,30 @@ const FriendList = ({friends, sortKey, showProbability = false}) => {
 
                 return (
                     <div key={friend.otherUserId} className="friend-item"
-                         onClick={() => {
-                             UserModal.openUserProfileModal({userId: friend.otherUserId})
-                         }}
-                         onContextMenu={(a) => {
-                             ContextMenu.open(a, ContextMenu.buildMenu(
-                                 menu
-                             ))
-                         }}
-                         style={{
-                             backgroundColor: 'var(--background-base-lower)',
-                             display: 'flex',
-                             alignItems: 'center',
-                             gap: '10px',
-                             margin: '10px 0',
-                             padding: '10px',
-                             borderRadius: '5px',
-                             position: 'relative'
-                         }}>
+                        onClick={() => {
+                            UserModal.openUserProfileModal({ userId: friend.otherUserId })
+                        }}
+                        onContextMenu={(a) => {
+                            ContextMenu.open(a, ContextMenu.buildMenu(
+                                menu
+                            ))
+                        }}
+                        style={{
+                            backgroundColor: 'var(--background-base-lower)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            margin: '10px 0',
+                            padding: '10px',
+                            borderRadius: '5px',
+                            position: 'relative'
+                        }}>
                         {!showProbability && <Components.Tooltip text={"sup"}>
                             {() => {
                                 return RankIcons[value]?.icon
                             }}
                         </Components.Tooltip>}
-                        <Components.Text style={{minWidth: '30px', textAlign: 'center'}}>
+                        <Components.Text style={{ minWidth: '30px', textAlign: 'center' }}>
                             {showProbability ?
                                 `${Math.round((value || 0) * 100)}%` :
                                 `#${value || 'N/A'}`
@@ -269,7 +269,7 @@ const FriendList = ({friends, sortKey, showProbability = false}) => {
                         <img
                             src={user?.getAvatarURL() || `https://cdn.discordapp.com/embed/avatars/${getAvatar(friend.otherUserId)}.png`}
                             alt={`${user?.username || 'User'} avatar`}
-                            style={{height: '36px', borderRadius: '50%'}}
+                            style={{ height: '36px', borderRadius: '50%' }}
                             className="friend-avatar"
                         />
                         <Components.Text style={{
@@ -283,7 +283,7 @@ const FriendList = ({friends, sortKey, showProbability = false}) => {
                         </Components.Text>
 
                         {friend.isFriend && (
-                            <FriendIcon size={20} color={'#28952f'}/>
+                            <FriendIcon size={20} color={'#28952f'} />
                         )}
                     </div>
                 );
@@ -292,7 +292,7 @@ const FriendList = ({friends, sortKey, showProbability = false}) => {
     );
 };
 
-const InformationModalForAffinities = ({props}) => {
+const InformationModalForAffinities = ({ props }) => {
     const [activeTab, setActiveTab] = useState('communication');
 
     const friends = UseStateFromStores([AffinityStore], (a) => {
@@ -300,45 +300,45 @@ const InformationModalForAffinities = ({props}) => {
     });
 
     const tabs = [
-        {id: 'communication', label: 'Communication'},
-        {id: 'dm', label: 'Direct Messages'},
-        {id: 'vc', label: 'Voice Chat'},
-        {id: 'server', label: 'Server Messages'},
-        {id: 'probabilities', label: 'Probabilities'}
+        { id: 'communication', label: 'Communication' },
+        { id: 'dm', label: 'Direct Messages' },
+        { id: 'vc', label: 'Voice Chat' },
+        { id: 'server', label: 'Server Messages' },
+        { id: 'probabilities', label: 'Probabilities' }
     ];
 
     const renderTabContent = () => {
         switch (activeTab) {
             case 'communication':
-                return <FriendList friends={friends} sortKey="communicationRank"/>;
+                return <FriendList friends={friends} sortKey="communicationRank" />;
             case 'dm':
-                return <FriendList friends={friends} sortKey="dmRank"/>;
+                return <FriendList friends={friends} sortKey="dmRank" />;
             case 'vc':
-                return <FriendList friends={friends} sortKey="vcRank"/>;
+                return <FriendList friends={friends} sortKey="vcRank" />;
             case 'server':
-                return <FriendList friends={friends} sortKey="serverMessageRank"/>;
+                return <FriendList friends={friends} sortKey="serverMessageRank" />;
             case 'probabilities':
                 return (
                     <div>
                         <div>
-                            <Components.Text style={{marginBottom: '10px'}}>
+                            <Components.Text style={{ marginBottom: '10px' }}>
                                 Voice Chat Probs
                             </Components.Text>
 
-                            <FriendList friends={friends} sortKey="vcProbability" showProbability={true}/>
+                            <FriendList friends={friends} sortKey="vcProbability" showProbability={true} />
                         </div>
 
                         <div>
-                            <Components.Text style={{marginBottom: '10px'}}>
+                            <Components.Text style={{ marginBottom: '10px' }}>
                                 Server Messages Probs
                             </Components.Text>
 
-                            <FriendList friends={friends} sortKey="serverMessageProbability" showProbability={true}/>
+                            <FriendList friends={friends} sortKey="serverMessageProbability" showProbability={true} />
                         </div>
                     </div>
                 );
             default:
-                return <FriendList friends={friends} sortKey="communicationRank"/>;
+                return <FriendList friends={friends} sortKey="communicationRank" />;
         }
     };
 
@@ -386,7 +386,7 @@ export default class Affinities {
             res.props.children = new Proxy(res.props.children, {
                 apply() {
                     const ret = Reflect.apply(...arguments);
-                    const header = Utils.findInTree(ret, x => x?.type === "header", {walkable: ['props', 'children']});
+                    const header = Utils.findInTree(ret, x => x?.type === "header", { walkable: ['props', 'children'] });
 
                     const guildScore = GuildAffinitiesStore.getGuildAffinity(args.guild.id)
 
