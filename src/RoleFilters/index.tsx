@@ -330,7 +330,6 @@ const MemberListComponent = React.memo(({channel}: { channel: Channel }) => {
         if (!containerRef.current) return;
 
         const {scrollTop: y, clientHeight: height} = containerRef.current;
-        console.log(y, height);
         originalScrollHandler({
             guildId: channel.guild_id,
             channelId: channel.id,

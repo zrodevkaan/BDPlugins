@@ -255,7 +255,6 @@ var MemberListComponent = React.memo(({ channel }) => {
   const handleScroll = React.useCallback(() => {
     if (!containerRef.current) return;
     const { scrollTop: y, clientHeight: height } = containerRef.current;
-    console.log(y, height);
     originalScrollHandler({
       guildId: channel.guild_id,
       channelId: channel.id,
