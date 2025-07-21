@@ -30,7 +30,7 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 var { Webpack, Patcher, ContextMenu } = new BdApi("Quoter");
-var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, height = 500) => {
+var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, height = 530) => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -40,7 +40,7 @@ var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, heigh
       let baseSize = Math.max(12, Math.min(60, 800 / text2.length));
       const wordCount = text2.split(" ").length;
       if (wordCount <= 3) baseSize *= 1;
-      else if (wordCount <= 6) baseSize *= 1.5;
+      else if (wordCount <= 6) baseSize *= 1.3;
       return baseSize;
     }
     function wrapTextCentered(ctx2, text2, x, y, maxWidth, lineHeight) {
@@ -75,9 +75,9 @@ var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, heigh
     const img = new Image();
     img.onload = () => {
       try {
-        ctx.drawImage(img, 0, 0, 500, height);
-        const grad = ctx.createLinearGradient(0, 0, 400, 0);
-        grad.addColorStop(0, "rgba(169, 169, 169, 0)");
+        ctx.drawImage(img, 0, 0, 600, height);
+        const grad = ctx.createLinearGradient(0, 45, 530, 0);
+        grad.addColorStop(0, "rgba(0, 0, 0, 0)");
         grad.addColorStop(1, "rgba(0, 0, 0, 1)");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, width, height);
@@ -87,11 +87,11 @@ var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, heigh
         const lineHeight = fontSize * 1.2;
         ctx.fillStyle = "white";
         ctx.font = `bold ${fontSize * 1.4}px Arial`;
-        const centerX = 600;
+        const centerX = 650;
         const centerY = height / 2;
         const endY = wrapTextCentered(ctx, text, centerX, centerY, availableWidth, lineHeight);
-        ctx.fillStyle = "rgba(255, 255, 255, 1)";
-        ctx.font = "24px Arial";
+        ctx.fillStyle = "rgba(104, 104, 104, 1)";
+        ctx.font = "italic 20px Arial";
         const attrWidth = ctx.measureText(attribution).width;
         const attrX = centerX + (availableWidth - attrWidth) / 2;
         ctx.fillText("- @" + attribution, attrX - 10, endY + 10);
