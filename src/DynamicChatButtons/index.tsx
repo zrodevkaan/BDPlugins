@@ -5,7 +5,7 @@
  * @description Customize which chat buttons are visible in Discord by right clicking the chat area.
  */
 
-const {Patcher, React, Webpack, DOM, ContextMenu, Data} = new BdApi('DynamicChatButtons')
+const { Patcher, React, Webpack, DOM, ContextMenu, Data } = new BdApi('DynamicChatButtons')
 
 const DataStore = new Proxy(
     {},
@@ -23,22 +23,17 @@ const DataStore = new Proxy(
     }
 );
 
-const Buttons = Webpack.getBySource("showAllButtons")
+const Buttons = Webpack.getBySource("isSubmitButtonEnabled",'.Z.getActiveOption(')
 
 export default class DynamicChatButtons {
     protected allKnownButtons: any[];
-    private originalButtonsType: any;
 
     constructor() {
         this.allKnownButtons = DataStore.allKnownButtons || [];
     }
 
     start() {
-        this.originalButtonsType = Buttons.Z.type;
-
-        Buttons.Z.type = (props, yes, b) => {
-            const originalResult = this.originalButtonsType(props);
-
+        Patcher.after(Buttons.Z, 'type', (_, [props], originalResult) => {
             if (!originalResult?.props?.children) {
                 return originalResult;
             }
@@ -64,14 +59,8 @@ export default class DynamicChatButtons {
                 return DataStore[key] !== true;
             });
 
-            return {
-                ...originalResult,
-                props: {
-                    ...originalResult.props,
-                    children: filteredButtons
-                }
-            }
-        };
+            return filteredButtons
+        });
 
         ContextMenu.patch('textarea-context', this.patchSlate);
     }
@@ -118,10 +107,6 @@ export default class DynamicChatButtons {
     }
 
     stop() {
-        if (this.originalButtonsType) {
-            Buttons.Z.type = this.originalButtonsType;
-        }
-
         Patcher.unpatchAll();
         ContextMenu.unpatch('textarea-context', this.patchSlate);
     }

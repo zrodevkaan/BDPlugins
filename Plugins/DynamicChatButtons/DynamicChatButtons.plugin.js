@@ -45,17 +45,14 @@ var DataStore = new Proxy(
     }
   }
 );
-var Buttons = Webpack.getBySource("showAllButtons");
+var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".Z.getActiveOption(");
 var DynamicChatButtons = class {
   allKnownButtons;
-  originalButtonsType;
   constructor() {
     this.allKnownButtons = DataStore.allKnownButtons || [];
   }
   start() {
-    this.originalButtonsType = Buttons.Z.type;
-    Buttons.Z.type = (props, yes, b) => {
-      const originalResult = this.originalButtonsType(props);
+    Patcher.after(Buttons.Z, "type", (_, [props], originalResult) => {
       if (!originalResult?.props?.children) {
         return originalResult;
       }
@@ -73,15 +70,8 @@ var DynamicChatButtons = class {
         const key = String(button.type?.type)?.includes?.("entryPointCommandButtonRef") ? "app_launcher" : button.key;
         return DataStore[key] !== true;
       });
-      const reactTree = {
-        ...originalResult,
-        props: {
-          ...originalResult.props,
-          children: filteredButtons
-        }
-      };
-      return reactTree;
-    };
+      return filteredButtons;
+    });
     ContextMenu.patch("textarea-context", this.patchSlate);
   }
   updateKnownButtons(currentKeys) {
@@ -120,9 +110,6 @@ var DynamicChatButtons = class {
     );
   };
   stop() {
-    if (this.originalButtonsType) {
-      Buttons.Z.type = this.originalButtonsType;
-    }
     Patcher.unpatchAll();
     ContextMenu.unpatch("textarea-context", this.patchSlate);
   }
