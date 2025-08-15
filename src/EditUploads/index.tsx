@@ -46,13 +46,22 @@ const DataStore = new Proxy(
 
 const CanvasHolder = ({fileBuffer, ...props}) => {
     const canvasRef = React.useRef(null);
-    const [image, setImage] = React.useState(null);
-    const [size, setSize] = React.useState({w: 0, h: 0});
+    const [isDrawing, setIsDrawing] = React.useState(false);
+
+    const canvas = canvasRef.current;
+
+    function getMousePos(event, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    }
 
     React.useEffect(() => {
         if (!canvasRef.current || !fileBuffer) return;
 
-        const canvas = canvasRef.current;
+        const canvas: HTMLCanvasElement = canvasRef.current;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
@@ -60,9 +69,6 @@ const CanvasHolder = ({fileBuffer, ...props}) => {
 
         const img = new Image();
         img.onload = () => {
-            setImage(img);
-            setSize({w: img.width, h: img.height});
-
             canvas.width = img.width;
             canvas.height = img.height;
 
@@ -78,11 +84,33 @@ const CanvasHolder = ({fileBuffer, ...props}) => {
         };
 
         img.src = blobUrl;
+
+        canvas.addEventListener('mousedown', (event) => {
+            setIsDrawing(true)
+            const pos = getMousePos(event, canvas);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        });
+
+        canvas.addEventListener('mousemove', (event) => {
+            if (!isDrawing) return;
+            const pos = getMousePos(event, canvas);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            setIsDrawing(false);
+            ctx.closePath();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            setIsDrawing(false);
+        });
     }, [fileBuffer]);
 
     return (
-        <Modals.ModalRoot {...props}>
-            <Modals.ModalHeader>Edit Upload</Modals.ModalHeader>
+        <Modals.ModalRoot {...props} size={"LARGE"}>
             <Modals.ModalContent>
                 <canvas
                     {...props}

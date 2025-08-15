@@ -7,22 +7,47 @@
 
 const { Webpack, Patcher, ContextMenu } = new BdApi("Quoter")
 
+function calculateFontSize({
+  charCount,
+  width,
+  height,
+}: {
+  charCount: number;
+  width: number;
+  height: number;
+}) {
+  let baseSize;
+  
+  if (charCount <= 20) {
+    baseSize = 48;
+  } else if (charCount <= 50) {
+    baseSize = 36;
+  } else if (charCount <= 100) {
+    baseSize = 28;
+  } else if (charCount <= 200) {
+    baseSize = 22;
+  } else {
+    baseSize = 18;
+  }
+  
+  const estimatedCharWidth = baseSize * 0.6;
+  const charsPerLine = Math.floor(width / estimatedCharWidth);
+  const estimatedLines = Math.ceil(charCount / charsPerLine);
+  const requiredHeight = estimatedLines * baseSize * 1.2;
+  
+  if (requiredHeight > height * 0.8) {
+    baseSize = baseSize * (height * 0.8) / requiredHeight;
+  }
+  
+  return Math.max(16, Math.min(baseSize, 60));
+}
+
 const generateQuoteImage = async (imageUrl, text, attribution, width = 1250, height = 530) => {
     return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-
-        function calculateFontSize(text, maxWidth, maxHeight) {
-            let baseSize = Math.max(12, Math.min(60, 800 / text.length));
-
-            const wordCount = text.split(' ').length;
-            if (wordCount <= 3) baseSize *= 1;
-            else if (wordCount <= 6) baseSize *= 1.3;
-
-            return baseSize
-        }
 
         function wrapTextCentered(ctx, text, x, y, maxWidth, lineHeight) {
             var words = text.split(' ');
@@ -74,11 +99,16 @@ const generateQuoteImage = async (imageUrl, text, attribution, width = 1250, hei
                 const availableWidth = 400;
                 const availableHeight = height;
 
-                const fontSize = calculateFontSize(text, availableWidth, availableHeight) * 1.3
+                const fontSize = calculateFontSize({
+                    charCount: text.length,
+                    width: availableWidth,
+                    height: availableHeight
+                });
+                
                 const lineHeight = fontSize * 1.2;
 
                 ctx.fillStyle = "white";
-                ctx.font = `bold ${fontSize * 1.4}px Arial`;
+                ctx.font = `bold ${fontSize}px Arial`;
 
                 const centerX = 650;
                 const centerY = height / 2;
@@ -90,7 +120,7 @@ const generateQuoteImage = async (imageUrl, text, attribution, width = 1250, hei
 
                 const attrWidth = ctx.measureText(attribution).width;
                 const attrX = centerX + (availableWidth - attrWidth) / 2;
-                ctx.fillText("- @" + attribution, attrX - 10, endY + 10);
+                ctx.fillText("- @" + attribution, attrX - 10, endY + 5);
 
                 canvas.toBlob((blob) => {
                     if (blob) {
@@ -117,21 +147,47 @@ const generateQuoteImage = async (imageUrl, text, attribution, width = 1250, hei
 const CloudUploader = Webpack.getByStrings('uploadFileToCloud', { searchExports: true })
 const SelectedStore = Webpack.getStore('SelectedChannelStore')
 const UserStore = Webpack.getStore("UserStore")
-const Chatbar = Webpack.getBySource('channelTextAreaDisabled', 'handleSubmit')
+const mods = Webpack.getByKeys('getSendMessageOptionsForReply')
+const PendingReplyStore = Webpack.getStore("PendingReplyStore")
+const FluxDispatcher = Webpack.getModule(x=>x._dispatch)
 
-let onSubmit;
+export const timestampToSnowflake = (timestamp: number): string => {
+    const DISCORD_EPOCH = BigInt(1420070400000);
+    const SHIFT = BigInt(22);
 
-async function upload(a, b, c) {
+    const ms = BigInt(timestamp) - DISCORD_EPOCH;
+    return ms <= BigInt(0) ? "0" : (ms << SHIFT).toString();
+};
+
+async function upload(a, b, c, channelId) {
     const yeah = await generateQuoteImage(a, b, c);
 
     const file = new File([yeah], 'quote.png', { type: 'image/png' });
 
+    const replyOptions = mods.getSendMessageOptionsForReply(
+        PendingReplyStore.getPendingReply(channelId),
+    );
+    if (replyOptions.messageReference) {
+        FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
+    }
+    
     const upload = new CloudUploader({ file }, SelectedStore.getCurrentlySelectedChannelId());
 
-    onSubmit({
-        value: "",
-        stickers: [],
-        uploads: [upload]
+    const messagePayload = {
+        flags: 0,
+        channel_id: channelId,
+        content: "",
+        sticker_ids: [],
+        validNonShortcutEmojis: [],
+        type: 0,
+        message_reference: replyOptions?.messageReference || null,
+        nonce: timestampToSnowflake(Date.now()),
+    };
+
+    mods.sendMessage(channelId, messagePayload, null, {
+        attachmentsToUpload: [upload],
+        onAttachmentUploadError: () => false,
+        ...messagePayload,
     });
 }
 
@@ -141,15 +197,13 @@ export default class Quoter {
     }
 
     async start() {
-        Patcher.before(Chatbar.Z.type, 'render', (a, args) => onSubmit = args[0]?.onSubmit);
-
         this.contextMenuPatch = ContextMenu.patch('message', (res, props) => {
             res.props.children.props.children.push(ContextMenu.buildItem({
                 label: 'Quote User',
                 action: async () => {
-                    const yesImage = UserStore.getUser(props.message.author.id).getAvatarURL({ size: 1280, animated: true })
-                    const img = yesImage.slice(0, yesImage.length - 2) + 1280, text = props.message.content, attribution = props.message.author.username
-                    await upload(img, text, attribution);
+                    const yesImage = UserStore.getUser(props.message.author.id).getAvatarURL({ size: (1 << 12), animated: true })
+                    const img = yesImage.slice(0, yesImage.length - 2) + (1 << 12), text = props.message.content, attribution = props.message.author.username
+                    await upload(img, text, attribution, props.message.channel_id);
                 }
             }));
         });

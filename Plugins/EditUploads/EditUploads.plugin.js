@@ -65,20 +65,25 @@ var DataStore = new Proxy(
 );
 var CanvasHolder = ({ fileBuffer, ...props }) => {
   const canvasRef = React.useRef(null);
-  const [image, setImage] = React.useState(null);
-  const [size, setSize] = React.useState({ w: 0, h: 0 });
+  const [isDrawing, setIsDrawing] = React.useState(false);
+  const canvas = canvasRef.current;
+  function getMousePos(event, canvas2) {
+    const rect = canvas2.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
+  }
   React.useEffect(() => {
     if (!canvasRef.current || !fileBuffer) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const canvas2 = canvasRef.current;
+    const ctx = canvas2.getContext("2d");
     if (!ctx) return;
     const blobUrl = URL.createObjectURL(fileBuffer);
     const img = new Image();
     img.onload = () => {
-      setImage(img);
-      setSize({ w: img.width, h: img.height });
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas2.width = img.width;
+      canvas2.height = img.height;
       ctx.clearRect(0, 0, img.width, img.height);
       ctx.drawImage(img, 0, 0, img.width, img.height);
       URL.revokeObjectURL(blobUrl);
@@ -88,8 +93,27 @@ var CanvasHolder = ({ fileBuffer, ...props }) => {
       URL.revokeObjectURL(blobUrl);
     };
     img.src = blobUrl;
+    canvas2.addEventListener("mousedown", (event) => {
+      setIsDrawing(true);
+      const pos = getMousePos(event, canvas2);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    });
+    canvas2.addEventListener("mousemove", (event) => {
+      if (!isDrawing) return;
+      const pos = getMousePos(event, canvas2);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    });
+    canvas2.addEventListener("mouseup", () => {
+      setIsDrawing(false);
+      ctx.closePath();
+    });
+    canvas2.addEventListener("mouseleave", () => {
+      setIsDrawing(false);
+    });
   }, [fileBuffer]);
-  return /* @__PURE__ */ BdApi.React.createElement(Modals.ModalRoot, { ...props }, /* @__PURE__ */ BdApi.React.createElement(Modals.ModalHeader, null, "Edit Upload"), /* @__PURE__ */ BdApi.React.createElement(Modals.ModalContent, null, /* @__PURE__ */ BdApi.React.createElement(
+  return /* @__PURE__ */ BdApi.React.createElement(Modals.ModalRoot, { ...props, size: "LARGE" }, /* @__PURE__ */ BdApi.React.createElement(Modals.ModalContent, null, /* @__PURE__ */ BdApi.React.createElement(
     "canvas",
     {
       ...props,
