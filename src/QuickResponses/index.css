@@ -1,0 +1,107 @@
+.snippets-container {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px;
+    margin: 0 2px;
+    border-radius: 6px;
+    background: transparent;
+    align-content: center;
+    cursor: pointer;
+}
+
+.snippets-container:hover {
+    background-color: var(--background-modifier-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.snippets-container:active {
+    background-color: var(--background-modifier-selected);
+}
+
+.snippet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.snippet-name {
+    color: var(--interactive-active);
+    font-size: 15px;
+    line-height: 1.3;
+    font-weight: 500;
+}
+
+.snippet-content {
+    color: var(--text-default);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.snippet-timestamp {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+    padding: 2px 6px;
+    background: var(--background-base-lower);
+    border-radius: 10px;
+}
+
+.snippet-attachments {
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.attachment-item {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--background-base-lower);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    padding: 4px 8px;
+    text-align: center;
+    gap: 4px;
+}
+
+.attachment-icon {
+    width: 18px;
+    height: 18px;
+    fill: var(--text-muted);
+    opacity: 0.8;
+}
+
+.attachment-filename {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.snippet-header-message {
+    color: var(--interactive-normal);
+    padding: 2px 0;
+    text-transform: uppercase;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+}
+
+.snippet-base {
+    padding: 6px;
+}
