@@ -12,16 +12,16 @@ var { React, Webpack, Patcher, Data } = new BdApi("FileNameRandomization");
 var FormItem = Webpack.getByStrings('case"legend"', { searchExports: true });
 var {
   FormSwitch,
-  FormTitle,
+  label,
   TextInput,
   FormText,
   SearchableSelect
 } = Webpack.getMangled(/ConfirmModal:\(\)=>.{1,3}.ConfirmModal/, {
   FormSwitch: (x) => x.toString?.().includes("disabledText"),
   SearchableSelect: (x) => x.render?.toString?.().includes(",renderCustomPill:"),
-  TextInput: Webpack.Filters.byStrings(".error]:this.hasError()"),
+  TextInput: Webpack.Filters.byStrings("showCharacterCountFullPadding"),
   FormText: Webpack.Filters.byStrings(".SELECTABLE),", ".DISABLED:"),
-  FormTitle: Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
+  "label": Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
   FormItem: Webpack.Filters.byStrings(".fieldWrapper:void 0"),
   openModal: Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "onCloseCallback", "instant", "backdropStyle")
 });
@@ -148,7 +148,7 @@ var FileNameRandomization = class {
   }
   getSettingsPanel() {
     return () => {
-      const [useTimestamp, setUseTimestamp] = useState(this.getSetting("useTimestamp"));
+      const [useTimestamp, setUseTimestamp] = useState(this.getSetting("useTimestamp") || false);
       const [prefix, setPrefix] = useState(this.getSetting("prefix") || "");
       const [suffix, setSuffix] = useState(this.getSetting("suffix") || "");
       const [randomLength, setRandomLength] = useState(this.getSetting("randomLength") || 10);
@@ -174,35 +174,59 @@ var FileNameRandomization = class {
         setCaseOption(value);
         this.setSetting("caseOption", value);
       };
-      return React.createElement("div", {}, React.createElement(FormSwitch, {
-        note: "Use a Unix timestamp instead of random characters.",
-        value: useTimestamp,
-        onChange: (e) => onSwitch("useTimestamp", e)
-      }, "Use Unix Timestamp"), React.createElement(FormItem, { className: Margins.marginBottom40 }, React.createElement(FormTitle, null, "Case Option"), React.createElement(SearchableSelect, {
-        options: [{ label: "Mixed Case", value: "mixed" }, {
-          label: "Lowercase",
-          value: "lowercase"
-        }, { label: "Uppercase", value: "uppercase" }],
-        value: caseOption,
-        onChange: (value) => onCaseOptionChange(value)
-      })), React.createElement(FormItem, { className: Margins.marginBottom40 }, React.createElement(FormTitle, null, "Prefix"), React.createElement(TextInput, {
-        value: prefix,
-        onChange: (e) => onChange("prefix", e)
-      })), React.createElement(FormItem, { className: Margins.marginBottom40 }, React.createElement(FormTitle, null, "Suffix"), React.createElement(TextInput, {
-        value: suffix,
-        onChange: (e) => onChange("suffix", e)
-      })), React.createElement(FormItem, { className: Margins.marginBottom40 }, React.createElement(FormTitle, null, "Random String Length"), React.createElement(TextInput, {
-        type: "number",
-        value: randomLength,
-        onChange: (e) => onLengthChange(e)
-      })), React.createElement(FormItem, { className: Margins.marginBottom40 }, React.createElement(FormTitle, null, "Custom Format"), React.createElement(FormText, {}, "Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders."), React.createElement(TextInput, {
-        value: customFormat,
-        onChange: (e) => onChange("customFormat", e)
-      })), React.createElement(FormSwitch, {
-        note: "Include the original filename in the new name.",
-        value: preserveOriginalName,
-        onChange: (e) => onSwitch("preserveOriginalName", e)
-      }, "Preserve Original Filename"));
+      return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
+        FormSwitch,
+        {
+          note: "Use a Unix timestamp instead of random characters.",
+          value: useTimestamp,
+          onChange: (e) => onSwitch("useTimestamp", e)
+        },
+        "Use Unix Timestamp"
+      ), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Case Option"), /* @__PURE__ */ BdApi.React.createElement(
+        SearchableSelect,
+        {
+          options: [
+            { label: "Mixed Case", value: "mixed" },
+            { label: "Lowercase", value: "lowercase" },
+            { label: "Uppercase", value: "uppercase" }
+          ],
+          value: caseOption,
+          onChange: (value) => onCaseOptionChange(value)
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Prefix"), /* @__PURE__ */ BdApi.React.createElement(
+        TextInput,
+        {
+          value: prefix,
+          onChange: (e) => onChange("prefix", e)
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Suffix"), /* @__PURE__ */ BdApi.React.createElement(
+        TextInput,
+        {
+          value: suffix,
+          onChange: (e) => onChange("suffix", e)
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Random String Length"), /* @__PURE__ */ BdApi.React.createElement(
+        TextInput,
+        {
+          type: "number",
+          value: randomLength,
+          onChange: (e) => onLengthChange(e)
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Custom Format"), /* @__PURE__ */ BdApi.React.createElement("div", { style: { color: "var(--text-normal)", fontSize: "14px", fontWeight: "var(--font-weight-normal)", lineHeight: "20px" } }, "Use ", "{prefix}", ", ", "{suffix}", ", ", "{timestamp}", ", ", "{random}", ", and ", "{original}", " as placeholders."), /* @__PURE__ */ BdApi.React.createElement(
+        TextInput,
+        {
+          value: customFormat,
+          onChange: (e) => onChange("customFormat", e)
+        }
+      )), ";", /* @__PURE__ */ BdApi.React.createElement(
+        FormSwitch,
+        {
+          note: "Include the original filename in the new name.",
+          value: preserveOriginalName,
+          onChange: (e) => onSwitch("preserveOriginalName", e)
+        },
+        "Preserve Original Filename"
+      ));
     };
   }
 };

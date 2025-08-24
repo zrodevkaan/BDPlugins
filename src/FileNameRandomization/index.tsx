@@ -7,27 +7,27 @@
 
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-const {React, Webpack, Patcher, Data} = new BdApi('FileNameRandomization');
-const FormItem = Webpack.getByStrings("case\"legend\"", {searchExports: true})
+const { React, Webpack, Patcher, Data } = new BdApi('FileNameRandomization');
+const FormItem = Webpack.getByStrings("case\"legend\"", { searchExports: true })
 const {
-    FormSwitch, FormTitle, TextInput, FormText, SearchableSelect
+    FormSwitch, label, TextInput, FormText, SearchableSelect
 } = Webpack.getMangled(/ConfirmModal:\(\)=>.{1,3}.ConfirmModal/, {
     FormSwitch: x => x.toString?.().includes('disabledText'),
     SearchableSelect: x => x.render?.toString?.().includes(",renderCustomPill:"),
-    TextInput: Webpack.Filters.byStrings(".error]:this.hasError()"),
+    TextInput: Webpack.Filters.byStrings("showCharacterCountFullPadding"),
     FormText: Webpack.Filters.byStrings(".SELECTABLE),", ".DISABLED:"),
-    FormTitle: Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
+    "label": Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
     FormItem: Webpack.Filters.byStrings('.fieldWrapper:void 0'),
     openModal: Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'onCloseCallback', 'instant', 'backdropStyle')
 })
-const {useState} = React;
+const { useState } = React;
 
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
 const Margins = Webpack.getByKeys('marginBottom40', 'marginTop4');
 
 const ToolbarButton = Webpack.getByStrings('actionBarIcon')
 
-const FoodIcon = ({size = 24, color = "var(--interactive-normal)", ...props}) => {
+const FoodIcon = ({ size = 24, color = "var(--interactive-normal)", ...props }) => {
     return React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg", width: size, height: size, viewBox: "0 0 24 24", ...props
     }, React.createElement("path", {
@@ -57,7 +57,7 @@ const DataStore = new Proxy(
 
 const IncognitoButton = () => {
     const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
-    
+
     const color = enabled ? "var(--interactive-normal)" : 'var(--status-danger)'
 
     return React.createElement(ToolbarButton, {
@@ -169,7 +169,7 @@ class FileNameRandomization {
 
     getSettingsPanel() {
         return () => {
-            const [useTimestamp, setUseTimestamp] = useState(this.getSetting('useTimestamp'));
+            const [useTimestamp, setUseTimestamp] = useState(this.getSetting('useTimestamp') || false);
             const [prefix, setPrefix] = useState(this.getSetting('prefix') || '');
             const [suffix, setSuffix] = useState(this.getSetting('suffix') || '');
             const [randomLength, setRandomLength] = useState(this.getSetting('randomLength') || 10);
@@ -200,30 +200,74 @@ class FileNameRandomization {
                 this.setSetting('caseOption', value);
             };
 
-            return React.createElement("div", {}, React.createElement(FormSwitch, {
-                note: 'Use a Unix timestamp instead of random characters.',
-                value: useTimestamp,
-                onChange: (e) => onSwitch('useTimestamp', e),
-            }, "Use Unix Timestamp"), React.createElement(FormItem, {className: Margins.marginBottom40}, React.createElement(FormTitle, null, "Case Option"), React.createElement(SearchableSelect, {
-                options: [{label: 'Mixed Case', value: 'mixed'}, {
-                    label: 'Lowercase',
-                    value: 'lowercase'
-                }, {label: 'Uppercase', value: 'uppercase'},],
-                value: caseOption,
-                onChange: (value) => onCaseOptionChange(value),
-            })), React.createElement(FormItem, {className: Margins.marginBottom40}, React.createElement(FormTitle, null, "Prefix"), React.createElement(TextInput, {
-                value: prefix, onChange: (e) => onChange('prefix', e),
-            })), React.createElement(FormItem, {className: Margins.marginBottom40}, React.createElement(FormTitle, null, "Suffix"), React.createElement(TextInput, {
-                value: suffix, onChange: (e) => onChange('suffix', e),
-            })), React.createElement(FormItem, {className: Margins.marginBottom40}, React.createElement(FormTitle, null, "Random String Length"), React.createElement(TextInput, {
-                type: 'number', value: randomLength, onChange: (e) => onLengthChange(e),
-            })), React.createElement(FormItem, {className: Margins.marginBottom40}, React.createElement(FormTitle, null, "Custom Format"), React.createElement(FormText, {}, "Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders."), React.createElement(TextInput, {
-                value: customFormat, onChange: (e) => onChange('customFormat', e),
-            })), React.createElement(FormSwitch, {
-                note: 'Include the original filename in the new name.',
-                value: preserveOriginalName,
-                onChange: (e) => onSwitch('preserveOriginalName', e),
-            }, "Preserve Original Filename"));
+            return (
+                <div>
+                    <FormSwitch
+                        note="Use a Unix timestamp instead of random characters."
+                        value={useTimestamp}
+                        onChange={(e) => onSwitch('useTimestamp', e)}
+                    >
+                        Use Unix Timestamp
+                    </FormSwitch>
+
+                    <FormItem className={Margins.marginBottom40}>
+                        <label>Case Option</label>
+                        <SearchableSelect
+                            options={[
+                                { label: 'Mixed Case', value: 'mixed' },
+                                { label: 'Lowercase', value: 'lowercase' },
+                                { label: 'Uppercase', value: 'uppercase' }
+                            ]}
+                            value={caseOption}
+                            onChange={(value) => onCaseOptionChange(value)}
+                        />
+                    </FormItem>
+
+                    <FormItem className={Margins.marginBottom40}>
+                        <label>Prefix</label>
+                        <TextInput
+                            value={prefix}
+                            onChange={(e) => onChange('prefix', e)}
+                        />
+                    </FormItem>
+
+                    <FormItem className={Margins.marginBottom40}>
+                        <label>Suffix</label>
+                        <TextInput
+                            value={suffix}
+                            onChange={(e) => onChange('suffix', e)}
+                        />
+                    </FormItem>
+
+                    <FormItem className={Margins.marginBottom40}>
+                        <label>Random String Length</label>
+                        <TextInput
+                            type="number"
+                            value={randomLength}
+                            onChange={(e) => onLengthChange(e)}
+                        />
+                    </FormItem>
+
+                    <FormItem className={Margins.marginBottom40}>
+                        <label>Custom Format</label>
+                        <div style={{ color: "var(--text-normal)", fontSize: "14px", fontWeight: "var(--font-weight-normal)", lineHeight: "20px" }}>
+                            Use {"{prefix}"}, {"{suffix}"}, {"{timestamp}"}, {"{random}"}, and {"{original}"} as placeholders.
+                        </div>
+                        <TextInput
+                            value={customFormat}
+                            onChange={(e) => onChange('customFormat', e)}
+                        />
+                    </FormItem >
+                    ;
+                    <FormSwitch
+                        note="Include the original filename in the new name."
+                        value={preserveOriginalName}
+                        onChange={(e) => onSwitch('preserveOriginalName', e)}
+                    >
+                        Preserve Original Filename
+                    </FormSwitch>
+                </div >
+            );
         };
     }
 }
