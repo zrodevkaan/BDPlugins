@@ -1,6 +1,6 @@
 /**
  * @name MentionFix
- * @version 1.1.0
+ * @version 1.1.1
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
