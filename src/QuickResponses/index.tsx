@@ -201,10 +201,10 @@ function incrementUsage(x) {
 
 const RenderSnippets = (props) => {
     const textarea = document.querySelector('[data-slate-editor="true"]')
+    const [selectedIndex, setSelectedIndex] = React.useState(0);
+    const [stats, setStats] = React.useState(DataStore.snippetStatistics)
 
     props.query = props.query?.split('_').join(' ')
-    // add support for like searching many snippet names.
-    // discord removes the UI once you press space
 
     const filteredSnippets = DataStore.snippets.filter(snippet => {
         if (!props.query || props.query.trim() === '') {
@@ -213,6 +213,100 @@ const RenderSnippets = (props) => {
         return snippet.name.toLowerCase().includes(props.query.toLowerCase().trim()) || snippet.content.toLowerCase().includes(props.query.toLowerCase().trim());
     });
 
+    const sortedSnippets = filteredSnippets.sort((a, b) => {
+        const usageA = stats[a.id] || 0;
+        const usageB = stats[b.id] || 0;
+        return usageB - usageA;
+    });
+
+    React.useEffect(() => {
+        setSelectedIndex(0);
+    }, [props.query, filteredSnippets.length]);
+
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    setSelectedIndex(selectedIndex + 1)
+                    break;
+
+                case 'ArrowUp':
+                    e.preventDefault();
+                    setSelectedIndex(selectedIndex - 1);
+                    break;
+
+                case 'Enter':
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (filteredSnippets[selectedIndex]) {
+                        handleSnippetSelect(filteredSnippets[selectedIndex], e);
+                    }
+                    break;
+
+                case 'Escape':
+                    e.preventDefault();
+                    textarea.blur();
+                    break;
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown, { capture: true });
+        return () => document.removeEventListener('keydown', handleKeyDown, { capture: true });
+    }, [filteredSnippets, selectedIndex]);
+
+    const handleSnippetSelect = async (snippet, e) => {
+        if (e.shiftKey || snippet.alwaysClientSided) {
+            await SendMessages.sendBotMessage(BigInt(props.channel), snippet.content)
+        } else {
+            incrementUsage(snippet)
+            setStats({ ...stats, [snippet.id]: stats[snippet.id] + 1 })
+
+            let attachmentsToUpload = [];
+
+            if (snippet.attachments && Object.keys(snippet.attachments).length > 0) {
+                const uploadPromises = Object.values(snippet.attachments).map(async (attachment) => {
+                    try {
+                        const content = await Net.fetch(attachment.url);
+                        const file = new File([await content.blob()], attachment.filename, {
+                            type: attachment.content_type
+                        });
+
+                        const upload = new CloudUploader({ file }, props.channel);
+                        return upload;
+                    } catch (error) {
+                        console.error(`Failed to process attachment: ${attachment?.filename}`, error);
+                        return null;
+                    }
+                });
+
+                const results = await Promise.allSettled(uploadPromises);
+                attachmentsToUpload = results
+                    .filter(result => result.status === 'fulfilled' && result.value !== null)
+                    .map(result => result.value);
+            }
+
+            const messagePayload = {
+                flags: 0,
+                channel_id: props.channel,
+                content: snippet.content,
+                sticker_ids: [],
+                validNonShortcutEmojis: [],
+                type: 0,
+                message_reference: null,
+                nonce: timestampToSnowflake(Date.now()),
+            };
+
+            SendMessages.sendMessage(props.channel, messagePayload, null, {
+                attachmentsToUpload: attachmentsToUpload,
+                onAttachmentUploadError: () => false,
+                ...messagePayload,
+            });
+        }
+        textarea.blur()
+    };
+
     return (
         <>
             <div className='snippet-base'>
@@ -220,77 +314,34 @@ const RenderSnippets = (props) => {
                     {props.query.trim() === '' ? "Snippets" : `Snippets Matching: ${props.query}`}
                 </div>
             </div>
-            {filteredSnippets.map((x, index) => (
-                <>
-                    <div key={x.id || index} className="snippets-container" onClick={async (e) => {
-                        if (e.shiftKey || x.alwaysClientSided) {
-                            await SendMessages.sendBotMessage(BigInt(props.channel), x.content)
-                        } else {
-                            incrementUsage(x)
-
-                            let attachmentsToUpload = [];
-
-                            if (x.attachments && Object.keys(x.attachments).length > 0) {
-                                const uploadPromises = Object.values(x.attachments).map(async (attachment) => {
-                                    try {
-                                        const content = await Net.fetch(attachment.url);
-                                        const file = new File([await content.blob()], attachment.filename, {
-                                            type: attachment.content_type
-                                        });
-
-                                        const upload = new CloudUploader({ file }, props.channel);
-                                        return upload;
-                                    } catch (error) {
-                                        console.error(`Failed to process attachment: ${attachment?.filename}`, error);
-                                        return null;
-                                    }
-                                });
-
-                                const results = await Promise.allSettled(uploadPromises);
-                                attachmentsToUpload = results
-                                    .filter(result => result.status === 'fulfilled' && result.value !== null)
-                                    .map(result => result.value);
-                            }
-
-                            const messagePayload = {
-                                flags: 0,
-                                channel_id: props.channel,
-                                content: x.content,
-                                sticker_ids: [],
-                                validNonShortcutEmojis: [],
-                                type: 0,
-                                message_reference: null,
-                                nonce: timestampToSnowflake(Date.now()),
-                            };
-
-                            SendMessages.sendMessage(props.channel, messagePayload, null, {
-                                attachmentsToUpload: attachmentsToUpload,
-                                onAttachmentUploadError: () => false,
-                                ...messagePayload,
-                            });
-                        }
-                        textarea.blur()
-                    }}>
-                        <div className="snippet-header">
-                            <span className="snippet-name">{x.name}</span>
-                            <span className="snippet-timestamp">{x.id}</span>
-                        </div>
-                        {x.content && <span className="snippet-content">{x.content}</span>}
-                        {x.attachments && x.attachments.length > 0 && (
-                            <div className="snippet-attachments">
-                                {x.attachments.map((attachment, attachmentIndex) => (
-                                    <div key={attachmentIndex} className="attachment-item">
-                                        <Icon type={attachment.content_type} className="attachment-icon" />
-                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                            <span className="attachment-filename">{attachment.filename}</span>
-                                            <span className="attachment-filename">{attachment.size}KB</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+            {sortedSnippets.map((snippet, index) => (
+                <div
+                    key={snippet.id || index}
+                    className={`snippets-container ${selectedIndex === index ? 'selected' : ''}`}
+                    onClick={(e) => handleSnippetSelect(snippet, e)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                >
+                    <div className="snippet-header">
+                        <span className="snippet-name">
+                            {stats[snippet.id] > 0 ? `(${stats[snippet.id]}) ` : ""}{snippet.name}
+                        </span>
+                        <span className="snippet-timestamp">{snippet.id}</span>
                     </div>
-                </>
+                    {snippet.content && <span className="snippet-content">{snippet.content}</span>}
+                    {snippet.attachments && snippet.attachments.length > 0 && (
+                        <div className="snippet-attachments">
+                            {snippet.attachments.map((attachment, attachmentIndex) => (
+                                <div key={attachmentIndex} className="attachment-item">
+                                    <Icon type={attachment.content_type} className="attachment-icon" />
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                        <span className="attachment-filename">{attachment.filename}</span>
+                                        <span className="attachment-filename">{attachment.size}KB</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             ))}
         </>
     )
@@ -301,7 +352,7 @@ const Snippets = {
     stores: [],
     matches: () => true,
     queryResults: () => {
-        return { results: { globals: [{ theMeaningOfLifeIs: 42 }] } }
+        return { results: { globals: [DataStore.snippets] } }
     },
     renderResults: (a) => {
         return <RenderSnippets channel={a.channel.id} callback={a.options.sendMessage} query={a.query} />

@@ -37,7 +37,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/QuickResponses/index.css?raw
-var index_default = ".snippets-container {\r\n    display: flex;\r\n    flex-direction: column;\r\n    padding: 6px 10px;\r\n    margin: 0 2px;\r\n    border-radius: 6px;\r\n    background: transparent;\r\n    align-content: center;\r\n    cursor: pointer;\r\n}\r\n\r\n.snippets-container:hover {\r\n    background-color: var(--background-modifier-hover);\r\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);\r\n}\r\n\r\n.snippets-container:active {\r\n    background-color: var(--background-modifier-selected);\r\n}\r\n\r\n.snippet-header {\r\n    display: flex;\r\n    justify-content: space-between;\r\n    align-items: center;\r\n    margin-bottom: 3px;\r\n}\r\n\r\n.snippet-name {\r\n    color: var(--interactive-active);\r\n    font-size: 15px;\r\n    line-height: 1.3;\r\n    font-weight: 500;\r\n}\r\n\r\n.snippet-content {\r\n    color: var(--text-default);\r\n    font-size: 13px;\r\n    font-weight: 400;\r\n    line-height: 1.4;\r\n    margin-bottom: 2px;\r\n    white-space: nowrap;\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\r\n}\r\n\r\n.snippet-timestamp {\r\n    color: var(--text-muted);\r\n    font-size: 10px;\r\n    font-weight: 600;\r\n    line-height: 1.2;\r\n    text-transform: uppercase;\r\n    letter-spacing: 0.04em;\r\n    opacity: 0.7;\r\n    padding: 2px 6px;\r\n    background: var(--background-base-lower);\r\n    border-radius: 10px;\r\n}\r\n\r\n.snippet-attachments {\r\n    display: inline-flex;\r\n    justify-content: flex-start;\r\n    align-items: center;\r\n    gap: 8px;\r\n    margin-top: 6px;\r\n    flex-wrap: wrap;\r\n}\r\n\r\n.attachment-item {\r\n    display: inline-flex;\r\n    align-items: center;\r\n    background-color: var(--background-base-lower);\r\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\r\n    border-radius: 6px;\r\n    border: 1px solid var(--border-subtle);\r\n    padding: 4px 8px;\r\n    text-align: center;\r\n    gap: 4px;\r\n}\r\n\r\n.attachment-icon {\r\n    width: 18px;\r\n    height: 18px;\r\n    fill: var(--text-muted);\r\n    opacity: 0.8;\r\n}\r\n\r\n.attachment-filename {\r\n    color: var(--text-muted);\r\n    font-size: 11px;\r\n    font-weight: 500;\r\n    opacity: 0.9;\r\n}\r\n\r\n.snippet-header-message {\r\n    color: var(--interactive-normal);\r\n    padding: 2px 0;\r\n    text-transform: uppercase;\r\n    font-family: var(--font-display);\r\n    font-size: 11px;\r\n    font-weight: 700;\r\n    line-height: 1.4;\r\n    letter-spacing: 0.02em;\r\n}\r\n\r\n.snippet-base {\r\n    padding: 6px;\r\n}";
+var index_default = ".snippets-container {\r\n    display: flex;\r\n    flex-direction: column;\r\n    padding: 6px 10px;\r\n    margin: 0 2px;\r\n    border-radius: 6px;\r\n    background: transparent;\r\n    align-content: center;\r\n    cursor: pointer;\r\n}\r\n\r\n.snippets-container:hover {\r\n    background-color: var(--background-modifier-hover);\r\n    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);\r\n}\r\n\r\n.snippets-container:active {\r\n    background-color: var(--background-modifier-selected);\r\n}\r\n\r\n.snippet-header {\r\n    display: flex;\r\n    justify-content: space-between;\r\n    align-items: center;\r\n    margin-bottom: 3px;\r\n}\r\n\r\n.snippet-name {\r\n    color: var(--interactive-active);\r\n    font-size: 15px;\r\n    line-height: 1.3;\r\n    font-weight: 500;\r\n}\r\n\r\n.snippet-content {\r\n    color: var(--text-default);\r\n    font-size: 13px;\r\n    font-weight: 400;\r\n    line-height: 1.4;\r\n    margin-bottom: 2px;\r\n    white-space: nowrap;\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\r\n}\r\n\r\n.snippet-timestamp {\r\n    color: var(--text-muted);\r\n    font-size: 10px;\r\n    font-weight: 600;\r\n    line-height: 1.2;\r\n    text-transform: uppercase;\r\n    letter-spacing: 0.04em;\r\n    opacity: 0.7;\r\n    padding: 2px 6px;\r\n    background: var(--background-base-lower);\r\n    border-radius: 10px;\r\n}\r\n\r\n.snippet-attachments {\r\n    display: inline-flex;\r\n    justify-content: flex-start;\r\n    align-items: center;\r\n    gap: 8px;\r\n    margin-top: 6px;\r\n    flex-wrap: wrap;\r\n}\r\n\r\n.attachment-item {\r\n    display: inline-flex;\r\n    align-items: center;\r\n    background-color: var(--background-base-lower);\r\n    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);\r\n    border-radius: 6px;\r\n    border: 1px solid var(--border-subtle);\r\n    padding: 4px 8px;\r\n    text-align: center;\r\n    gap: 4px;\r\n}\r\n\r\n.attachment-icon {\r\n    width: 18px;\r\n    height: 18px;\r\n    fill: var(--text-muted);\r\n    opacity: 0.8;\r\n}\r\n\r\n.attachment-filename {\r\n    color: var(--text-muted);\r\n    font-size: 11px;\r\n    font-weight: 500;\r\n    opacity: 0.9;\r\n}\r\n\r\n.snippet-header-message {\r\n    color: var(--interactive-normal);\r\n    padding: 2px 0;\r\n    text-transform: uppercase;\r\n    font-family: var(--font-display);\r\n    font-size: 11px;\r\n    font-weight: 700;\r\n    line-height: 1.4;\r\n    letter-spacing: 0.02em;\r\n}\r\n\r\n.snippet-base {\r\n    padding: 6px;\r\n}\r\n\r\n.snippets-container.selected {\r\n    background-color: var(--background-modifier-hover) !important;\r\n}\r\n\r\n.snippets-container {\r\n    cursor: pointer;\r\n}\r\n\r\n.snippets-container.selected .snippet-name {\r\n    font-weight: 600;\r\n}";
 
 // src/QuickResponses/index.tsx
 var { Webpack, DOM, Data, ContextMenu, Components, React, Net, Patcher } = new BdApi("QuickResponses");
@@ -183,6 +183,8 @@ function incrementUsage(x) {
 }
 var RenderSnippets = (props) => {
   const textarea = document.querySelector('[data-slate-editor="true"]');
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [stats, setStats] = React.useState(DataStore.snippetStatistics);
   props.query = props.query?.split("_").join(" ");
   const filteredSnippets = DataStore.snippets.filter((snippet) => {
     if (!props.query || props.query.trim() === "") {
@@ -190,14 +192,51 @@ var RenderSnippets = (props) => {
     }
     return snippet.name.toLowerCase().includes(props.query.toLowerCase().trim()) || snippet.content.toLowerCase().includes(props.query.toLowerCase().trim());
   });
-  return /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-base" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-header-message" }, props.query.trim() === "" ? "Snippets" : `Snippets Matching: ${props.query}`)), filteredSnippets.map((x, index) => /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement("div", { key: x.id || index, className: "snippets-container", onClick: async (e) => {
-    if (e.shiftKey || x.alwaysClientSided) {
-      await SendMessages.sendBotMessage(BigInt(props.channel), x.content);
+  const sortedSnippets = filteredSnippets.sort((a, b) => {
+    const usageA = stats[a.id] || 0;
+    const usageB = stats[b.id] || 0;
+    return usageB - usageA;
+  });
+  React.useEffect(() => {
+    setSelectedIndex(0);
+  }, [props.query, filteredSnippets.length]);
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex(selectedIndex + 1);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex(selectedIndex - 1);
+          break;
+        case "Enter":
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          if (filteredSnippets[selectedIndex]) {
+            handleSnippetSelect(filteredSnippets[selectedIndex], e);
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          textarea.blur();
+          break;
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => document.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [filteredSnippets, selectedIndex]);
+  const handleSnippetSelect = async (snippet, e) => {
+    if (e.shiftKey || snippet.alwaysClientSided) {
+      await SendMessages.sendBotMessage(BigInt(props.channel), snippet.content);
     } else {
-      incrementUsage(x);
+      incrementUsage(snippet);
+      setStats({ ...stats, [snippet.id]: stats[snippet.id] + 1 });
       let attachmentsToUpload = [];
-      if (x.attachments && Object.keys(x.attachments).length > 0) {
-        const uploadPromises = Object.values(x.attachments).map(async (attachment) => {
+      if (snippet.attachments && Object.keys(snippet.attachments).length > 0) {
+        const uploadPromises = Object.values(snippet.attachments).map(async (attachment) => {
           try {
             const content = await Net.fetch(attachment.url);
             const file = new File([await content.blob()], attachment.filename, {
@@ -216,7 +255,7 @@ var RenderSnippets = (props) => {
       const messagePayload = {
         flags: 0,
         channel_id: props.channel,
-        content: x.content,
+        content: snippet.content,
         sticker_ids: [],
         validNonShortcutEmojis: [],
         type: 0,
@@ -230,14 +269,26 @@ var RenderSnippets = (props) => {
       });
     }
     textarea.blur();
-  } }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-header" }, /* @__PURE__ */ BdApi.React.createElement("span", { className: "snippet-name" }, x.name), /* @__PURE__ */ BdApi.React.createElement("span", { className: "snippet-timestamp" }, x.id)), x.content && /* @__PURE__ */ BdApi.React.createElement("span", { className: "snippet-content" }, x.content), x.attachments && x.attachments.length > 0 && /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-attachments" }, x.attachments.map((attachment, attachmentIndex) => /* @__PURE__ */ BdApi.React.createElement("div", { key: attachmentIndex, className: "attachment-item" }, /* @__PURE__ */ BdApi.React.createElement(Icon, { type: attachment.content_type, className: "attachment-icon" }), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "10px", alignItems: "center" } }, /* @__PURE__ */ BdApi.React.createElement("span", { className: "attachment-filename" }, attachment.filename), /* @__PURE__ */ BdApi.React.createElement("span", { className: "attachment-filename" }, attachment.size, "KB")))))))));
+  };
+  return /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-base" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-header-message" }, props.query.trim() === "" ? "Snippets" : `Snippets Matching: ${props.query}`)), sortedSnippets.map((snippet, index) => /* @__PURE__ */ BdApi.React.createElement(
+    "div",
+    {
+      key: snippet.id || index,
+      className: `snippets-container ${selectedIndex === index ? "selected" : ""}`,
+      onClick: (e) => handleSnippetSelect(snippet, e),
+      onMouseEnter: () => setSelectedIndex(index)
+    },
+    /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-header" }, /* @__PURE__ */ BdApi.React.createElement("span", { className: "snippet-name" }, stats[snippet.id] > 0 ? `(${stats[snippet.id]}) ` : "", snippet.name), /* @__PURE__ */ BdApi.React.createElement("span", { className: "snippet-timestamp" }, snippet.id)),
+    snippet.content && /* @__PURE__ */ BdApi.React.createElement("span", { className: "snippet-content" }, snippet.content),
+    snippet.attachments && snippet.attachments.length > 0 && /* @__PURE__ */ BdApi.React.createElement("div", { className: "snippet-attachments" }, snippet.attachments.map((attachment, attachmentIndex) => /* @__PURE__ */ BdApi.React.createElement("div", { key: attachmentIndex, className: "attachment-item" }, /* @__PURE__ */ BdApi.React.createElement(Icon, { type: attachment.content_type, className: "attachment-icon" }), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "10px", alignItems: "center" } }, /* @__PURE__ */ BdApi.React.createElement("span", { className: "attachment-filename" }, attachment.filename), /* @__PURE__ */ BdApi.React.createElement("span", { className: "attachment-filename" }, attachment.size, "KB")))))
+  )));
 };
 var Snippets = {
   sentinel: ">>",
   stores: [],
   matches: () => true,
   queryResults: () => {
-    return { results: { globals: [{ theMeaningOfLifeIs: 42 }] } };
+    return { results: { globals: [DataStore.snippets] } };
   },
   renderResults: (a) => {
     return /* @__PURE__ */ BdApi.React.createElement(RenderSnippets, { channel: a.channel.id, callback: a.options.sendMessage, query: a.query });

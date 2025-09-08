@@ -16,7 +16,7 @@ const PermissionStore = Webpack.getModule(Filters.byKeys("getGuildPermissions"))
 const MessageStore = Webpack.getStore('MessageStore')
 const UserStore = Webpack.getStore('UserStore')
 const GuildMemberStore = Webpack.getStore('GuildMemberStore')
-const GuildStore = Webpack.getStore('GuildStore')
+const GuildStore = Webpack.getStore('GuildRoleStore')
 const ChannelStore = Webpack.getStore('ChannelStore')
 const SimpleMarkdownWrapper = Webpack.getModule(m => m.defaultRules && m.parse);
 const CarouselModal = Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true });
@@ -184,7 +184,7 @@ const CONFIG = {
 const Utils = {
     regex: {
         url: new RegExp(`^(?:(?:<([^<\\s]+?://[^\\s]+\\.(${CONFIG.MEDIA.IMAGE_EXTENSIONS.join('|')})(?:[?#][^\\s<>]*)?)\>)|([^<\\s]+?://[^\\s]+\\.(${CONFIG.MEDIA.IMAGE_EXTENSIONS.join('|')})(?:[?#][^\\s<>]*)?))(?:\\s|$)`, 'i'),
-        hidden: new RegExp(`<https?:\/\/[^>]+>`,'i'),
+        hidden: new RegExp(`<https?:\/\/[^>]+>`, 'i'),
         video: new RegExp(`\\.(${CONFIG.MEDIA.VIDEO_EXTENSIONS.join('|')})$`, 'i')
     },
 
@@ -620,15 +620,19 @@ module.exports = class ShowImagesAnyway {
         SimpleMarkdownWrapper.defaultRules[CONFIG.CONSTS.RULES] = {
             order: 1,
             match: this.match,
-            parse: capture => ({
-                url: capture[0],
-                type: CONFIG.CONSTS.RULES
-            }),
-            react: (node, _, args) => React.createElement(MediaViewer, {
-                url: node.url,
-                args: args,
-                key: args.key
-            })
+            parse: capture => {
+                return ({
+                    url: capture[0],
+                    type: CONFIG.CONSTS.RULES
+                })
+            },
+            react: (node, _, args) => {
+                return React.createElement(MediaViewer, {
+                    url: node.url,
+                    args: args,
+                    key: args.key
+                })
+            }
         };
 
         SimpleMarkdownWrapper.parse = SimpleMarkdownWrapper.reactParserFor(SimpleMarkdownWrapper.defaultRules);
@@ -637,10 +641,10 @@ module.exports = class ShowImagesAnyway {
     match = (text, state) => {
         const message = MessageStore.getMessage(state.channelId, state.messageId);
         const channel = ChannelStore.getChannel(state.channelId);
-        
+
         if (!channel || !channel.guild_id) return false;
         if (!message?.author?.id) return false;
-        
+
         const isHiddenLink = Utils.regex.hidden.test(text);
 
         const canEmbedLinks = PermissionStore.can(
@@ -651,8 +655,8 @@ module.exports = class ShowImagesAnyway {
 
         const hasFallbackPermissions = hasPermission(message.author.id, channel.guild_id, 'EMBED_LINKS', true)
 
-        if (!isHiddenLink && (canEmbedLinks || hasFallbackPermissions)) return;
-        
+        if (isHiddenLink && (canEmbedLinks || hasFallbackPermissions)) return;
+
         return Utils.regex.url.exec(text);
     }
 

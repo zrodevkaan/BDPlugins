@@ -35,7 +35,7 @@ var ImageComp = Webpack.getModule((x) => x?.displayName == "Image", { searchExpo
 var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.y;
 var ImageRenderComponent = Webpack.getModule((x) => x?.isAnimated && x?.getFormatQuality, { raw: true }).exports;
 var MediaModal = Webpack.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true });
-var getUserBanner = Webpack.getModule((x) => x?.getUserBannerURL)?.getUserBannerURL;
+var mediautils = Webpack.getModule((x) => x?.getUserBannerURL);
 var UserProfileStore = Webpack.getStore("UserProfileStore");
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
 var ToolbarButton = Webpack.getByStrings("actionBarIcon");
@@ -150,7 +150,7 @@ var openMedia = async (url, doBarrelRoll, buffer) => {
     original: discordDoesntEncodeWebpsInDiscordNative,
     proxyUrl: discordDoesntEncodeWebpsInDiscordNative,
     isAnimated: true,
-    type: extension === "MP4" || extension === "GIF" ? "VIDEO" : "IMAGE"
+    type: "IMAGE"
   };
   let mediaBuffer = buffer;
   if (!mediaBuffer) {
@@ -177,7 +177,10 @@ var openMedia = async (url, doBarrelRoll, buffer) => {
   };
   const modalIndex = MediaModal({
     items: [mediaItem],
-    onContextMenu: (e) => ContextMenu.open(e, menuStuff())
+    onContextMenu: (e) => {
+      if (extension == "GIF") return;
+      return ContextMenu.open(e, menuStuff());
+    }
   });
   requestAnimationFrame(() => {
     try {
@@ -847,58 +850,133 @@ var BetterMedia = class {
   }
   AUCM(res, props) {
     const user = props.user;
-    const img = user.getAvatarSource(user.id, true, 4096);
-    const userF = UserProfileStore.getUserProfile(user.id);
-    const userBanner = getUserBanner({ id: user.id, banner: userF?.banner, size: 4096, canAnimate: true });
+    const img = mediautils.getUserAvatarURL({ id: user.id, avatar: user.avatar, discriminator: null }, true, 4096, "png", false);
+    const userProfile = UserProfileStore.getUserProfile(user.id);
+    const userBanner = mediautils.getUserBannerURL({ id: user.id, banner: userProfile?.banner, size: 4096, canAnimate: true });
+    const isAnimated = user.avatar && user.avatar.startsWith("a_");
+    const isAnimatedBanner = userProfile?.banner && userProfile.banner.startsWith("a_");
+    const animatedImg = isAnimated ? img.replace(".png", ".gif").replace(".webp", ".gif") : null;
+    const animatedBanner = isAnimatedBanner ? userBanner.replace(".png", ".gif").replace(".webp", ".gif") : null;
     const buildProfilePictureMenu = () => {
-      return [
+      const menuItems = [
         {
           type: "button",
           id: "open-pfp",
           label: "Open",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
-          action: () => openMedia(img.uri)
-        },
-        {
+          action: () => openMedia(img)
+        }
+      ];
+      if (isAnimated) {
+        menuItems.push({
           type: "button",
-          id: "copy-pfp-url",
+          id: "open-pfp_a",
+          label: "Open Animated",
+          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
+          action: () => openMedia(animatedImg)
+        });
+      }
+      if (isAnimated) {
+        menuItems.push({
+          type: "submenu",
+          id: "copy-avatar-submenu",
           label: "Copy URL",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-          action: () => copyURL(img.uri)
-        },
+          items: [
+            {
+              type: "button",
+              id: "copy-avatar-url-static",
+              label: "Copy Static URL",
+              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+              action: () => copyURL(img)
+            },
+            {
+              type: "button",
+              id: "copy-avatar-url-animated",
+              label: "Copy Animated URL",
+              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+              action: () => copyURL(animatedImg)
+            }
+          ]
+        });
+      } else {
+        menuItems.push({
+          type: "button",
+          id: "copy-avatar-url",
+          label: "Copy URL",
+          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+          action: () => copyURL(img)
+        });
+      }
+      menuItems.push(
         {
           type: "submenu",
           id: "reverse-search",
           label: "Reverse Search",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
-          items: buildSearchMenu(img.uri)
+          items: buildSearchMenu(img)
         },
         {
           type: "submenu",
           id: "canvas-methods",
           label: "Canvas Methods",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null),
-          items: createCanvasMenu(img.uri)
+          items: createCanvasMenu(img)
         }
-      ];
+      );
+      return menuItems;
     };
     const buildBannerMenu = () => {
       const items = [];
-      items.push(
-        {
+      items.push({
+        type: "button",
+        id: "open-banner",
+        label: "Open",
+        iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
+        action: () => openMedia(userBanner)
+      });
+      if (isAnimatedBanner) {
+        items.push({
           type: "button",
-          id: "open-banner",
-          label: "Open",
+          id: "open-banner-a",
+          label: "Open Animated",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
-          action: () => openMedia(userBanner)
-        },
-        {
+          action: () => openMedia(animatedBanner)
+        });
+      }
+      if (isAnimatedBanner) {
+        items.push({
+          type: "submenu",
+          id: "copy-banner-submenu",
+          label: "Copy URL",
+          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+          items: [
+            {
+              type: "button",
+              id: "copy-banner-url-static",
+              label: "Copy Static URL",
+              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+              action: () => copyURL(userBanner)
+            },
+            {
+              type: "button",
+              id: "copy-banner-url-animated",
+              label: "Copy Animated URL",
+              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+              action: () => copyURL(animatedBanner)
+            }
+          ]
+        });
+      } else {
+        items.push({
           type: "button",
           id: "copy-banner-url",
           label: "Copy URL",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
           action: () => copyURL(userBanner)
-        },
+        });
+      }
+      items.push(
         {
           type: "submenu",
           id: "reverse-search-banner",
@@ -922,7 +1000,7 @@ var BetterMedia = class {
       label: "BetterMedia",
       iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(MainMenuIcon, null),
       items: [
-        img?.uri && {
+        img && {
           type: "submenu",
           id: "profile-picture",
           label: "Profile Picture",

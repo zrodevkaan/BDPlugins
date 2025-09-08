@@ -105,3 +105,15 @@
 .snippet-base {
     padding: 6px;
 }
+
+.snippets-container.selected {
+    background-color: var(--background-modifier-hover) !important;
+}
+
+.snippets-container {
+    cursor: pointer;
+}
+
+.snippets-container.selected .snippet-name {
+    font-weight: 600;
+}
