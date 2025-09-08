@@ -1,7 +1,7 @@
 /**
  * @name ShowImagesAnyway
  * @author kaan
- * @version 1.0.6
+ * @version 1.0.7
  * @description Enhances Discord's image handling by showing hidden image links with safety controls
  */
 
