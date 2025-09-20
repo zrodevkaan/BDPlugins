@@ -37,6 +37,9 @@ var ImageRenderComponent = Webpack.getModule((x) => x?.isAnimated && x?.getForma
 var MediaModal = Webpack.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true });
 var mediautils = Webpack.getModule((x) => x?.getUserBannerURL);
 var UserProfileStore = Webpack.getStore("UserProfileStore");
+var GuildStoreCurrent = Webpack.getStore("SelectedGuildStore");
+var GuildMemberStore = Webpack.getStore("GuildMemberStore");
+var GuildProfileStore = Webpack.getStore("GuildProfileStore");
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
 var ToolbarButton = Webpack.getByStrings("actionBarIcon");
 var ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -327,6 +330,10 @@ var ArrowDownload = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", 
 var Clipboard = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 18 18", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M11.873 3H12.75A2.25 2.25 0 0 1 15 5.25v9A2.25 2.25 0 0 1 12.75 16.5h-7.5A2.25 2.25 0 0 1 3 14.25v-9A2.25 2.25 0 0 1 5.25 3h.877A2.25 2.25 0 0 1 8.25 1.5h1.5a2.25 2.25 0 0 1 2.123 1.5M7.5 3.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0-.75.75" }));
 var ArrowUpRightDashes = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M11 3a1 1 0 1 0 0 2h6.586l-2.293 2.293a1 1 0 0 0 1.414 1.414L19 6.414V13a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1zm2.707 8.707a1 1 0 0 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414zm-6 6a1 1 0 1 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414z" }));
 var Settings16Filled = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 20 20", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M7.999 2c-.37 0-.731.036-1.08.106a.5.5 0 0 0-.394.396l-.262 1.354a.417.417 0 0 1-.545.315l-1.307-.45a.5.5 0 0 0-.538.141A5.495 5.495 0 0 0 2.786 5.74a.5.5 0 0 0 .146.538l1.045.907a.417.417 0 0 1 0 .63l-1.045.907a.5.5 0 0 0-.146.537a5.5 5.5 0 0 0 1.087 1.878a.5.5 0 0 0 .538.142l1.307-.45a.417.417 0 0 1 .545.314l.262 1.355a.5.5 0 0 0 .393.396a5.525 5.525 0 0 0 2.17-.002a.5.5 0 0 0 .393-.395l.262-1.354a.417.417 0 0 1 .545-.315l1.3.45a.5.5 0 0 0 .538-.143a5.495 5.495 0 0 0 1.087-1.882a.5.5 0 0 0-.146-.537l-1.039-.902a.417.417 0 0 1 0-.629l1.04-.902a.5.5 0 0 0 .145-.537a5.496 5.496 0 0 0-1.087-1.881a.5.5 0 0 0-.538-.143l-1.3.45a.417.417 0 0 1-.545-.316l-.262-1.353a.5.5 0 0 0-.392-.395A5.524 5.524 0 0 0 7.999 2ZM6.5 7.5a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0Zm4.663 4.947a.459.459 0 0 1 .526-.152l.8.276a.455.455 0 0 0 .594-.343l.16-.83a.459.459 0 0 1 .396-.38a3.554 3.554 0 0 1 .719 0c.202.02.356.18.395.38l.16.83a.455.455 0 0 0 .595.343l.8-.276a.46.46 0 0 1 .526.152c.14.194.261.403.36.623a.459.459 0 0 1-.13.532l-.64.555a.455.455 0 0 0 0 .686l.64.555a.459.459 0 0 1 .13.532c-.099.22-.22.429-.36.623a.46.46 0 0 1-.526.152l-.8-.276a.455.455 0 0 0-.594.343l-.16.83a.459.459 0 0 1-.396.38a3.554 3.554 0 0 1-.719 0a.459.459 0 0 1-.395-.38l-.161-.83a.455.455 0 0 0-.595-.343l-.799.276a.46.46 0 0 1-.526-.152a3.493 3.493 0 0 1-.36-.623a.459.459 0 0 1 .13-.532l.64-.555a.455.455 0 0 0 0-.686l-.64-.555a.459.459 0 0 1-.13-.532c.099-.22.22-.429.36-.623ZM15 14.5a1 1 0 1 0-2 0a1 1 0 0 0 2 0Z" }));
+var UserIcon = (props) => {
+  return /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 20 20" }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M10 2a4 4 0 1 0 0 8a4 4 0 0 0 0-8Zm-4.991 9A2.001 2.001 0 0 0 3 13c0 1.691.833 2.966 2.135 3.797C6.417 17.614 8.145 18 10 18c1.855 0 3.583-.386 4.865-1.203C16.167 15.967 17 14.69 17 13a2 2 0 0 0-2-2H5.009Z" }));
+};
+var GuildIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16" }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M11.414 1.586A2 2 0 0 0 10 1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V3a2 2 0 0 0-.586-1.414ZM9.853 12.854a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-2a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-6A.5.5 0 0 1 9.499 5h-3a.498.498 0 0 1-.5-.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .354.854Z" }));
 var rotateImage = (url, rotation) => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
@@ -849,176 +856,214 @@ var BetterMedia = class {
     res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
   }
   AUCM(res, props) {
+    const isInGuild = GuildStoreCurrent.getGuildId() != null;
     const user = props.user;
-    const img = mediautils.getUserAvatarURL({ id: user.id, avatar: user.avatar, discriminator: null }, true, 4096, "png", false);
     const userProfile = UserProfileStore.getUserProfile(user.id);
-    const userBanner = mediautils.getUserBannerURL({ id: user.id, banner: userProfile?.banner, size: 4096, canAnimate: true });
+    const guildMemberProfile = isInGuild ? UserProfileStore.getGuildMemberProfile(user.id, GuildStoreCurrent.getGuildId()) : null;
+    const normalImg = mediautils.getUserAvatarURL({ id: user.id, avatar: user.avatar, discriminator: null }, true, 4096, "png", false);
+    const normalBanner = mediautils.getUserBannerURL({ id: user.id, banner: userProfile?.banner, size: 4096, canAnimate: true });
+    const guildMember = isInGuild ? GuildMemberStore.getMember(GuildStoreCurrent.getGuildId(), user.id) : null;
+    const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL({ guildId: GuildStoreCurrent.getGuildId(), userId: user.id, avatar: guildMember?.avatar, discriminator: null }, true, 4096, "png", false).replace("?size=96", "?size=4096") : null;
+    const guildBanner = isInGuild ? mediautils.getGuildMemberBannerURL({ id: user.id, guildId: GuildStoreCurrent.getGuildId(), banner: guildMemberProfile?.banner, size: 4096, canAnimate: true }) : null;
     const isAnimated = user.avatar && user.avatar.startsWith("a_");
     const isAnimatedBanner = userProfile?.banner && userProfile.banner.startsWith("a_");
-    const animatedImg = isAnimated ? img.replace(".png", ".gif").replace(".webp", ".gif") : null;
-    const animatedBanner = isAnimatedBanner ? userBanner.replace(".png", ".gif").replace(".webp", ".gif") : null;
-    const buildProfilePictureMenu = () => {
-      const menuItems = [
-        {
-          type: "button",
-          id: "open-pfp",
-          label: "Open",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
-          action: () => openMedia(img)
+    const isAnimatedGuildBanner = guildMemberProfile?.banner && guildMemberProfile.banner.startsWith("a_");
+    const animatedNormalImg = isAnimated ? normalImg.replace(".png", ".gif").replace(".webp", ".gif") : null;
+    const animatedNormalBanner = isAnimatedBanner ? normalBanner.replace(".png", ".gif").replace(".webp", ".gif") : null;
+    const animatedGuildImg = isAnimated && guildImg ? guildImg.replace(".png", ".gif").replace(".webp", ".gif") : null;
+    const animatedGuildBanner = isAnimatedGuildBanner && guildBanner ? guildBanner.replace(".png", ".gif").replace(".webp", ".gif") : null;
+    const buildMediaMenu = (img, banner, animatedImg, animatedBanner, isAnimatedBanner2) => {
+      const menuItems = [];
+      if (img) {
+        const pfpItems = [
+          {
+            type: "button",
+            id: "open-pfp",
+            label: "Open",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
+            action: () => openMedia(img)
+          }
+        ];
+        if (isAnimated) {
+          pfpItems.push({
+            type: "button",
+            id: "open-pfp_a",
+            label: "Open Animated",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
+            action: () => openMedia(animatedImg)
+          });
         }
-      ];
-      if (isAnimated) {
-        menuItems.push({
-          type: "button",
-          id: "open-pfp_a",
-          label: "Open Animated",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
-          action: () => openMedia(animatedImg)
-        });
-      }
-      if (isAnimated) {
-        menuItems.push({
-          type: "submenu",
-          id: "copy-avatar-submenu",
-          label: "Copy URL",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-          items: [
-            {
-              type: "button",
-              id: "copy-avatar-url-static",
-              label: "Copy Static URL",
-              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-              action: () => copyURL(img)
-            },
-            {
-              type: "button",
-              id: "copy-avatar-url-animated",
-              label: "Copy Animated URL",
-              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-              action: () => copyURL(animatedImg)
-            }
-          ]
-        });
-      } else {
-        menuItems.push({
-          type: "button",
-          id: "copy-avatar-url",
-          label: "Copy URL",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-          action: () => copyURL(img)
-        });
-      }
-      menuItems.push(
-        {
-          type: "submenu",
-          id: "reverse-search",
-          label: "Reverse Search",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
-          items: buildSearchMenu(img)
-        },
-        {
-          type: "submenu",
-          id: "canvas-methods",
-          label: "Canvas Methods",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null),
-          items: createCanvasMenu(img)
+        if (isAnimated) {
+          pfpItems.push({
+            type: "submenu",
+            id: "copy-avatar-submenu",
+            label: "Copy URL",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+            items: [
+              {
+                type: "button",
+                id: "copy-avatar-url-static",
+                label: "Copy Static URL",
+                iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+                action: () => copyURL(img)
+              },
+              {
+                type: "button",
+                id: "copy-avatar-url-animated",
+                label: "Copy Animated URL",
+                iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+                action: () => copyURL(animatedImg)
+              }
+            ]
+          });
+        } else {
+          pfpItems.push({
+            type: "button",
+            id: "copy-avatar-url",
+            label: "Copy URL",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+            action: () => copyURL(img)
+          });
         }
-      );
-      return menuItems;
-    };
-    const buildBannerMenu = () => {
-      const items = [];
-      items.push({
-        type: "button",
-        id: "open-banner",
-        label: "Open",
-        iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
-        action: () => openMedia(userBanner)
-      });
-      if (isAnimatedBanner) {
-        items.push({
-          type: "button",
-          id: "open-banner-a",
-          label: "Open Animated",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
-          action: () => openMedia(animatedBanner)
-        });
-      }
-      if (isAnimatedBanner) {
-        items.push({
-          type: "submenu",
-          id: "copy-banner-submenu",
-          label: "Copy URL",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-          items: [
-            {
-              type: "button",
-              id: "copy-banner-url-static",
-              label: "Copy Static URL",
-              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-              action: () => copyURL(userBanner)
-            },
-            {
-              type: "button",
-              id: "copy-banner-url-animated",
-              label: "Copy Animated URL",
-              iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-              action: () => copyURL(animatedBanner)
-            }
-          ]
-        });
-      } else {
-        items.push({
-          type: "button",
-          id: "copy-banner-url",
-          label: "Copy URL",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
-          action: () => copyURL(userBanner)
-        });
-      }
-      items.push(
-        {
-          type: "submenu",
-          id: "reverse-search-banner",
-          label: "Reverse Search",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
-          items: buildSearchMenu(userBanner)
-        },
-        {
-          type: "submenu",
-          id: "canvas-methods-banner",
-          label: "Canvas Methods",
-          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null),
-          items: createCanvasMenu(userBanner)
-        }
-      );
-      return items;
-    };
-    const betterMediaMenu = {
-      type: "submenu",
-      id: "better-media",
-      label: "BetterMedia",
-      iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(MainMenuIcon, null),
-      items: [
-        img && {
+        pfpItems.push(
+          {
+            type: "submenu",
+            id: "reverse-search",
+            label: "Reverse Search",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
+            items: buildSearchMenu(img)
+          },
+          {
+            type: "submenu",
+            id: "canvas-methods",
+            label: "Canvas Methods",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null),
+            items: createCanvasMenu(img)
+          }
+        );
+        menuItems.push({
           type: "submenu",
           id: "profile-picture",
           label: "Profile Picture",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(ImageIcon, null),
-          items: buildProfilePictureMenu()
-        },
-        {
+          items: pfpItems
+        });
+      }
+      if (banner) {
+        const bannerItems = [
+          {
+            type: "button",
+            id: "open-banner",
+            label: "Open",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
+            action: () => openMedia(banner)
+          }
+        ];
+        if (isAnimatedBanner2) {
+          bannerItems.push({
+            type: "button",
+            id: "open-banner-a",
+            label: "Open Animated",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null),
+            action: () => openMedia(animatedBanner)
+          });
+        }
+        if (isAnimatedBanner2) {
+          bannerItems.push({
+            type: "submenu",
+            id: "copy-banner-submenu",
+            label: "Copy URL",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+            items: [
+              {
+                type: "button",
+                id: "copy-banner-url-static",
+                label: "Copy Static URL",
+                iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+                action: () => copyURL(banner)
+              },
+              {
+                type: "button",
+                id: "copy-banner-url-animated",
+                label: "Copy Animated URL",
+                iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+                action: () => copyURL(animatedBanner)
+              }
+            ]
+          });
+        } else {
+          bannerItems.push({
+            type: "button",
+            id: "copy-banner-url",
+            label: "Copy URL",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
+            action: () => copyURL(banner)
+          });
+        }
+        bannerItems.push(
+          {
+            type: "submenu",
+            id: "reverse-search-banner",
+            label: "Reverse Search",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
+            items: buildSearchMenu(banner)
+          },
+          {
+            type: "submenu",
+            id: "canvas-methods-banner",
+            label: "Canvas Methods",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null),
+            items: createCanvasMenu(banner)
+          }
+        );
+        menuItems.push({
           type: "submenu",
           id: "banner",
           label: "Banner",
-          disabled: !userBanner,
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(BannerIcon, null),
-          items: buildBannerMenu()
-        }
-      ].filter(Boolean)
+          items: bannerItems
+        });
+      }
+      return menuItems;
     };
-    res.props.children.push(ContextMenu.buildItem({ type: "separator" }));
-    res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+    const betterMediaItems = [];
+    const normalItems = buildMediaMenu(normalImg, normalBanner, animatedNormalImg, animatedNormalBanner, isAnimatedBanner);
+    if (normalItems.length > 0) {
+      if (isInGuild) {
+        betterMediaItems.push({
+          type: "submenu",
+          id: "profile",
+          label: "Profile",
+          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(UserIcon, null),
+          items: normalItems
+        });
+      } else {
+        betterMediaItems.push(...normalItems);
+      }
+    }
+    if (isInGuild && (guildImg || guildBanner)) {
+      const guildItems = buildMediaMenu(guildImg, guildBanner, animatedGuildImg, animatedGuildBanner, isAnimatedGuildBanner);
+      if (guildItems.length > 0) {
+        betterMediaItems.push({
+          type: "submenu",
+          id: "guild",
+          label: "Guild",
+          iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(GuildIcon, null),
+          items: guildItems
+        });
+      }
+    }
+    if (betterMediaItems.length > 0) {
+      const betterMediaMenu = {
+        type: "submenu",
+        id: "better-media",
+        label: "BetterMedia",
+        iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(MainMenuIcon, null),
+        items: betterMediaItems
+      };
+      res.props.children.push(ContextMenu.buildItem({ type: "separator" }));
+      res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+    }
   }
   stop() {
     ImageRenderComponent.uo = uoOrg;

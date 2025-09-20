@@ -12,6 +12,9 @@ const ImageRenderComponent = Webpack.getModule(x => x?.isAnimated && x?.getForma
 const MediaModal = Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', { searchExports: true })
 const mediautils = Webpack.getModule(x => x?.getUserBannerURL)
 const UserProfileStore = Webpack.getStore("UserProfileStore")
+const GuildStoreCurrent = Webpack.getStore("SelectedGuildStore")
+const GuildMemberStore = Webpack.getStore("GuildMemberStore")
+const GuildProfileStore = Webpack.getStore("GuildProfileStore")
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
 const ToolbarButton = Webpack.getByStrings('actionBarIcon')
 const ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -452,6 +455,14 @@ const Rotate = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 32 32" {...props}>
         <path fill="var(--interactive-normal)" d="M15 3v2h1V3h-1zm-2.156.438L12 3.655l-.03.03l-.033.002l-.843.312h-.03l-.033.03l-.092.032l.843 1.813h.033l.062-.03l.688-.25l.062-.032l.78-.22l-.56-1.905zM20 4v8h2V6.78c3.03 1.98 5 5.28 5 9.22c0 6.055-4.945 11-11 11S5 22.055 5 16v-1H3v1c0 7.145 5.855 13 13 13s13-5.855 13-13c0-4.06-1.795-7.615-4.656-10H28V4h-8zM9.156 5l-.53.344l-.032.03h-.03l-.69.532l-.03.032h-.032l-.28.25l1.312 1.5l.22-.188l.06-.03l.563-.44L9.75 7l.47-.313L9.155 5zM6.094 7.594l-.22.28l-.03.032l-.032.032l-.53.687v.03l-.032.033l-.344.53l1.688 1.095l.28-.47l.064-.062l.437-.592l.03-.032l.22-.25l-1.53-1.312zM3.97 11l-.033.125l-.03.03v.033L3.593 12v.03l-.03.064l-.22.844l1.906.53l.22-.78l.03-.063l.25-.688l.03-.062v-.03L3.97 11z"></path>
     </svg>
+)
+
+const UserIcon = (props) => {
+    return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 20 20"><path fill="var(--interactive-normal)" d="M10 2a4 4 0 1 0 0 8a4 4 0 0 0 0-8Zm-4.991 9A2.001 2.001 0 0 0 3 13c0 1.691.833 2.966 2.135 3.797C6.417 17.614 8.145 18 10 18c1.855 0 3.583-.386 4.865-1.203C16.167 15.967 17 14.69 17 13a2 2 0 0 0-2-2H5.009Z"></path></svg>
+}
+
+const GuildIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"><path fill="var(--interactive-normal)" d="M11.414 1.586A2 2 0 0 0 10 1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V3a2 2 0 0 0-.586-1.414ZM9.853 12.854a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-2a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-6A.5.5 0 0 1 9.499 5h-3a.498.498 0 0 1-.5-.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .354.854Z"></path></svg>
 )
 
 const Eye = (props) => (
@@ -1080,192 +1091,237 @@ export default class BetterMedia {
     }
 
     AUCM(res, props) {
+        const isInGuild = (GuildStoreCurrent.getGuildId() != null);
         const user = props.user;
-        const img = mediautils.getUserAvatarURL({ id: user.id, avatar: user.avatar, discriminator: null }, true, 4096, "png", false);
 
         const userProfile = UserProfileStore.getUserProfile(user.id);
-        const userBanner = mediautils.getUserBannerURL({ id: user.id, banner: userProfile?.banner, size: 4096, canAnimate: true })
+        const guildMemberProfile = isInGuild ? UserProfileStore.getGuildMemberProfile(user.id, GuildStoreCurrent.getGuildId()) : null;
+
+        const normalImg = mediautils.getUserAvatarURL({ id: user.id, avatar: user.avatar, discriminator: null }, true, 4096, "png", false);
+        const normalBanner = mediautils.getUserBannerURL({ id: user.id, banner: userProfile?.banner, size: 4096, canAnimate: true });
+
+        const guildMember = isInGuild ? GuildMemberStore.getMember(GuildStoreCurrent.getGuildId(), user.id) : null;
+
+        const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL({ guildId: GuildStoreCurrent.getGuildId(), userId: user.id, avatar: guildMember?.avatar, discriminator: null }, true, 4096, "png", false).replace('?size=96', '?size=4096') : null;
+        const guildBanner = isInGuild ? mediautils.getGuildMemberBannerURL({ id: user.id, guildId: GuildStoreCurrent.getGuildId(), banner: guildMemberProfile?.banner, size: 4096, canAnimate: true }) : null;
 
         const isAnimated = user.avatar && user.avatar.startsWith('a_');
         const isAnimatedBanner = userProfile?.banner && userProfile.banner.startsWith('a_');
+        const isAnimatedGuildBanner = guildMemberProfile?.banner && guildMemberProfile.banner.startsWith('a_');
 
-        const animatedImg = isAnimated ? img.replace('.png', '.gif').replace('.webp', '.gif') : null;
-        const animatedBanner = isAnimatedBanner ? userBanner.replace('.png', '.gif').replace('.webp', '.gif') : null;
+        const animatedNormalImg = isAnimated ? normalImg.replace('.png', '.gif').replace('.webp', '.gif') : null;
+        const animatedNormalBanner = isAnimatedBanner ? normalBanner.replace('.png', '.gif').replace('.webp', '.gif') : null;
+        const animatedGuildImg = isAnimated && guildImg ? guildImg.replace('.png', '.gif').replace('.webp', '.gif') : null;
+        const animatedGuildBanner = isAnimatedGuildBanner && guildBanner ? guildBanner.replace('.png', '.gif').replace('.webp', '.gif') : null;
 
-        const buildProfilePictureMenu = () => {
-            const menuItems = [
-                {
-                    type: 'button',
-                    id: 'open-pfp',
-                    label: 'Open',
-                    iconLeft: () => <OpenIcon />,
-                    action: () => openMedia(img)
+        const buildMediaMenu = (img, banner, animatedImg, animatedBanner, isAnimatedBanner) => {
+            const menuItems = [];
+
+            if (img) {
+                const pfpItems = [
+                    {
+                        type: 'button',
+                        id: 'open-pfp',
+                        label: 'Open',
+                        iconLeft: () => <OpenIcon />,
+                        action: () => openMedia(img)
+                    }
+                ];
+
+                if (isAnimated) {
+                    pfpItems.push({
+                        type: 'button',
+                        id: 'open-pfp_a',
+                        label: 'Open Animated',
+                        iconLeft: () => <OpenIcon />,
+                        action: () => openMedia(animatedImg)
+                    });
                 }
-            ];
 
-            if (isAnimated) {
-                menuItems.push({
-                    type: 'button',
-                    id: 'open-pfp_a',
-                    label: 'Open Animated',
-                    iconLeft: () => <OpenIcon />,
-                    action: () => openMedia(animatedImg)
-                });
-            }
-
-            if (isAnimated) {
-                menuItems.push({
-                    type: 'submenu',
-                    id: 'copy-avatar-submenu',
-                    label: 'Copy URL',
-                    iconLeft: () => <CopyIcon />,
-                    items: [
-                        {
-                            type: 'button',
-                            id: 'copy-avatar-url-static',
-                            label: 'Copy Static URL',
-                            iconLeft: () => <CopyIcon />,
-                            action: () => copyURL(img)
-                        },
-                        {
-                            type: 'button',
-                            id: 'copy-avatar-url-animated',
-                            label: 'Copy Animated URL',
-                            iconLeft: () => <CopyIcon />,
-                            action: () => copyURL(animatedImg)
-                        }
-                    ]
-                });
-            } else {
-                menuItems.push({
-                    type: 'button',
-                    id: 'copy-avatar-url',
-                    label: 'Copy URL',
-                    iconLeft: () => <CopyIcon />,
-                    action: () => copyURL(img)
-                });
-            }
-
-            menuItems.push(
-                {
-                    type: 'submenu',
-                    id: 'reverse-search',
-                    label: 'Reverse Search',
-                    iconLeft: () => <SearchIcon />,
-                    items: buildSearchMenu(img)
-                },
-                {
-                    type: 'submenu',
-                    id: 'canvas-methods',
-                    label: 'Canvas Methods',
-                    iconLeft: () => <CanvasIcon />,
-                    items: createCanvasMenu(img)
+                if (isAnimated) {
+                    pfpItems.push({
+                        type: 'submenu',
+                        id: 'copy-avatar-submenu',
+                        label: 'Copy URL',
+                        iconLeft: () => <CopyIcon />,
+                        items: [
+                            {
+                                type: 'button',
+                                id: 'copy-avatar-url-static',
+                                label: 'Copy Static URL',
+                                iconLeft: () => <CopyIcon />,
+                                action: () => copyURL(img)
+                            },
+                            {
+                                type: 'button',
+                                id: 'copy-avatar-url-animated',
+                                label: 'Copy Animated URL',
+                                iconLeft: () => <CopyIcon />,
+                                action: () => copyURL(animatedImg)
+                            }
+                        ]
+                    });
+                } else {
+                    pfpItems.push({
+                        type: 'button',
+                        id: 'copy-avatar-url',
+                        label: 'Copy URL',
+                        iconLeft: () => <CopyIcon />,
+                        action: () => copyURL(img)
+                    });
                 }
-            );
 
-            return menuItems;
-        };
+                pfpItems.push(
+                    {
+                        type: 'submenu',
+                        id: 'reverse-search',
+                        label: 'Reverse Search',
+                        iconLeft: () => <SearchIcon />,
+                        items: buildSearchMenu(img)
+                    },
+                    {
+                        type: 'submenu',
+                        id: 'canvas-methods',
+                        label: 'Canvas Methods',
+                        iconLeft: () => <CanvasIcon />,
+                        items: createCanvasMenu(img)
+                    }
+                );
 
-        const buildBannerMenu = () => {
-            const items = [];
-
-            items.push({
-                type: 'button',
-                id: 'open-banner',
-                label: 'Open',
-                iconLeft: () => <OpenIcon />,
-                action: () => openMedia(userBanner)
-            });
-
-            if (isAnimatedBanner) {
-                items.push({
-                    type: 'button',
-                    id: 'open-banner-a',
-                    label: 'Open Animated',
-                    iconLeft: () => <OpenIcon />,
-                    action: () => openMedia(animatedBanner)
-                });
-            }
-
-            if (isAnimatedBanner) {
-                items.push({
-                    type: 'submenu',
-                    id: 'copy-banner-submenu',
-                    label: 'Copy URL',
-                    iconLeft: () => <CopyIcon />,
-                    items: [
-                        {
-                            type: 'button',
-                            id: 'copy-banner-url-static',
-                            label: 'Copy Static URL',
-                            iconLeft: () => <CopyIcon />,
-                            action: () => copyURL(userBanner)
-                        },
-                        {
-                            type: 'button',
-                            id: 'copy-banner-url-animated',
-                            label: 'Copy Animated URL',
-                            iconLeft: () => <CopyIcon />,
-                            action: () => copyURL(animatedBanner)
-                        }
-                    ]
-                });
-            } else {
-                items.push({
-                    type: 'button',
-                    id: 'copy-banner-url',
-                    label: 'Copy URL',
-                    iconLeft: () => <CopyIcon />,
-                    action: () => copyURL(userBanner)
-                });
-            }
-
-            items.push(
-                {
-                    type: 'submenu',
-                    id: 'reverse-search-banner',
-                    label: 'Reverse Search',
-                    iconLeft: () => <SearchIcon />,
-                    items: buildSearchMenu(userBanner)
-                },
-                {
-                    type: 'submenu',
-                    id: 'canvas-methods-banner',
-                    label: 'Canvas Methods',
-                    iconLeft: () => <CanvasIcon />,
-                    items: createCanvasMenu(userBanner)
-                }
-            );
-
-            return items;
-        };
-
-        const betterMediaMenu = {
-            type: 'submenu',
-            id: 'better-media',
-            label: 'BetterMedia',
-            iconLeft: () => <MainMenuIcon />,
-            items: [
-                img && {
+                menuItems.push({
                     type: 'submenu',
                     id: 'profile-picture',
                     label: 'Profile Picture',
                     iconLeft: () => <ImageIcon />,
-                    items: buildProfilePictureMenu()
-                },
-                {
+                    items: pfpItems
+                });
+            }
+
+            if (banner) {
+                const bannerItems = [
+                    {
+                        type: 'button',
+                        id: 'open-banner',
+                        label: 'Open',
+                        iconLeft: () => <OpenIcon />,
+                        action: () => openMedia(banner)
+                    }
+                ];
+
+                if (isAnimatedBanner) {
+                    bannerItems.push({
+                        type: 'button',
+                        id: 'open-banner-a',
+                        label: 'Open Animated',
+                        iconLeft: () => <OpenIcon />,
+                        action: () => openMedia(animatedBanner)
+                    });
+                }
+
+                if (isAnimatedBanner) {
+                    bannerItems.push({
+                        type: 'submenu',
+                        id: 'copy-banner-submenu',
+                        label: 'Copy URL',
+                        iconLeft: () => <CopyIcon />,
+                        items: [
+                            {
+                                type: 'button',
+                                id: 'copy-banner-url-static',
+                                label: 'Copy Static URL',
+                                iconLeft: () => <CopyIcon />,
+                                action: () => copyURL(banner)
+                            },
+                            {
+                                type: 'button',
+                                id: 'copy-banner-url-animated',
+                                label: 'Copy Animated URL',
+                                iconLeft: () => <CopyIcon />,
+                                action: () => copyURL(animatedBanner)
+                            }
+                        ]
+                    });
+                } else {
+                    bannerItems.push({
+                        type: 'button',
+                        id: 'copy-banner-url',
+                        label: 'Copy URL',
+                        iconLeft: () => <CopyIcon />,
+                        action: () => copyURL(banner)
+                    });
+                }
+
+                bannerItems.push(
+                    {
+                        type: 'submenu',
+                        id: 'reverse-search-banner',
+                        label: 'Reverse Search',
+                        iconLeft: () => <SearchIcon />,
+                        items: buildSearchMenu(banner)
+                    },
+                    {
+                        type: 'submenu',
+                        id: 'canvas-methods-banner',
+                        label: 'Canvas Methods',
+                        iconLeft: () => <CanvasIcon />,
+                        items: createCanvasMenu(banner)
+                    }
+                );
+
+                menuItems.push({
                     type: 'submenu',
                     id: 'banner',
                     label: 'Banner',
-                    disabled: !userBanner,
                     iconLeft: () => <BannerIcon />,
-                    items: buildBannerMenu()
-                }
-            ].filter(Boolean)
+                    items: bannerItems
+                });
+            }
+
+            return menuItems;
         };
 
-        res.props.children.push(ContextMenu.buildItem({ type: 'separator' }));
-        res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+        const betterMediaItems = [];
+
+        const normalItems = buildMediaMenu(normalImg, normalBanner, animatedNormalImg, animatedNormalBanner, isAnimatedBanner);
+        if (normalItems.length > 0) {
+            if (isInGuild) {
+                betterMediaItems.push({
+                    type: 'submenu',
+                    id: 'profile',
+                    label: 'Profile',
+                    iconLeft: () => <UserIcon />,
+                    items: normalItems
+                });
+            } else {
+                betterMediaItems.push(...normalItems);
+            }
+        }
+
+        if (isInGuild && (guildImg || guildBanner)) {
+            const guildItems = buildMediaMenu(guildImg, guildBanner, animatedGuildImg, animatedGuildBanner, isAnimatedGuildBanner);
+            if (guildItems.length > 0) {
+                betterMediaItems.push({
+                    type: 'submenu',
+                    id: 'guild',
+                    label: 'Guild',
+                    iconLeft: () => <GuildIcon />,
+                    items: guildItems
+                });
+            }
+        }
+
+        if (betterMediaItems.length > 0) {
+            const betterMediaMenu = {
+                type: 'submenu',
+                id: 'better-media',
+                label: 'BetterMedia',
+                iconLeft: () => <MainMenuIcon />,
+                items: betterMediaItems
+            };
+
+            res.props.children.push(ContextMenu.buildItem({ type: 'separator' }));
+            res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+        }
     }
 
     stop() {
