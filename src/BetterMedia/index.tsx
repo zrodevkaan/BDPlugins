@@ -1102,7 +1102,7 @@ export default class BetterMedia {
 
         const guildMember = isInGuild ? GuildMemberStore.getMember(GuildStoreCurrent.getGuildId(), user.id) : null;
 
-        const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL({ guildId: GuildStoreCurrent.getGuildId(), userId: user.id, avatar: guildMember?.avatar, discriminator: null }, true, 4096, "png", false).replace('?size=96', '?size=4096') : null;
+        const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL({ guildId: GuildStoreCurrent.getGuildId(), userId: user.id, avatar: guildMember?.avatar, discriminator: null }, true, 4096, "png", false)?.replace('?size=96', '?size=4096') : null;
         const guildBanner = isInGuild ? mediautils.getGuildMemberBannerURL({ id: user.id, guildId: GuildStoreCurrent.getGuildId(), banner: guildMemberProfile?.banner, size: 4096, canAnimate: true }) : null;
 
         const isAnimated = user.avatar && user.avatar.startsWith('a_');
