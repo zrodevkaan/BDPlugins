@@ -39,7 +39,8 @@ var mediautils = Webpack.getModule((x) => x?.getUserBannerURL);
 var UserProfileStore = Webpack.getStore("UserProfileStore");
 var GuildStoreCurrent = Webpack.getStore("SelectedGuildStore");
 var GuildMemberStore = Webpack.getStore("GuildMemberStore");
-var GuildProfileStore = Webpack.getStore("GuildProfileStore");
+var MessageStore = Webpack.getStore("MessageStore");
+var SelectedChannelStore = Webpack.getStore("SelectedChannelStore");
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
 var ToolbarButton = Webpack.getByStrings("actionBarIcon");
 var ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -179,6 +180,7 @@ var openMedia = async (url, doBarrelRoll, buffer) => {
     }]);
   };
   const modalIndex = MediaModal({
+    BetterMediaModal: true,
     items: [mediaItem],
     onContextMenu: (e) => {
       if (extension == "GIF") return;
@@ -804,6 +806,35 @@ var BetterMedia = class {
             }
           )
         );
+      }
+    });
+    Patcher.before(Webpack.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true, raw: true }).exports, "K", (_, args) => {
+      const chatAttachments = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array.reduce((acc, x) => {
+        if (x?.attachments) {
+          acc.push(...x.attachments);
+        }
+        return acc;
+      }, []);
+      if (args[0].BetterMediaModal == void 0 && args[0].location !== "ChannelAttachmentUpload") {
+        const firstOriginalItem = args[0].items?.[0];
+        const existingUrls = new Set(args[0].items?.map((item) => item.url) || []);
+        const filteredAttachments = chatAttachments.filter((attachment) => {
+          const url = attachment.original || attachment.proxy_url;
+          const processedUrl = url.replace(/\.webp(\?|$)/i, ".png$1");
+          return !existingUrls.has(processedUrl);
+        });
+        const mediaItems = filteredAttachments.map((attachment) => {
+          const url = attachment.url || attachment.proxy_url;
+          const discordDoesntEncodeWebpsInDiscordNative = url.replace(/\.webp(\?|$)/i, ".png$1");
+          return {
+            url: discordDoesntEncodeWebpsInDiscordNative,
+            original: discordDoesntEncodeWebpsInDiscordNative,
+            proxyUrl: discordDoesntEncodeWebpsInDiscordNative,
+            isAnimated: true,
+            type: "IMAGE"
+          };
+        });
+        args[0].items = firstOriginalItem ? [firstOriginalItem, ...mediaItems] : mediaItems;
       }
     });
     Patcher.after(Toolbar, "Z", (_, [args], returnValue) => {

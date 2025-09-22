@@ -14,7 +14,8 @@ const mediautils = Webpack.getModule(x => x?.getUserBannerURL)
 const UserProfileStore = Webpack.getStore("UserProfileStore")
 const GuildStoreCurrent = Webpack.getStore("SelectedGuildStore")
 const GuildMemberStore = Webpack.getStore("GuildMemberStore")
-const GuildProfileStore = Webpack.getStore("GuildProfileStore")
+const MessageStore = Webpack.getStore("MessageStore")
+const SelectedChannelStore = Webpack.getStore("SelectedChannelStore")
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
 const ToolbarButton = Webpack.getByStrings('actionBarIcon')
 const ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -174,6 +175,7 @@ const openMedia = async (url: string, doBarrelRoll: boolean, buffer?: Buffer) =>
     }
 
     const modalIndex = MediaModal({
+        BetterMediaModal: true,
         items: [mediaItem],
         onContextMenu: (e) => {
             if (extension == "GIF") return
@@ -1024,6 +1026,42 @@ export default class BetterMedia {
                 );
             }
         });
+
+        Patcher.before(Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', { searchExports: true, raw: true }).exports, 'K', (_, args) => {
+            const chatAttachments = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array
+                .reduce((acc, x) => {
+                    if (x?.attachments) {
+                        acc.push(...x.attachments);
+                    }
+                    return acc;
+                }, []);
+
+            if (args[0].BetterMediaModal == undefined && args[0].location !== "ChannelAttachmentUpload") {
+                const firstOriginalItem = args[0].items?.[0];
+
+                const existingUrls = new Set(args[0].items?.map(item => item.url) || []);
+
+                const filteredAttachments = chatAttachments.filter(attachment => {
+                    const url = attachment.original || attachment.proxy_url;
+                    const processedUrl = url.replace(/\.webp(\?|$)/i, '.png$1');
+                    return !existingUrls.has(processedUrl);
+                });
+
+                const mediaItems = filteredAttachments.map(attachment => {
+                    const url = attachment.url || attachment.proxy_url;
+                    const discordDoesntEncodeWebpsInDiscordNative = url.replace(/\.webp(\?|$)/i, '.png$1');
+                    return {
+                        url: discordDoesntEncodeWebpsInDiscordNative,
+                        original: discordDoesntEncodeWebpsInDiscordNative,
+                        proxyUrl: discordDoesntEncodeWebpsInDiscordNative,
+                        isAnimated: true,
+                        type: "IMAGE" as const,
+                    };
+                });
+
+                args[0].items = firstOriginalItem ? [firstOriginalItem, ...mediaItems] : mediaItems;
+            }
+        })
 
         Patcher.after(Toolbar, 'Z', (_, [args], returnValue) => {
             if (returnValue?.props?.actions?.props?.children && args?.upload?.item?.file) {
