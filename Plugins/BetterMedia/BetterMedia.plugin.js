@@ -645,7 +645,9 @@ var DataStore = new Proxy(
   }
 );
 var settings = {
-  allImagesAreGifs: true
+  allImagesAreGifs: true,
+  showToolbar: true,
+  reverseModalGallery: true
 };
 var InternalStore = class _InternalStore {
   static stores = /* @__PURE__ */ new Set();
@@ -915,11 +917,12 @@ var BetterMedia = class {
       if (args[0].BetterMediaModal == void 0 && args[0].location !== "ChannelAttachmentUpload") {
         const firstOriginalItem = args[0].items?.[0];
         const existingUrls = new Set(args[0].items?.map((item) => item.url) || []);
-        const filteredAttachments = chatAttachments.filter((attachment) => {
+        let filteredAttachments = chatAttachments.filter((attachment) => {
           const url = attachment.original || attachment.proxy_url;
           const processedUrl = url.replace(/\.webp(\?|$)/i, ".png$1");
           return !existingUrls.has(processedUrl);
         });
+        filteredAttachments = DataStore.settings.reverseModalGallery ? filteredAttachments.reverse() : filteredAttachments;
         const mediaItems = filteredAttachments.map((attachment) => {
           const url = attachment.url || attachment.proxy_url;
           const discordDoesntEncodeWebpsInDiscordNative = url.replace(/\.webp(\?|$)/i, ".png$1");
@@ -1196,11 +1199,18 @@ var BetterMedia = class {
   getSettingsPanel() {
     return () => {
       const [showToolbar, setShowToolbar] = useSetting("showToolbar", true);
+      const [reverseModalGallery, setReverseModalGallery] = useSetting("reverseModalGallery", true);
       return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement("span", null, "Toggle Image Toolbar"), /* @__PURE__ */ BdApi.React.createElement(
         Components.SwitchInput,
         {
           value: showToolbar,
           onChange: setShowToolbar
+        }
+      ), /* @__PURE__ */ BdApi.React.createElement("span", null, "Reverse Modal Gallery"), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SwitchInput,
+        {
+          value: reverseModalGallery,
+          onChange: setReverseModalGallery
         }
       ));
     };

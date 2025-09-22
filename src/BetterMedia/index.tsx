@@ -838,7 +838,9 @@ const DataStore = new Proxy(
 );
 
 const settings = {
-    allImagesAreGifs: true
+    allImagesAreGifs: true,
+    showToolbar: true,
+    reverseModalGallery: true,
 }
 
 class InternalStore {
@@ -1146,11 +1148,15 @@ export default class BetterMedia {
 
                 const existingUrls = new Set(args[0].items?.map(item => item.url) || []);
 
-                const filteredAttachments = chatAttachments.filter(attachment => {
+                let filteredAttachments = chatAttachments.filter(attachment => {
                     const url = attachment.original || attachment.proxy_url;
                     const processedUrl = url.replace(/\.webp(\?|$)/i, '.png$1');
                     return !existingUrls.has(processedUrl);
                 });
+
+                filteredAttachments = DataStore.settings.reverseModalGallery
+                    ? filteredAttachments.reverse()
+                    : filteredAttachments;
 
                 const mediaItems = filteredAttachments.map(attachment => {
                     const url = attachment.url || attachment.proxy_url;
@@ -1190,7 +1196,7 @@ export default class BetterMedia {
             return <video src={data?.embed.url}>  </video>
         })*/
 
-        Patcher.instead(ImageRenderComponent.uo,'test', () => DataStore.settings.allImagesAreGifs)
+        Patcher.instead(ImageRenderComponent.uo, 'test', () => DataStore.settings.allImagesAreGifs)
 
         Patcher.instead(ImageRenderComponent.ZP, "isAnimated", (_, [__], ret) => {
             return true;
@@ -1470,6 +1476,7 @@ export default class BetterMedia {
     getSettingsPanel() {
         return () => {
             const [showToolbar, setShowToolbar] = useSetting('showToolbar', true);
+            const [reverseModalGallery, setReverseModalGallery] = useSetting('reverseModalGallery', true);
 
             return (
                 <div>
@@ -1479,6 +1486,13 @@ export default class BetterMedia {
                     <Components.SwitchInput
                         value={showToolbar}
                         onChange={setShowToolbar}
+                    />
+                    <span>
+                        Reverse Modal Gallery
+                    </span>
+                    <Components.SwitchInput
+                        value={reverseModalGallery}
+                        onChange={setReverseModalGallery}
                     />
                 </div>
             );
