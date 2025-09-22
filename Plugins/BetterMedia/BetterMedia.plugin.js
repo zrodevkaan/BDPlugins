@@ -717,7 +717,6 @@ var SettingsStore = class extends InternalStore {
   }
 };
 var settingsStore = new SettingsStore();
-var uoOrg = ImageRenderComponent.uo;
 var RotateIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M12 6v3l4-4-4-4v3c-5.5 0-10 4.5-10 10 0 2.2.7 4.2 1.9 5.8l1.4-1.4C4.5 16.8 4 14.5 4 12c0-4.4 3.6-8 8-8z" }), /* @__PURE__ */ BdApi.React.createElement("path", { d: "M20 12c0-4.4-3.6-8-8-8v1.8c3.4 0 6.2 2.8 6.2 6.2 0 2.5-1.5 4.7-3.6 5.7l1.4 1.4c2.3-1.3 3.8-3.7 3.8-6.3z" }));
 var FireIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z" }));
 var SparklesIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "m9 11 3-3 3 3-3 3-3-3z" }), /* @__PURE__ */ BdApi.React.createElement("path", { d: "M18.5 6.5 21 4l-2.5-2.5L16 4l2.5 2.5zM18.5 17.5 21 20l-2.5 2.5L16 20l2.5-2.5zM5.5 6.5 8 4 5.5 1.5 3 4l2.5 2.5zM5.5 17.5 8 20l-2.5 2.5L3 20l2.5-2.5z" }));
@@ -948,7 +947,7 @@ var BetterMedia = class {
         );
       }
     });
-    ImageRenderComponent.uo = DataStore.settings.allImagesAreGifs ? /.{1,3}/ : uoOrg;
+    Patcher.instead(ImageRenderComponent.uo, "test", () => DataStore.settings.allImagesAreGifs);
     Patcher.instead(ImageRenderComponent.ZP, "isAnimated", (_, [__], ret) => {
       return true;
     });
@@ -1207,7 +1206,6 @@ var BetterMedia = class {
     };
   }
   stop() {
-    ImageRenderComponent.uo = uoOrg;
     DOM.removeStyle("BetterMedia");
     Patcher.unpatchAll();
     ContextMenu.unpatch("user-context", this.AUCM);
