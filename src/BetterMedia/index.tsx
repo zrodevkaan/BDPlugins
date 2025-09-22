@@ -316,6 +316,7 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
     const owoRef = React.useRef(null)
     const containerWidth = Math.max(width - 20, 60);
     const [open, setOpen] = React.useState(false)
+    const [shouldShow, setShouldShow] = React.useState(DataStore.settings.showToolbar ?? true)
     const iconWidth = 24;
     const totalIconsWidth = iconWidth * 5;
     const availableSpaceForGaps = containerWidth - totalIconsWidth - 10;
@@ -335,10 +336,13 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
             );
         });
 
-        return [createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems), createSubmenuItem('canvas-methods', "Canvas Methods", createCanvasMenu(url))];
+        return [createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems), createSubmenuItem('canvas-methods', "Canvas Methods", createCanvasMenu(url)), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
+            setShouldShow(false);
+            DataStore.settings.showToolbar = false;
+        })];
     };
 
-    return (
+    return shouldShow && (
         <div className="bm-media-container">
             <div className="bm-media-controls" style={{ gap: `${gap}px` }}>
                 <Components.Tooltip text="Download">

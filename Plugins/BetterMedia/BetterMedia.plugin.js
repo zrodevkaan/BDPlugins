@@ -115,6 +115,12 @@ var buildSearchMenu = (url) => {
     };
   });
 };
+var createContextMenuItem = (id, label, action, options = {}) => ({
+  id,
+  label,
+  action,
+  ...options
+});
 var createSubmenuItem = (id, label, items, options = {}) => ({
   id,
   label,
@@ -287,6 +293,7 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
   const owoRef = React.useRef(null);
   const containerWidth = Math.max(width - 20, 60);
   const [open, setOpen] = React.useState(false);
+  const [shouldShow, setShouldShow] = React.useState(DataStore.settings.showToolbar ?? true);
   const iconWidth = 24;
   const totalIconsWidth = iconWidth * 5;
   const availableSpaceForGaps = containerWidth - totalIconsWidth - 10;
@@ -303,9 +310,12 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
         { color: engine.mayContainNSFW ? "danger" : "brand" }
       );
     });
-    return [createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems), createSubmenuItem("canvas-methods", "Canvas Methods", createCanvasMenu(url))];
+    return [createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems), createSubmenuItem("canvas-methods", "Canvas Methods", createCanvasMenu(url)), createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
+      setShouldShow(false);
+      DataStore.settings.showToolbar = false;
+    })];
   };
-  return /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-container" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-controls", style: { gap: `${gap}px` } }, /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Download" }, (props) => /* @__PURE__ */ BdApi.React.createElement(ArrowDownload, { ...props, className: "bm-icon", onClick: () => createDownloadLink(url, Date.now()) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Copy URL" }, (props) => /* @__PURE__ */ BdApi.React.createElement(Clipboard, { ...props, className: "bm-icon", onClick: () => copyURL(url) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Open in Browser" }, (props) => /* @__PURE__ */ BdApi.React.createElement(ArrowUpRightDashes, { ...props, className: "bm-icon", onClick: () => openInBrowser(url) })), /* @__PURE__ */ BdApi.React.createElement("div", { ref: owoRef }, /* @__PURE__ */ BdApi.React.createElement(
+  return shouldShow && /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-container" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-controls", style: { gap: `${gap}px` } }, /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Download" }, (props) => /* @__PURE__ */ BdApi.React.createElement(ArrowDownload, { ...props, className: "bm-icon", onClick: () => createDownloadLink(url, Date.now()) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Copy URL" }, (props) => /* @__PURE__ */ BdApi.React.createElement(Clipboard, { ...props, className: "bm-icon", onClick: () => copyURL(url) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Open in Browser" }, (props) => /* @__PURE__ */ BdApi.React.createElement(ArrowUpRightDashes, { ...props, className: "bm-icon", onClick: () => openInBrowser(url) })), /* @__PURE__ */ BdApi.React.createElement("div", { ref: owoRef }, /* @__PURE__ */ BdApi.React.createElement(
     Popout,
     {
       shouldShow: open,
