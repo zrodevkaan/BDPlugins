@@ -316,7 +316,7 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
     const owoRef = React.useRef(null)
     const containerWidth = Math.max(width - 20, 60);
     const [open, setOpen] = React.useState(false)
-    const [shouldShow, setShouldShow] = React.useState(DataStore.settings.showToolbar ?? true)
+    const [shouldShow, setShouldShow] = useSetting('showToolbar', true)
     const iconWidth = 24;
     const totalIconsWidth = iconWidth * 5;
     const availableSpaceForGaps = containerWidth - totalIconsWidth - 10;
@@ -841,6 +841,84 @@ const settings = {
     allImagesAreGifs: true
 }
 
+class InternalStore {
+    static stores = new Set();
+    static idSymbol = Symbol("id");
+    static id = 0;
+    static getStore(name) {
+        for (const store of InternalStore.stores) {
+            if (InternalStore.prototype.getName.call(store) === name) return store;
+        }
+    }
+    static getStoreId(store) {
+        return store[InternalStore.idSymbol];
+    }
+    constructor() {
+        this[InternalStore.idSymbol] = InternalStore.id++;
+        InternalStore.stores.add(this);
+    }
+    initialize() {
+    }
+    static displayName;
+    displayName;
+    getName() {
+        if (this.displayName) return this.displayName;
+        const constructor = this.constructor;
+        if (constructor.displayName) return constructor.displayName;
+        return constructor.name;
+    }
+    #listeners = new Set();
+    addChangeListener(callback) {
+        this.#listeners.add(callback);
+    }
+    removeChangeListener(callback) {
+        this.#listeners.delete(callback);
+    }
+    emit() {
+        for (const listener of this.#listeners) {
+            listener();
+        }
+    }
+    getClass() {
+        return this.constructor;
+    }
+    getId() {
+        return InternalStore.getStoreId(this);
+    }
+}
+
+class SettingsStore extends InternalStore {
+    static displayName = "SettingsStore";
+
+    constructor() {
+        super();
+        this.settings = {};
+        this.initialize();
+    }
+
+    initialize() {
+        this.settings = DataStore.settings || {};
+    }
+
+    getSetting(key, defaultValue) {
+        return this.settings[key] ?? defaultValue;
+    }
+
+    setSetting(key, value) {
+        this.settings[key] = value;
+        DataStore.settings = this.settings;
+        this.emit();
+    }
+
+    updateSettings(newSettings) {
+        this.settings = { ...this.settings, ...newSettings };
+        DataStore.settings = this.settings;
+        this.emit();
+    }
+}
+
+const settingsStore = new SettingsStore();
+
 const uoOrg = ImageRenderComponent.uo
 
 const RotateIcon = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 6v3l4-4-4-4v3c-5.5 0-10 4.5-10 10 0 2.2.7 4.2 1.9 5.8l1.4-1.4C4.5 16.8 4 14.5 4 12c0-4.4 3.6-8 8-8z" /><path d="M20 12c0-4.4-3.6-8-8-8v1.8c3.4 0 6.2 2.8 6.2 6.2 0 2.5-1.5 4.7-3.6 5.7l1.4 1.4c2.3-1.3 3.8-3.7 3.8-6.3z" /></svg>
@@ -1001,6 +1079,31 @@ function getImageProvider(imageArgs, mainURL) {
 
     return 'UNKNOWN';
 }
+
+const useSetting = (key, defaultValue) => {
+    const [value, setValue] = React.useState(() =>
+        settingsStore.getSetting(key, defaultValue)
+    );
+
+    React.useEffect(() => {
+        const updateValue = () => {
+            setValue(settingsStore.getSetting(key, defaultValue));
+        };
+
+        settingsStore.addChangeListener(updateValue);
+
+        return () => {
+            settingsStore.removeChangeListener(updateValue);
+        };
+    }, [key, defaultValue]);
+
+    const setSetting = (newValue) => {
+        settingsStore.setSetting(key, newValue);
+    };
+
+    return [value, setSetting];
+};
+
 
 export default class BetterMedia {
     async start() {
@@ -1364,6 +1467,24 @@ export default class BetterMedia {
             res.props.children.push(ContextMenu.buildItem({ type: 'separator' }));
             res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
         }
+    }
+    
+    getSettingsPanel() {
+        return () => {
+            const [showToolbar, setShowToolbar] = useSetting('showToolbar', true);
+
+            return (
+                <div>
+                    <span>
+                        Toggle Image Toolbar
+                    </span>
+                    <Components.SwitchInput
+                        value={showToolbar}
+                        onChange={setShowToolbar}
+                    />
+                </div>
+            );
+        };
     }
 
     stop() {

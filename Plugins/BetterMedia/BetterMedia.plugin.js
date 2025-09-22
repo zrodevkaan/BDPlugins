@@ -293,7 +293,7 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
   const owoRef = React.useRef(null);
   const containerWidth = Math.max(width - 20, 60);
   const [open, setOpen] = React.useState(false);
-  const [shouldShow, setShouldShow] = React.useState(DataStore.settings.showToolbar ?? true);
+  const [shouldShow, setShouldShow] = useSetting("showToolbar", true);
   const iconWidth = 24;
   const totalIconsWidth = iconWidth * 5;
   const availableSpaceForGaps = containerWidth - totalIconsWidth - 10;
@@ -647,6 +647,76 @@ var DataStore = new Proxy(
 var settings = {
   allImagesAreGifs: true
 };
+var InternalStore = class _InternalStore {
+  static stores = /* @__PURE__ */ new Set();
+  static idSymbol = Symbol("id");
+  static id = 0;
+  static getStore(name) {
+    for (const store of _InternalStore.stores) {
+      if (_InternalStore.prototype.getName.call(store) === name) return store;
+    }
+  }
+  static getStoreId(store) {
+    return store[_InternalStore.idSymbol];
+  }
+  constructor() {
+    this[_InternalStore.idSymbol] = _InternalStore.id++;
+    _InternalStore.stores.add(this);
+  }
+  initialize() {
+  }
+  static displayName;
+  displayName;
+  getName() {
+    if (this.displayName) return this.displayName;
+    const constructor = this.constructor;
+    if (constructor.displayName) return constructor.displayName;
+    return constructor.name;
+  }
+  #listeners = /* @__PURE__ */ new Set();
+  addChangeListener(callback) {
+    this.#listeners.add(callback);
+  }
+  removeChangeListener(callback) {
+    this.#listeners.delete(callback);
+  }
+  emit() {
+    for (const listener of this.#listeners) {
+      listener();
+    }
+  }
+  getClass() {
+    return this.constructor;
+  }
+  getId() {
+    return _InternalStore.getStoreId(this);
+  }
+};
+var SettingsStore = class extends InternalStore {
+  static displayName = "SettingsStore";
+  constructor() {
+    super();
+    this.settings = {};
+    this.initialize();
+  }
+  initialize() {
+    this.settings = DataStore.settings || {};
+  }
+  getSetting(key, defaultValue) {
+    return this.settings[key] ?? defaultValue;
+  }
+  setSetting(key, value) {
+    this.settings[key] = value;
+    DataStore.settings = this.settings;
+    this.emit();
+  }
+  updateSettings(newSettings) {
+    this.settings = { ...this.settings, ...newSettings };
+    DataStore.settings = this.settings;
+    this.emit();
+  }
+};
+var settingsStore = new SettingsStore();
 var uoOrg = ImageRenderComponent.uo;
 var RotateIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M12 6v3l4-4-4-4v3c-5.5 0-10 4.5-10 10 0 2.2.7 4.2 1.9 5.8l1.4-1.4C4.5 16.8 4 14.5 4 12c0-4.4 3.6-8 8-8z" }), /* @__PURE__ */ BdApi.React.createElement("path", { d: "M20 12c0-4.4-3.6-8-8-8v1.8c3.4 0 6.2 2.8 6.2 6.2 0 2.5-1.5 4.7-3.6 5.7l1.4 1.4c2.3-1.3 3.8-3.7 3.8-6.3z" }));
 var FireIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z" }));
@@ -794,6 +864,24 @@ function getImageProvider(imageArgs, mainURL) {
   }
   return "UNKNOWN";
 }
+var useSetting = (key, defaultValue) => {
+  const [value, setValue] = React.useState(
+    () => settingsStore.getSetting(key, defaultValue)
+  );
+  React.useEffect(() => {
+    const updateValue = () => {
+      setValue(settingsStore.getSetting(key, defaultValue));
+    };
+    settingsStore.addChangeListener(updateValue);
+    return () => {
+      settingsStore.removeChangeListener(updateValue);
+    };
+  }, [key, defaultValue]);
+  const setSetting = (newValue) => {
+    settingsStore.setSetting(key, newValue);
+  };
+  return [value, setSetting];
+};
 var BetterMedia = class {
   async start() {
     DataStore.settings ??= settings;
@@ -1105,6 +1193,18 @@ var BetterMedia = class {
       res.props.children.push(ContextMenu.buildItem({ type: "separator" }));
       res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
     }
+  }
+  getSettingsPanel() {
+    return () => {
+      const [showToolbar, setShowToolbar] = useSetting("showToolbar", true);
+      return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement("span", null, "Toggle Image Toolbar"), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SwitchInput,
+        {
+          value: showToolbar,
+          onChange: setShowToolbar
+        }
+      ));
+    };
   }
   stop() {
     ImageRenderComponent.uo = uoOrg;
