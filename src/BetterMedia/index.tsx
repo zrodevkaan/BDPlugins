@@ -1136,12 +1136,7 @@ export default class BetterMedia {
 
         Patcher.before(Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', { searchExports: true, raw: true }).exports, 'K', (_, args) => {
             const chatAttachments = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array
-                .reduce((acc, x) => {
-                    if (x?.attachments) {
-                        acc.push(...x.attachments);
-                    }
-                    return acc;
-                }, []);
+                .flatMap(x => x?.attachments?.filter(attachment => attachment?.height) || []);
 
             if (args[0].BetterMediaModal == undefined && args[0].location !== "ChannelAttachmentUpload") {
                 const firstOriginalItem = args[0].items?.[0];

@@ -908,12 +908,8 @@ var BetterMedia = class {
       }
     });
     Patcher.before(Webpack.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true, raw: true }).exports, "K", (_, args) => {
-      const chatAttachments = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array.reduce((acc, x) => {
-        if (x?.attachments) {
-          acc.push(...x.attachments);
-        }
-        return acc;
-      }, []);
+      const chatAttachments = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array.flatMap((x) => x?.attachments?.filter((attachment) => attachment?.height) || []);
+      console.log(chatAttachments);
       if (args[0].BetterMediaModal == void 0 && args[0].location !== "ChannelAttachmentUpload") {
         const firstOriginalItem = args[0].items?.[0];
         const existingUrls = new Set(args[0].items?.map((item) => item.url) || []);
