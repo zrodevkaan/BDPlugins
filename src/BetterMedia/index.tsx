@@ -5,7 +5,7 @@
  * @author Kaan
  */
 
-const { Webpack, Patcher, DOM, Components, React, ContextMenu, UI, Net, Data } = new BdApi("BetterMedia")
+const { Webpack, Patcher, DOM, Components, React, ContextMenu, UI, Net, Data, Plugins } = new BdApi("BetterMedia")
 const ImageComp = Webpack.getModule(x => x?.displayName == "Image", { searchExports: true })
 const Popout = Webpack.getModule(m => m?.Animation, { searchExports: true, raw: true }).exports.y
 const ImageRenderComponent = Webpack.getModule(x => x?.isAnimated && x?.getFormatQuality, { raw: true }).exports
@@ -16,14 +16,16 @@ const GuildStoreCurrent = Webpack.getStore("SelectedGuildStore")
 const GuildMemberStore = Webpack.getStore("GuildMemberStore")
 const MessageStore = Webpack.getStore("MessageStore")
 const SelectedChannelStore = Webpack.getStore("SelectedChannelStore")
-const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
-const ToolbarButton = Webpack.getByStrings('actionBarIcon')
 const ModalSystem = Webpack.getMangled(".modalKey?", {
     openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
     openModal: Webpack.Filters.byStrings(",instant:"),
     closeModal: Webpack.Filters.byStrings(".onCloseCallback()"),
     closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
+
+const Modal = Webpack.getModule(x => x.Modal).Modal
+
+const FormSwitch = Webpack.getByStrings('tooltipNote', 'hideBorder', { searchExports: true })
 
 const searchEngines = {
     Google: {
@@ -101,12 +103,13 @@ const createContextMenuItem = (id, label, action, options = {}) => ({
     ...options
 });
 
-const createSubmenuItem = (id, label, items, options = {}) => ({
+const createSubmenuItem = (id, label, items, options = {}, icon = null) => ({
     id,
     label,
     type: 'submenu',
     items,
-    ...options
+    ...options,
+    iconLeft: () => icon
 });
 
 const createIconItem = (id, label, icon, action, options = {}) => ({
@@ -336,10 +339,22 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
             );
         });
 
-        return [createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems), createSubmenuItem('canvas-methods', "Canvas Methods", createCanvasMenu(url)), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
+        const elements = [createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems, {}, <SearchIcon />), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
             setShouldShow(false);
             DataStore.settings.showToolbar = false;
-        })];
+        }), createContextMenuItem('open-settings', "Open Settings", () => {
+            const SettingsPanel = Plugins.get('BetterMedia').instance.getSettingsPanel()
+
+            ModalSystem.openModal((props) => <Modal {...props} title="BetterMedia Settings">
+                <SettingsPanel />
+            </Modal>)
+        })]
+
+        if (DataStore.settings.canvasFeatures) {
+            elements.splice(1, 0, createSubmenuItem('canvas-methods', "Canvas Methods", createCanvasMenu(url), {}, <CanvasIcon />))
+        }
+
+        return elements;
     };
 
     return shouldShow && (
@@ -838,9 +853,10 @@ const DataStore = new Proxy(
 );
 
 const settings = {
-    allImagesAreGifs: true,
-    showToolbar: true,
-    reverseModalGallery: true,
+    allImagesAreGifs: { value: true, title: 'All Media are GIFs', note: 'Show all media as GIFs' },
+    showToolbar: { value: true, title: 'Show Toolbar', note: 'Shows or hides the Toolbar on media' },
+    reverseModalGallery: { value: true, title: 'Image Gallery Reverse', note: 'Reverses the images on the Media modal gallery at the bottom.' },
+    canvasFeatures: { value: true, title: 'Canvas Methods', note: 'Adds Canvas Methods to Media like Glow or Deep Fry' },
 }
 
 class InternalStore {
@@ -1104,6 +1120,46 @@ const useSetting = (key, defaultValue) => {
     return [value, setSetting];
 };
 
+const FileTypes = [
+    "avif",
+    "bmp",
+    "bpg",
+    "cr2",
+    "exr",
+    "gif",
+    "heic",
+    "ico",
+    "jpeg",
+    "pbm",
+    "pgm",
+    "png",
+    "ppm",
+    "psd",
+    "webp"
+]
+
+async function getMediaDimensions(src, type = 'image') {
+    return new Promise((resolve, reject) => {
+        if (type === 'image') {
+            const img = new window.Image();
+            img.src = src;
+            img.onload = () => resolve({
+                width: img.naturalWidth,
+                height: img.naturalHeight
+            });
+            img.onerror = reject;
+        } else {
+            const video = document.createElement('video');
+            video.src = src;
+            video.onloadedmetadata = () => resolve({
+                width: video.videoWidth,
+                height: video.videoHeight,
+                type: video.canPlayType(src) || 'video/mp4'
+            });
+            video.onerror = reject;
+        }
+    });
+}
 
 export default class BetterMedia {
     async start() {
@@ -1134,62 +1190,96 @@ export default class BetterMedia {
             }
         });
 
-        Patcher.before(Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', { searchExports: true, raw: true }).exports, 'K', (_, args) => {
-            const chatAttachments = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array
-                .flatMap(x => x?.attachments?.filter(attachment => attachment?.height) || []);
-
-            if (args[0].BetterMediaModal == undefined && args[0].location !== "ChannelAttachmentUpload") {
-                const firstOriginalItem = args[0].items?.[0];
-
-                const existingUrls = new Set(args[0].items?.map(item => item.url) || []);
-
-                let filteredAttachments = chatAttachments.filter(attachment => {
-                    const url = attachment.original || attachment.proxy_url;
-                    const processedUrl = url.replace(/\.webp(\?|$)/i, '.png$1');
-                    return !existingUrls.has(processedUrl);
+        Patcher.before(
+            Webpack.getByStrings('.shouldHideMediaOptions', 'hasMediaOptions:', 'numMediaItems:', {
+                searchExports: true,
+                raw: true
+            }).exports,
+            'K',
+            (_, args) => {
+                if (args[0].BetterMediaModal !== undefined || args[0].location === "ChannelAttachmentUpload") {
+                    return;
+                }
+                const messages = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array;
+                const existingIds = new Set(args[0].items?.map(item => item.id) || []);
+                const processUrl = url => url?.replace(/\.webp(\?|$)/i, '.png$1');
+                const filterUnique = items => items.filter(item => {
+                    const id = item.attachment.id;
+                    return id && !existingIds.has(id);
                 });
 
-                filteredAttachments = DataStore.settings.reverseModalGallery
-                    ? filteredAttachments.reverse()
-                    : filteredAttachments;
-
-                const mediaItems = filteredAttachments.map(attachment => {
-                    const url = attachment.url || attachment.proxy_url;
-                    const discordDoesntEncodeWebpsInDiscordNative = url.replace(/\.webp(\?|$)/i, '.png$1');
-                    return {
-                        url: discordDoesntEncodeWebpsInDiscordNative,
-                        original: discordDoesntEncodeWebpsInDiscordNative,
-                        proxyUrl: discordDoesntEncodeWebpsInDiscordNative,
-                        isAnimated: true,
-                        type: "IMAGE" as const,
-                    };
-                });
-
-                args[0].items = firstOriginalItem ? [firstOriginalItem, ...mediaItems] : mediaItems;
-            }
-        })
-
-        Patcher.after(Toolbar, 'Z', (_, [args], returnValue) => {
-            if (returnValue?.props?.actions?.props?.children && args?.upload?.item?.file) {
-                const fileBuffer = args.upload.item.file;
-
-                returnValue.props.actions.props.children.unshift(
-                    <ToolbarButton tooltip="Edit Upload" onClick={() => {
-                        ModalSystem.openModal((modalProps) =>
-                            <div {...modalProps}> hi pp </div>//<CanvasHolder {...modalProps} fileBuffer={fileBuffer}/>
-                        );
-                    }}>
-                        <Settings16Filled />
-                    </ToolbarButton>
+                const chatAttachments = messages.flatMap(m =>
+                    (m?.attachments?.filter(a => a?.url && a?.height) || []).map(attachment => ({ attachment, message: m }))
                 );
-            }
-        });
+                const chatEmbeds = messages.flatMap(m =>
+                    (m?.embeds?.filter(e => e?.video?.proxyURL) || []).map(embed => ({ attachment: embed, message: m }))
+                );
 
-        /*Patcher.after(VideoComponent.prototype, 'render', (_, args, res) => {
-            const data = args.props
- 
-            return <video src={data?.embed.url}>  </video>
-        })*/
+                const referencedMessages = messages
+                    .filter(m => m?.messageReference?.channel_id && m?.messageReference?.message_id)
+                    .map(m => MessageStore.getMessage(m.messageReference.channel_id, m.messageReference.message_id))
+                    .filter(Boolean);
+
+                const referencedAttachments = referencedMessages.flatMap(m =>
+                    (m?.attachments?.filter(a => a?.url && a?.height) || []).map(attachment => ({ attachment, message: m }))
+                );
+                const referencedEmbeds = referencedMessages.flatMap(m =>
+                    (m?.embeds?.filter(e => e?.video?.proxyURL) || []).map(embed => ({ attachment: embed, message: m }))
+                );
+
+                const allSources = [chatAttachments, referencedAttachments, referencedEmbeds, chatEmbeds]
+                    .map(filterUnique)
+                    .map(items => DataStore.settings.reverseModalGallery ? items.reverse() : items);
+
+                const createImageItem = ({ attachment, message }) => {
+                    const url = processUrl(attachment.url || attachment.proxy_url);
+                    return {
+                        id: attachment.id,
+                        url,
+                        original: url,
+                        proxyUrl: url,
+                        animated: true,
+                        type: "IMAGE",
+                        sourceMetadata: { message }
+                    };
+                };
+
+                const createEmbedItem = ({ attachment: embed, message }) => {
+                    let width = embed.video?.width || 500;
+                    let height = embed.video?.height || 500;
+
+                    return {
+                        id: embed.id,
+                        url: embed.url,
+                        proxyUrl: embed.video.proxyURL,
+                        width: width,
+                        height: height,
+                        type: "IMAGE",
+                        children: ({ size, src: poster }) => {
+                            return React.createElement('video', {
+                                ...size,
+                                alt: "GIF",
+                                poster,
+                                src: embed.video.proxyURL,
+                                autoPlay: true,
+                                loop: true
+                            });
+                        }
+                    };
+                };
+
+                const [filteredAttachments, filteredRefAttachments, filteredRefEmbeds, filteredEmbeds] = allSources;
+                const mediaItems = [
+                    ...filteredAttachments.map(createImageItem),
+                    ...filteredRefAttachments.map(createImageItem),
+                    ...filteredRefEmbeds.map(createEmbedItem),
+                    ...filteredEmbeds.map(createEmbedItem)
+                ];
+
+                const originalItems = args[0].items || [];
+                args[0].items = [...originalItems, ...mediaItems];
+            }
+        );
 
         Patcher.instead(ImageRenderComponent.uo, 'test', () => DataStore.settings.allImagesAreGifs)
 
@@ -1235,223 +1325,331 @@ export default class BetterMedia {
     }
 
     AUCM(res, props) {
-        const isInGuild = (GuildStoreCurrent.getGuildId() != null);
-        const user = props.user;
+        const { user } = props;
+        const isInGuild = GuildStoreCurrent.getGuildId() != null;
+        const currentGuildId = GuildStoreCurrent.getGuildId();
 
         const userProfile = UserProfileStore.getUserProfile(user.id);
-        const guildMemberProfile = isInGuild ? UserProfileStore.getGuildMemberProfile(user.id, GuildStoreCurrent.getGuildId()) : null;
+        const guildMemberProfile = isInGuild
+            ? UserProfileStore.getGuildMemberProfile(user.id, currentGuildId)
+            : null;
+        const guildMember = isInGuild
+            ? GuildMemberStore.getMember(currentGuildId, user.id)
+            : null;
 
-        const normalImg = mediautils.getUserAvatarURL({ id: user.id, avatar: user.avatar, discriminator: null }, true, 4096, "png", false);
-        const normalBanner = mediautils.getUserBannerURL({ id: user.id, banner: userProfile?.banner, size: 4096, canAnimate: true });
+        const normalImg = mediautils.getUserAvatarURL(
+            { id: user.id, avatar: user.avatar, discriminator: null },
+            true, 4096, "png", false
+        );
 
-        const guildMember = isInGuild ? GuildMemberStore.getMember(GuildStoreCurrent.getGuildId(), user.id) : null;
+        const normalBanner = mediautils.getUserBannerURL({
+            id: user.id,
+            banner: userProfile?.banner,
+            size: 4096,
+            canAnimate: true
+        });
 
-        const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL({ guildId: GuildStoreCurrent.getGuildId(), userId: user.id, avatar: guildMember?.avatar, discriminator: null }, true, 4096, "png", false)?.replace('?size=96', '?size=4096') : null;
-        const guildBanner = isInGuild ? mediautils.getGuildMemberBannerURL({ id: user.id, guildId: GuildStoreCurrent.getGuildId(), banner: guildMemberProfile?.banner, size: 4096, canAnimate: true }) : null;
+        const guildImg = isInGuild
+            ? mediautils.getGuildMemberAvatarURL({
+                guildId: currentGuildId,
+                userId: user.id,
+                avatar: guildMember?.avatar,
+                discriminator: null
+            }, true, 4096, "png", false)?.replace('?size=96', '?size=4096')
+            : null;
 
-        const isAnimated = user.avatar && user.avatar.startsWith('a_');
+        const guildBanner = isInGuild
+            ? mediautils.getGuildMemberBannerURL({
+                id: user.id,
+                guildId: currentGuildId,
+                banner: guildMemberProfile?.banner,
+                size: 4096,
+                canAnimate: true
+            })
+            : null;
+
+        const isAnimatedAvatar = user.avatar && user.avatar.startsWith('a_');
         const isAnimatedBanner = userProfile?.banner && userProfile.banner.startsWith('a_');
         const isAnimatedGuildBanner = guildMemberProfile?.banner && guildMemberProfile.banner.startsWith('a_');
 
-        const animatedNormalImg = isAnimated ? normalImg.replace('.png', '.gif').replace('.webp', '.gif') : null;
+        const animatedNormalImg = isAnimatedAvatar ? normalImg.replace('.png', '.gif').replace('.webp', '.gif') : null;
         const animatedNormalBanner = isAnimatedBanner ? normalBanner.replace('.png', '.gif').replace('.webp', '.gif') : null;
-        const animatedGuildImg = isAnimated && guildImg ? guildImg.replace('.png', '.gif').replace('.webp', '.gif') : null;
+        const animatedGuildImg = isAnimatedAvatar && guildImg ? guildImg.replace('.png', '.gif').replace('.webp', '.gif') : null;
         const animatedGuildBanner = isAnimatedGuildBanner && guildBanner ? guildBanner.replace('.png', '.gif').replace('.webp', '.gif') : null;
 
-        const buildMediaMenu = (img, banner, animatedImg, animatedBanner, isAnimatedBanner) => {
-            const menuItems = [];
+        const avatarItems = [];
+        if (normalImg) {
+            avatarItems.push({
+                type: 'button',
+                id: 'open-profile-avatar',
+                label: 'Open Profile Avatar',
+                iconLeft: () => <ImageIcon />,
+                action: () => openMedia(normalImg)
+            });
 
-            if (img) {
-                const pfpItems = [
-                    {
-                        type: 'button',
-                        id: 'open-pfp',
-                        label: 'Open',
-                        iconLeft: () => <OpenIcon />,
-                        action: () => openMedia(img)
-                    }
-                ];
-
-                if (isAnimated) {
-                    pfpItems.push({
-                        type: 'button',
-                        id: 'open-pfp_a',
-                        label: 'Open Animated',
-                        iconLeft: () => <OpenIcon />,
-                        action: () => openMedia(animatedImg)
-                    });
-                }
-
-                if (isAnimated) {
-                    pfpItems.push({
-                        type: 'submenu',
-                        id: 'copy-avatar-submenu',
-                        label: 'Copy URL',
-                        iconLeft: () => <CopyIcon />,
-                        items: [
-                            {
-                                type: 'button',
-                                id: 'copy-avatar-url-static',
-                                label: 'Copy Static URL',
-                                iconLeft: () => <CopyIcon />,
-                                action: () => copyURL(img)
-                            },
-                            {
-                                type: 'button',
-                                id: 'copy-avatar-url-animated',
-                                label: 'Copy Animated URL',
-                                iconLeft: () => <CopyIcon />,
-                                action: () => copyURL(animatedImg)
-                            }
-                        ]
-                    });
-                } else {
-                    pfpItems.push({
-                        type: 'button',
-                        id: 'copy-avatar-url',
-                        label: 'Copy URL',
-                        iconLeft: () => <CopyIcon />,
-                        action: () => copyURL(img)
-                    });
-                }
-
-                pfpItems.push(
-                    {
-                        type: 'submenu',
-                        id: 'reverse-search',
-                        label: 'Reverse Search',
-                        iconLeft: () => <SearchIcon />,
-                        items: buildSearchMenu(img)
-                    },
-                    {
-                        type: 'submenu',
-                        id: 'canvas-methods',
-                        label: 'Canvas Methods',
-                        iconLeft: () => <CanvasIcon />,
-                        items: createCanvasMenu(img)
-                    }
-                );
-
-                menuItems.push({
-                    type: 'submenu',
-                    id: 'profile-picture',
-                    label: 'Profile Picture',
+            if (isAnimatedAvatar && animatedNormalImg) {
+                avatarItems.push({
+                    type: 'button',
+                    id: 'open-profile-avatar-animated',
+                    label: 'Open Profile Avatar (Animated)',
                     iconLeft: () => <ImageIcon />,
-                    items: pfpItems
+                    action: () => openMedia(animatedNormalImg)
                 });
             }
 
-            if (banner) {
-                const bannerItems = [
-                    {
-                        type: 'button',
-                        id: 'open-banner',
-                        label: 'Open',
-                        iconLeft: () => <OpenIcon />,
-                        action: () => openMedia(banner)
-                    }
-                ];
+            avatarItems.push({
+                type: 'button',
+                id: 'copy-profile-avatar',
+                label: 'Copy Profile Avatar URL',
+                iconLeft: () => <CopyIcon />,
+                action: () => copyURL(normalImg)
+            });
 
-                if (isAnimatedBanner) {
-                    bannerItems.push({
-                        type: 'button',
-                        id: 'open-banner-a',
-                        label: 'Open Animated',
-                        iconLeft: () => <OpenIcon />,
-                        action: () => openMedia(animatedBanner)
-                    });
-                }
-
-                if (isAnimatedBanner) {
-                    bannerItems.push({
-                        type: 'submenu',
-                        id: 'copy-banner-submenu',
-                        label: 'Copy URL',
-                        iconLeft: () => <CopyIcon />,
-                        items: [
-                            {
-                                type: 'button',
-                                id: 'copy-banner-url-static',
-                                label: 'Copy Static URL',
-                                iconLeft: () => <CopyIcon />,
-                                action: () => copyURL(banner)
-                            },
-                            {
-                                type: 'button',
-                                id: 'copy-banner-url-animated',
-                                label: 'Copy Animated URL',
-                                iconLeft: () => <CopyIcon />,
-                                action: () => copyURL(animatedBanner)
-                            }
-                        ]
-                    });
-                } else {
-                    bannerItems.push({
-                        type: 'button',
-                        id: 'copy-banner-url',
-                        label: 'Copy URL',
-                        iconLeft: () => <CopyIcon />,
-                        action: () => copyURL(banner)
-                    });
-                }
-
-                bannerItems.push(
-                    {
-                        type: 'submenu',
-                        id: 'reverse-search-banner',
-                        label: 'Reverse Search',
-                        iconLeft: () => <SearchIcon />,
-                        items: buildSearchMenu(banner)
-                    },
-                    {
-                        type: 'submenu',
-                        id: 'canvas-methods-banner',
-                        label: 'Canvas Methods',
-                        iconLeft: () => <CanvasIcon />,
-                        items: createCanvasMenu(banner)
-                    }
-                );
-
-                menuItems.push({
-                    type: 'submenu',
-                    id: 'banner',
-                    label: 'Banner',
-                    iconLeft: () => <BannerIcon />,
-                    items: bannerItems
+            if (isAnimatedAvatar && animatedNormalImg) {
+                avatarItems.push({
+                    type: 'button',
+                    id: 'copy-profile-avatar-animated',
+                    label: 'Copy Profile Avatar URL (Animated)',
+                    iconLeft: () => <CopyIcon />,
+                    action: () => copyURL(animatedNormalImg)
                 });
-            }
-
-            return menuItems;
-        };
-
-        const betterMediaItems = [];
-
-        const normalItems = buildMediaMenu(normalImg, normalBanner, animatedNormalImg, animatedNormalBanner, isAnimatedBanner);
-        if (normalItems.length > 0) {
-            if (isInGuild) {
-                betterMediaItems.push({
-                    type: 'submenu',
-                    id: 'profile',
-                    label: 'Profile',
-                    iconLeft: () => <UserIcon />,
-                    items: normalItems
-                });
-            } else {
-                betterMediaItems.push(...normalItems);
             }
         }
 
-        if (isInGuild && (guildImg || guildBanner)) {
-            const guildItems = buildMediaMenu(guildImg, guildBanner, animatedGuildImg, animatedGuildBanner, isAnimatedGuildBanner);
-            if (guildItems.length > 0) {
-                betterMediaItems.push({
-                    type: 'submenu',
-                    id: 'guild',
-                    label: 'Guild',
-                    iconLeft: () => <GuildIcon />,
-                    items: guildItems
+        const bannerItems = [];
+        if (normalBanner) {
+            bannerItems.push({
+                type: 'button',
+                id: 'open-profile-banner',
+                label: 'Open Profile Banner',
+                iconLeft: () => <BannerIcon />,
+                action: () => openMedia(normalBanner)
+            });
+
+            if (isAnimatedBanner && animatedNormalBanner) {
+                bannerItems.push({
+                    type: 'button',
+                    id: 'open-profile-banner-animated',
+                    label: 'Open Profile Banner (Animated)',
+                    iconLeft: () => <BannerIcon />,
+                    action: () => openMedia(animatedNormalBanner)
                 });
             }
+
+            bannerItems.push({
+                type: 'button',
+                id: 'copy-profile-banner',
+                label: 'Copy Profile Banner URL',
+                iconLeft: () => <CopyIcon />,
+                action: () => copyURL(normalBanner)
+            });
+
+            if (isAnimatedBanner && animatedNormalBanner) {
+                bannerItems.push({
+                    type: 'button',
+                    id: 'copy-profile-banner-animated',
+                    label: 'Copy Profile Banner URL (Animated)',
+                    iconLeft: () => <CopyIcon />,
+                    action: () => copyURL(animatedNormalBanner)
+                });
+            }
+        }
+
+        const guildItems = [];
+        if (isInGuild && guildImg) {
+            guildItems.push({
+                type: 'button',
+                id: 'open-guild-avatar',
+                label: 'Open Guild Avatar',
+                iconLeft: () => <GuildIcon />,
+                action: () => openMedia(guildImg)
+            });
+
+            if (isAnimatedAvatar && animatedGuildImg) {
+                guildItems.push({
+                    type: 'button',
+                    id: 'open-guild-avatar-animated',
+                    label: 'Open Guild Avatar (Animated)',
+                    iconLeft: () => <GuildIcon />,
+                    action: () => openMedia(animatedGuildImg)
+                });
+            }
+
+            guildItems.push({
+                type: 'button',
+                id: 'copy-guild-avatar',
+                label: 'Copy Guild Avatar URL',
+                iconLeft: () => <CopyIcon />,
+                action: () => copyURL(guildImg)
+            });
+
+            if (isAnimatedAvatar && animatedGuildImg) {
+                guildItems.push({
+                    type: 'button',
+                    id: 'copy-guild-avatar-animated',
+                    label: 'Copy Guild Avatar URL (Animated)',
+                    iconLeft: () => <CopyIcon />,
+                    action: () => copyURL(animatedGuildImg)
+                });
+            }
+        }
+
+        if (isInGuild && guildBanner) {
+            if (guildItems.length > 0) {
+                guildItems.push({ type: 'separator' });
+            }
+
+            guildItems.push({
+                type: 'button',
+                id: 'open-guild-banner',
+                label: 'Open Guild Banner',
+                iconLeft: () => <BannerIcon />,
+                action: () => openMedia(guildBanner)
+            });
+
+            if (isAnimatedGuildBanner && animatedGuildBanner) {
+                guildItems.push({
+                    type: 'button',
+                    id: 'open-guild-banner-animated',
+                    label: 'Open Guild Banner (Animated)',
+                    iconLeft: () => <BannerIcon />,
+                    action: () => openMedia(animatedGuildBanner)
+                });
+            }
+
+            guildItems.push({
+                type: 'button',
+                id: 'copy-guild-banner',
+                label: 'Copy Guild Banner URL',
+                iconLeft: () => <CopyIcon />,
+                action: () => copyURL(guildBanner)
+            });
+
+            if (isAnimatedGuildBanner && animatedGuildBanner) {
+                guildItems.push({
+                    type: 'button',
+                    id: 'copy-guild-banner-animated',
+                    label: 'Copy Guild Banner URL (Animated)',
+                    iconLeft: () => <CopyIcon />,
+                    action: () => copyURL(animatedGuildBanner)
+                });
+            }
+        }
+
+        const advancedItems = [];
+
+        if (normalImg) {
+            advancedItems.push({
+                type: 'submenu',
+                id: 'reverse-search-profile-avatar',
+                label: 'Reverse Search Profile Avatar',
+                iconLeft: () => <SearchIcon />,
+                items: buildSearchMenu(normalImg)
+            });
+
+            advancedItems.push({
+                type: 'submenu',
+                id: 'canvas-methods-profile-avatar',
+                label: 'Canvas Methods (Profile Avatar)',
+                iconLeft: () => <CanvasIcon />,
+                items: createCanvasMenu(normalImg)
+            });
+        }
+
+        if (isInGuild && guildImg) {
+            advancedItems.push({
+                type: 'submenu',
+                id: 'reverse-search-guild-avatar',
+                label: 'Reverse Search Guild Avatar',
+                iconLeft: () => <SearchIcon />,
+                items: buildSearchMenu(guildImg)
+            });
+
+            advancedItems.push({
+                type: 'submenu',
+                id: 'canvas-methods-guild-avatar',
+                label: 'Canvas Methods (Guild Avatar)',
+                iconLeft: () => <CanvasIcon />,
+                items: createCanvasMenu(guildImg)
+            });
+        }
+
+        if (normalBanner) {
+            advancedItems.push({
+                type: 'submenu',
+                id: 'reverse-search-profile-banner',
+                label: 'Reverse Search Profile Banner',
+                iconLeft: () => <SearchIcon />,
+                items: buildSearchMenu(normalBanner)
+            });
+
+            advancedItems.push({
+                type: 'submenu',
+                id: 'canvas-methods-profile-banner',
+                label: 'Canvas Methods (Profile Banner)',
+                iconLeft: () => <CanvasIcon />,
+                items: createCanvasMenu(normalBanner)
+            });
+        }
+
+        if (isInGuild && guildBanner) {
+            advancedItems.push({
+                type: 'submenu',
+                id: 'reverse-search-guild-banner',
+                label: 'Reverse Search Guild Banner',
+                iconLeft: () => <SearchIcon />,
+                items: buildSearchMenu(guildBanner)
+            });
+
+            advancedItems.push({
+                type: 'submenu',
+                id: 'canvas-methods-guild-banner',
+                label: 'Canvas Methods (Guild Banner)',
+                iconLeft: () => <CanvasIcon />,
+                items: createCanvasMenu(guildBanner)
+            });
+        }
+
+        const betterMediaItems = [];
+
+        if (avatarItems.length > 0) {
+            betterMediaItems.push({
+                type: 'submenu',
+                id: 'avatar-folder',
+                label: 'Avatar',
+                iconLeft: () => <ImageIcon />,
+                items: avatarItems
+            });
+        }
+
+        if (bannerItems.length > 0) {
+            betterMediaItems.push({
+                type: 'submenu',
+                id: 'banner-folder',
+                label: 'Banner',
+                iconLeft: () => <BannerIcon />,
+                items: bannerItems
+            });
+        }
+
+        if (guildItems.length > 0) {
+            betterMediaItems.push({
+                type: 'submenu',
+                id: 'guild-folder',
+                label: 'Server Profile',
+                iconLeft: () => <GuildIcon />,
+                items: guildItems
+            });
+        }
+
+        if (advancedItems.length > 0) {
+            betterMediaItems.push({
+                type: 'submenu',
+                id: 'advanced-folder',
+                label: 'Advanced Options',
+                iconLeft: () => <SearchIcon />,
+                items: advancedItems
+            });
         }
 
         if (betterMediaItems.length > 0) {
@@ -1470,30 +1668,19 @@ export default class BetterMedia {
 
     getSettingsPanel() {
         return () => {
-            const [showToolbar, setShowToolbar] = useSetting('showToolbar', true);
-            const [reverseModalGallery, setReverseModalGallery] = useSetting('reverseModalGallery', true);
-
-            return (
-                <div>
-                    <span>
-                        Toggle Image Toolbar
-                    </span>
-                    <Components.SwitchInput
-                        value={showToolbar}
-                        onChange={setShowToolbar}
-                    />
-                    <span>
-                        Reverse Modal Gallery
-                    </span>
-                    <Components.SwitchInput
-                        value={reverseModalGallery}
-                        onChange={setReverseModalGallery}
-                    />
-                </div>
-            );
+            const elements = Object.entries({ ...settings }).map((object, array) => {
+                const settingObject = settings[object[0]]
+                if (!DataStore.settings.hasOwnProperty(object[0])) {
+                    DataStore.settings[object[0]] = settingObject.value;
+                }
+                const [showObject, setShowObject] = useSetting(object[0], DataStore.settings[object[0]]);
+                return <FormSwitch note={settingObject.note} value={showObject} onChange={setShowObject}>
+                    {settingObject.title}
+                </FormSwitch>
+            })
+            return elements;
         };
     }
-
     stop() {
         DOM.removeStyle('BetterMedia')
         Patcher.unpatchAll()
