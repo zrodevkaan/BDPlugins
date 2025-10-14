@@ -15,6 +15,8 @@ const UserProfileStore = Webpack.getStore("UserProfileStore")
 const GuildStoreCurrent = Webpack.getStore("SelectedGuildStore")
 const GuildMemberStore = Webpack.getStore("GuildMemberStore")
 const MessageStore = Webpack.getStore("MessageStore")
+const EmojiStore = Webpack.getStore("EmojiStore")
+const StickersStore = Webpack.getStore("StickersStore")
 const SelectedChannelStore = Webpack.getStore("SelectedChannelStore")
 const ModalSystem = Webpack.getMangled(".modalKey?", {
     openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
@@ -141,8 +143,35 @@ const copyURL = (text) => {
     navigator.clipboard.writeText(text);
 };
 
-const openMedia = async (url: string, doBarrelRoll: boolean, buffer?: Buffer) => {
-    const discordDoesntEncodeWebpsInDiscordNative = url.replace(/\.webp(\?|$)/i, '.png$1');
+async function setClipboard(data, mimeType) {
+    let clipboardItem;
+
+    if (typeof data === "string") {
+        clipboardItem = new ClipboardItem({
+            "text/plain": new Blob([data], { type: "text/plain" })
+        });
+    } else {
+        const type = mimeType || "image/png";
+
+        let blob;
+        if (data instanceof Blob) {
+            blob = mimeType ? data.slice(0, data.size, type) : data;
+        } else if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
+            blob = new Blob([data], { type });
+        } else {
+            throw new Error("Unsupported data type for clipboard image write.");
+        }
+
+        clipboardItem = new ClipboardItem({
+            [type]: blob
+        });
+    }
+
+    await navigator.clipboard.write([clipboardItem]);
+}
+
+const openMedia = async (url: string, doBarrelRoll: boolean, buffer?: Buffer, shouldReverse = true) => {
+    const discordDoesntEncodeWebpsInDiscordNative = shouldReverse ? url.replace(/\.webp(\?|$)/i, '.png$1') : url.replace(/\.png(\?|$)/i, '.webp$1');
     const extension = getFormatFromUrl(discordDoesntEncodeWebpsInDiscordNative);
     const mediaItem = {
         url: discordDoesntEncodeWebpsInDiscordNative,
@@ -171,7 +200,7 @@ const openMedia = async (url: string, doBarrelRoll: boolean, buffer?: Buffer) =>
                 {
                     type: 'button',
                     label: 'Copy Image',
-                    action: () => DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
+                    action: () => setClipboard(mediaBuffer, FileTypes.includes(extension.toLowerCase()) ? 'image/png' : 'image/gif') //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
                 }
             ]
         }])
@@ -227,7 +256,7 @@ const getFileSize = async (url) => {
     } catch (error) {
         console.warn('Failed to get file size:', error);
     }
-    return 'Unknown'; 
+    return 'Unknown';
 };
 
 
@@ -319,6 +348,7 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
     const owoRef = React.useRef(null)
     const containerWidth = Math.max(width - 20, 60);
     const [open, setOpen] = React.useState(false)
+    const [hide, setHide] = React.useState(false)
     const [shouldShow, setShouldShow] = useSetting('showToolbar', true)
     const iconWidth = 24;
     const totalIconsWidth = iconWidth * 5;
@@ -339,7 +369,7 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
             );
         });
 
-        const elements = [createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems, {}, <SearchIcon />), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
+        const elements = [createContextMenuItem('blur-image', "Blur", () => setHide(true)), createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems, {}, <SearchIcon />), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
             setShouldShow(false);
             DataStore.settings.showToolbar = false;
         }), createContextMenuItem('open-settings', "Open Settings", () => {
@@ -1161,6 +1191,30 @@ async function getMediaDimensions(src, type = 'image') {
     });
 }
 
+const getMessageEmojis = (message) => {
+    const guildEmojis = EmojiStore.getGuilds()
+    const emojiMatches = [...message.content.matchAll(/<a?:(.*?):(\d+)>/g)]
+    const guilds = Object.values(guildEmojis)
+    const foundEmojis = []
+
+    for (const match of emojiMatches) {
+        const emojiId = match[2]
+        const emojiName = match[1]
+        for (const guild of guilds) {
+            if (guild._emojiMap && guild._emojiMap[emojiId]) {
+                foundEmojis.push(guild._emojiMap[emojiId])
+                break
+            }
+            else {
+                foundEmojis.push({ id: emojiId, name: emojiName })
+                break
+            }
+        }
+    }
+
+    return foundEmojis
+}
+
 export default class BetterMedia {
     async start() {
         DataStore.settings ??= settings
@@ -1200,14 +1254,25 @@ export default class BetterMedia {
                 if (args[0].BetterMediaModal !== undefined || args[0].location === "ChannelAttachmentUpload") {
                     return;
                 }
-                const messages = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array;
-                const existingIds = new Set(args[0].items?.map(item => item.id) || []);
-                const processUrl = url => url?.replace(/\.webp(\?|$)/i, '.png$1');
-                const filterUnique = items => items.filter(item => {
-                    const id = item.attachment.id;
-                    return id && !existingIds.has(id);
-                });
 
+                return;
+
+                const messages = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array;
+                // const existingIds = new Set(messages.items?.map(item => item.id) || []);
+                /*const processUrl = url => url?.replace(/\.webp(\?|$)/i, '.png$1');
+                const filterUnique = items => items.filter(item => {
+                    const id = item.attachment.url;
+                    return id && !existingIds.has(id);
+                });*/
+
+                let newArray = messages
+                const sortedArray = DataStore.settings.reverseModalGallery ? newArray.reverse() : newArray
+
+                const sortedImages = sortedArray.map(x => {
+                    return { attachments: x.attachments, message: x }
+                }).filter(x => x.attachments.length > 0)
+
+                /*
                 const chatAttachments = messages.flatMap(m =>
                     (m?.attachments?.filter(a => a?.url && a?.height) || []).map(attachment => ({ attachment, message: m }))
                 );
@@ -1277,18 +1342,97 @@ export default class BetterMedia {
                 ];
 
                 const originalItems = args[0].items || [];
-                args[0].items = [...originalItems, ...mediaItems];
+                const setArray = [...originalItems, ...mediaItems]
+                args[0].items = setArray*/
             }
         );
 
-        Patcher.instead(ImageRenderComponent.uo, 'test', () => DataStore.settings.allImagesAreGifs)
-
-        Patcher.instead(ImageRenderComponent.ZP, "isAnimated", (_, [__], ret) => {
-            return true;
-        });
+        Patcher.instead(ImageRenderComponent.uo, 'test', (a, b, c) => {
+            if (DataStore.settings.allImagesAreGifs) {
+                return true
+            }
+            return c(...b)
+        })
 
         ContextMenu.patch("user-context", this.AUCM)
         ContextMenu.patch("image-context", this.AICM)
+        ContextMenu.patch("message", this.MICM)
+    }
+
+    MICM(res, props) {
+        const { message } = props;
+        const emojis = getMessageEmojis(message);
+
+        const emojiItems = emojis.map(x => {
+            const img = `https://cdn.discordapp.com/emojis/${x.id}.webp?size=24${x.animated ? "&animated=true" : ""}`;
+            return {
+                label: x.name,
+                id: x.id + Math.random(),
+                type: 'submenu',
+                iconLeft: () => <img src={img} />,
+                items: [
+                    {
+                        type: 'button',
+                        label: 'Copy Emoji Link',
+                        action: () => copyURL(img)
+                    },
+                    {
+                        type: 'button',
+                        label: 'Open Emoji',
+                        action: () => openMedia(img.replace('?size=24', '?size=4096') + "&animated=true", false, undefined, false)
+                    },
+                    {
+                        type: 'submenu',
+                        id: 'reverse-search',
+                        label: 'Reverse Search',
+                        iconLeft: () => <SearchIcon />,
+                        items: buildSearchMenu(img)
+                    },
+                ]
+            };
+        });
+
+        const stickerItems = message.stickerItems?.map(stickerId => {
+            const x = StickersStore.getStickerById(stickerId.id);
+            const img = `https://media.discordapp.net/stickers/${x.id}.webp?size=24${x.animated ? "&animated=true" : ""}`;
+            return {
+                label: x.name,
+                id: x.id + Math.random(),
+                type: 'submenu',
+                iconLeft: () => <img src={img} />,
+                items: [
+                    {
+                        type: 'button',
+                        label: 'Copy Sticker Link',
+                        action: () => copyURL(img)
+                    },
+                    {
+                        type: 'button',
+                        label: 'Open Sticker',
+                        action: () => openMedia(img.replace('?size=24', '?size=4096') + "&animated=true", false, undefined, false)
+                    },
+                    {
+                        type: 'submenu',
+                        id: 'reverse-search',
+                        label: 'Reverse Search',
+                        iconLeft: () => <SearchIcon />,
+                        items: buildSearchMenu(img)
+                    },
+                ]
+            };
+        }) || [];
+
+        const betterMediaMenu = {
+            type: 'submenu',
+            id: 'better-media',
+            label: 'BetterMedia',
+            iconLeft: () => <MainMenuIcon />,
+            items: [...emojiItems, ...stickerItems]
+        };
+
+        if (emojiItems.length > 0 || stickerItems.length > 0) {
+            res.props.children.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+        }
     }
 
     AICM(res, props) {
@@ -1547,7 +1691,7 @@ export default class BetterMedia {
                 items: buildSearchMenu(normalImg)
             });
 
-            advancedItems.push({
+            DataStore.settings.canvasFeatures && advancedItems.push({
                 type: 'submenu',
                 id: 'canvas-methods-profile-avatar',
                 label: 'Canvas Methods (Profile Avatar)',
@@ -1565,7 +1709,7 @@ export default class BetterMedia {
                 items: buildSearchMenu(guildImg)
             });
 
-            advancedItems.push({
+            DataStore.settings.canvasFeatures && advancedItems.push({
                 type: 'submenu',
                 id: 'canvas-methods-guild-avatar',
                 label: 'Canvas Methods (Guild Avatar)',
@@ -1583,7 +1727,7 @@ export default class BetterMedia {
                 items: buildSearchMenu(normalBanner)
             });
 
-            advancedItems.push({
+            DataStore.settings.canvasFeatures && advancedItems.push({
                 type: 'submenu',
                 id: 'canvas-methods-profile-banner',
                 label: 'Canvas Methods (Profile Banner)',
@@ -1601,7 +1745,7 @@ export default class BetterMedia {
                 items: buildSearchMenu(guildBanner)
             });
 
-            advancedItems.push({
+            DataStore.settings.canvasFeatures && advancedItems.push({
                 type: 'submenu',
                 id: 'canvas-methods-guild-banner',
                 label: 'Canvas Methods (Guild Banner)',
@@ -1685,6 +1829,7 @@ export default class BetterMedia {
         DOM.removeStyle('BetterMedia')
         Patcher.unpatchAll()
         ContextMenu.unpatch('user-context', this.AUCM)
+        ContextMenu.unpatch("message", this.MICM)
         ContextMenu.unpatch("image-context", this.AICM)
     }
 }

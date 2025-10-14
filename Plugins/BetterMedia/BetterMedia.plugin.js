@@ -40,6 +40,8 @@ var UserProfileStore = Webpack.getStore("UserProfileStore");
 var GuildStoreCurrent = Webpack.getStore("SelectedGuildStore");
 var GuildMemberStore = Webpack.getStore("GuildMemberStore");
 var MessageStore = Webpack.getStore("MessageStore");
+var EmojiStore = Webpack.getStore("EmojiStore");
+var StickersStore = Webpack.getStore("StickersStore");
 var SelectedChannelStore = Webpack.getStore("SelectedChannelStore");
 var ModalSystem = Webpack.getMangled(".modalKey?", {
   openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
@@ -153,8 +155,30 @@ var getFormatFromUrl = (url) => {
 var copyURL = (text) => {
   navigator.clipboard.writeText(text);
 };
-var openMedia = async (url, doBarrelRoll, buffer) => {
-  const discordDoesntEncodeWebpsInDiscordNative = url.replace(/\.webp(\?|$)/i, ".png$1");
+async function setClipboard(data, mimeType) {
+  let clipboardItem;
+  if (typeof data === "string") {
+    clipboardItem = new ClipboardItem({
+      "text/plain": new Blob([data], { type: "text/plain" })
+    });
+  } else {
+    const type = mimeType || "image/png";
+    let blob;
+    if (data instanceof Blob) {
+      blob = mimeType ? data.slice(0, data.size, type) : data;
+    } else if (data instanceof Uint8Array || data instanceof ArrayBuffer) {
+      blob = new Blob([data], { type });
+    } else {
+      throw new Error("Unsupported data type for clipboard image write.");
+    }
+    clipboardItem = new ClipboardItem({
+      [type]: blob
+    });
+  }
+  await navigator.clipboard.write([clipboardItem]);
+}
+var openMedia = async (url, doBarrelRoll, buffer, shouldReverse = true) => {
+  const discordDoesntEncodeWebpsInDiscordNative = shouldReverse ? url.replace(/\.webp(\?|$)/i, ".png$1") : url.replace(/\.png(\?|$)/i, ".webp$1");
   const extension = getFormatFromUrl(discordDoesntEncodeWebpsInDiscordNative);
   const mediaItem = {
     url: discordDoesntEncodeWebpsInDiscordNative,
@@ -181,7 +205,8 @@ var openMedia = async (url, doBarrelRoll, buffer) => {
         {
           type: "button",
           label: "Copy Image",
-          action: () => DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
+          action: () => setClipboard(mediaBuffer, FileTypes.includes(extension.toLowerCase()) ? "image/png" : "image/gif")
+          //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
         }
       ]
     }]);
@@ -294,6 +319,7 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
   const owoRef = React.useRef(null);
   const containerWidth = Math.max(width - 20, 60);
   const [open, setOpen] = React.useState(false);
+  const [hide, setHide] = React.useState(false);
   const [shouldShow, setShouldShow] = useSetting("showToolbar", true);
   const iconWidth = 24;
   const totalIconsWidth = iconWidth * 5;
@@ -311,7 +337,7 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
         { color: engine.mayContainNSFW ? "danger" : "brand" }
       );
     });
-    const elements = [createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems, {}, /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null)), createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
+    const elements = [createContextMenuItem("blur-image", "Blur", () => setHide(true)), createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems, {}, /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null)), createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
       setShouldShow(false);
       DataStore.settings.showToolbar = false;
     }), createContextMenuItem("open-settings", "Open Settings", () => {
@@ -888,6 +914,43 @@ var useSetting = (key, defaultValue) => {
   };
   return [value, setSetting];
 };
+var FileTypes = [
+  "avif",
+  "bmp",
+  "bpg",
+  "cr2",
+  "exr",
+  "gif",
+  "heic",
+  "ico",
+  "jpeg",
+  "pbm",
+  "pgm",
+  "png",
+  "ppm",
+  "psd",
+  "webp"
+];
+var getMessageEmojis = (message) => {
+  const guildEmojis = EmojiStore.getGuilds();
+  const emojiMatches = [...message.content.matchAll(/<a?:(.*?):(\d+)>/g)];
+  const guilds = Object.values(guildEmojis);
+  const foundEmojis = [];
+  for (const match of emojiMatches) {
+    const emojiId = match[2];
+    const emojiName = match[1];
+    for (const guild of guilds) {
+      if (guild._emojiMap && guild._emojiMap[emojiId]) {
+        foundEmojis.push(guild._emojiMap[emojiId]);
+        break;
+      } else {
+        foundEmojis.push({ id: emojiId, name: emojiName });
+        break;
+      }
+    }
+  }
+  return foundEmojis;
+};
 var BetterMedia = class {
   async start() {
     DataStore.settings ??= settings;
@@ -922,78 +985,95 @@ var BetterMedia = class {
         if (args[0].BetterMediaModal !== void 0 || args[0].location === "ChannelAttachmentUpload") {
           return;
         }
+        return;
         const messages = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array;
-        const existingIds = new Set(args[0].items?.map((item) => item.id) || []);
-        const processUrl = (url) => url?.replace(/\.webp(\?|$)/i, ".png$1");
-        const filterUnique = (items) => items.filter((item) => {
-          const id = item.attachment.id;
-          return id && !existingIds.has(id);
-        });
-        const chatAttachments = messages.flatMap(
-          (m) => (m?.attachments?.filter((a) => a?.url && a?.height) || []).map((attachment) => ({ attachment, message: m }))
-        );
-        const chatEmbeds = messages.flatMap(
-          (m) => (m?.embeds?.filter((e) => e?.video?.proxyURL) || []).map((embed) => ({ attachment: embed, message: m }))
-        );
-        const referencedMessages = messages.filter((m) => m?.messageReference?.channel_id && m?.messageReference?.message_id).map((m) => MessageStore.getMessage(m.messageReference.channel_id, m.messageReference.message_id)).filter(Boolean);
-        const referencedAttachments = referencedMessages.flatMap(
-          (m) => (m?.attachments?.filter((a) => a?.url && a?.height) || []).map((attachment) => ({ attachment, message: m }))
-        );
-        const referencedEmbeds = referencedMessages.flatMap(
-          (m) => (m?.embeds?.filter((e) => e?.video?.proxyURL) || []).map((embed) => ({ attachment: embed, message: m }))
-        );
-        const allSources = [chatAttachments, referencedAttachments, referencedEmbeds, chatEmbeds].map(filterUnique).map((items) => DataStore.settings.reverseModalGallery ? items.reverse() : items);
-        const createImageItem = ({ attachment, message }) => {
-          const url = processUrl(attachment.url || attachment.proxy_url);
-          return {
-            id: attachment.id,
-            url,
-            original: url,
-            proxyUrl: url,
-            animated: true,
-            type: "IMAGE",
-            sourceMetadata: { message }
-          };
-        };
-        const createEmbedItem = ({ attachment: embed, message }) => {
-          let width = embed.video?.width || 500;
-          let height = embed.video?.height || 500;
-          return {
-            id: embed.id,
-            url: embed.url,
-            proxyUrl: embed.video.proxyURL,
-            width,
-            height,
-            type: "IMAGE",
-            children: ({ size, src: poster }) => {
-              return React.createElement("video", {
-                ...size,
-                alt: "GIF",
-                poster,
-                src: embed.video.proxyURL,
-                autoPlay: true,
-                loop: true
-              });
-            }
-          };
-        };
-        const [filteredAttachments, filteredRefAttachments, filteredRefEmbeds, filteredEmbeds] = allSources;
-        const mediaItems = [
-          ...filteredAttachments.map(createImageItem),
-          ...filteredRefAttachments.map(createImageItem),
-          ...filteredRefEmbeds.map(createEmbedItem),
-          ...filteredEmbeds.map(createEmbedItem)
-        ];
-        const originalItems = args[0].items || [];
-        args[0].items = [...originalItems, ...mediaItems];
+        let newArray = messages;
+        const sortedArray = DataStore.settings.reverseModalGallery ? newArray.reverse() : newArray;
+        const sortedImages = sortedArray.map((x) => {
+          return { attachments: x.attachments, message: x };
+        }).filter((x) => x.attachments.length > 0);
       }
     );
-    Patcher.instead(ImageRenderComponent.uo, "test", () => DataStore.settings.allImagesAreGifs);
-    Patcher.instead(ImageRenderComponent.ZP, "isAnimated", (_, [__], ret) => {
-      return true;
+    Patcher.instead(ImageRenderComponent.uo, "test", (a, b, c) => {
+      if (DataStore.settings.allImagesAreGifs) {
+        return true;
+      }
+      return c(...b);
     });
     ContextMenu.patch("user-context", this.AUCM);
     ContextMenu.patch("image-context", this.AICM);
+    ContextMenu.patch("message", this.MICM);
+  }
+  MICM(res, props) {
+    const { message } = props;
+    const emojis = getMessageEmojis(message);
+    const emojiItems = emojis.map((x) => {
+      const img = `https://cdn.discordapp.com/emojis/${x.id}.webp?size=24${x.animated ? "&animated=true" : ""}`;
+      return {
+        label: x.name,
+        id: x.id + Math.random(),
+        type: "submenu",
+        iconLeft: () => /* @__PURE__ */ BdApi.React.createElement("img", { src: img }),
+        items: [
+          {
+            type: "button",
+            label: "Copy Emoji Link",
+            action: () => copyURL(img)
+          },
+          {
+            type: "button",
+            label: "Open Emoji",
+            action: () => openMedia(img.replace("?size=24", "?size=4096") + "&animated=true", false, void 0, false)
+          },
+          {
+            type: "submenu",
+            id: "reverse-search",
+            label: "Reverse Search",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
+            items: buildSearchMenu(img)
+          }
+        ]
+      };
+    });
+    const stickerItems = message.stickerItems?.map((stickerId) => {
+      const x = StickersStore.getStickerById(stickerId.id);
+      const img = `https://media.discordapp.net/stickers/${x.id}.webp?size=24${x.animated ? "&animated=true" : ""}`;
+      return {
+        label: x.name,
+        id: x.id + Math.random(),
+        type: "submenu",
+        iconLeft: () => /* @__PURE__ */ BdApi.React.createElement("img", { src: img }),
+        items: [
+          {
+            type: "button",
+            label: "Copy Sticker Link",
+            action: () => copyURL(img)
+          },
+          {
+            type: "button",
+            label: "Open Sticker",
+            action: () => openMedia(img.replace("?size=24", "?size=4096") + "&animated=true", false, void 0, false)
+          },
+          {
+            type: "submenu",
+            id: "reverse-search",
+            label: "Reverse Search",
+            iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
+            items: buildSearchMenu(img)
+          }
+        ]
+      };
+    }) || [];
+    const betterMediaMenu = {
+      type: "submenu",
+      id: "better-media",
+      label: "BetterMedia",
+      iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(MainMenuIcon, null),
+      items: [...emojiItems, ...stickerItems]
+    };
+    if (emojiItems.length > 0 || stickerItems.length > 0) {
+      res.props.children.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+    }
   }
   AICM(res, props) {
     const url = props.src;
@@ -1215,7 +1295,7 @@ var BetterMedia = class {
         iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
         items: buildSearchMenu(normalImg)
       });
-      advancedItems.push({
+      DataStore.settings.canvasFeatures && advancedItems.push({
         type: "submenu",
         id: "canvas-methods-profile-avatar",
         label: "Canvas Methods (Profile Avatar)",
@@ -1231,7 +1311,7 @@ var BetterMedia = class {
         iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
         items: buildSearchMenu(guildImg)
       });
-      advancedItems.push({
+      DataStore.settings.canvasFeatures && advancedItems.push({
         type: "submenu",
         id: "canvas-methods-guild-avatar",
         label: "Canvas Methods (Guild Avatar)",
@@ -1247,7 +1327,7 @@ var BetterMedia = class {
         iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
         items: buildSearchMenu(normalBanner)
       });
-      advancedItems.push({
+      DataStore.settings.canvasFeatures && advancedItems.push({
         type: "submenu",
         id: "canvas-methods-profile-banner",
         label: "Canvas Methods (Profile Banner)",
@@ -1263,7 +1343,7 @@ var BetterMedia = class {
         iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null),
         items: buildSearchMenu(guildBanner)
       });
-      advancedItems.push({
+      DataStore.settings.canvasFeatures && advancedItems.push({
         type: "submenu",
         id: "canvas-methods-guild-banner",
         label: "Canvas Methods (Guild Banner)",
@@ -1337,6 +1417,7 @@ var BetterMedia = class {
     DOM.removeStyle("BetterMedia");
     Patcher.unpatchAll();
     ContextMenu.unpatch("user-context", this.AUCM);
+    ContextMenu.unpatch("message", this.MICM);
     ContextMenu.unpatch("image-context", this.AICM);
   }
 };
