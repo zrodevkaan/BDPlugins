@@ -27,7 +27,7 @@ const ModalSystem = Webpack.getMangled(".modalKey?", {
 
 const Modal = Webpack.getModule(x => x.Modal).Modal
 
-const FormSwitch = Webpack.getByStrings('tooltipNote', 'hideBorder', { searchExports: true })
+const FormSwitch = Webpack.getByStrings('.Z.colors.INTERACTIVE_MUTED).spring()', { searchExports: true })
 
 const searchEngines = {
     Google: {
@@ -374,7 +374,7 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
             DataStore.settings.showToolbar = false;
         }), createContextMenuItem('open-settings', "Open Settings", () => {
             const SettingsPanel = Plugins.get('BetterMedia').instance.getSettingsPanel()
-
+            console.log(SettingsPanel)
             ModalSystem.openModal((props) => <Modal {...props} title="BetterMedia Settings">
                 <SettingsPanel />
             </Modal>)
@@ -1818,9 +1818,7 @@ export default class BetterMedia {
                     DataStore.settings[object[0]] = settingObject.value;
                 }
                 const [showObject, setShowObject] = useSetting(object[0], DataStore.settings[object[0]]);
-                return <FormSwitch note={settingObject.note} value={showObject} onChange={setShowObject}>
-                    {settingObject.title}
-                </FormSwitch>
+                return <FormSwitch description={settingObject.note} label={settingObject.title} checked={showObject} onChange={setShowObject}/>
             })
             return elements;
         };

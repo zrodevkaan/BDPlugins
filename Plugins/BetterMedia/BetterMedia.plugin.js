@@ -50,7 +50,7 @@ var ModalSystem = Webpack.getMangled(".modalKey?", {
   closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
 var Modal = Webpack.getModule((x) => x.Modal).Modal;
-var FormSwitch = Webpack.getByStrings("tooltipNote", "hideBorder", { searchExports: true });
+var FormSwitch = Webpack.getByStrings(".Z.colors.INTERACTIVE_MUTED).spring()", { searchExports: true });
 var searchEngines = {
   Google: {
     url: "https://www.google.com/searchbyimage?sbisrc=cr_1&image_url=",
@@ -342,6 +342,7 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
       DataStore.settings.showToolbar = false;
     }), createContextMenuItem("open-settings", "Open Settings", () => {
       const SettingsPanel = Plugins.get("BetterMedia").instance.getSettingsPanel();
+      console.log(SettingsPanel);
       ModalSystem.openModal((props) => /* @__PURE__ */ BdApi.React.createElement(Modal, { ...props, title: "BetterMedia Settings" }, /* @__PURE__ */ BdApi.React.createElement(SettingsPanel, null)));
     })];
     if (DataStore.settings.canvasFeatures) {
@@ -1408,7 +1409,7 @@ var BetterMedia = class {
           DataStore.settings[object[0]] = settingObject.value;
         }
         const [showObject, setShowObject] = useSetting(object[0], DataStore.settings[object[0]]);
-        return /* @__PURE__ */ BdApi.React.createElement(FormSwitch, { note: settingObject.note, value: showObject, onChange: setShowObject }, settingObject.title);
+        return /* @__PURE__ */ BdApi.React.createElement(FormSwitch, { description: settingObject.note, label: settingObject.title, checked: showObject, onChange: setShowObject });
       });
       return elements;
     };
