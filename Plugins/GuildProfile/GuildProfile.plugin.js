@@ -1,7 +1,7 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 1.0.5
+ * @version 1.0.6
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
 
@@ -176,7 +176,7 @@ async function openMediaModal(url) {
     };
 
     OpenImageModal({
-        className: ModalClass.modal,
+        // className: ModalClass.modal,
         items: [item]
     })
 }
@@ -997,15 +997,17 @@ const GuildSelector = ({data, onClose, props}) => {
         const isSticker = data.type === 2;
         const isAnimated = "isAnimated" in data ? data.isAnimated : false;
 
-        return Object.values(GuildStore.getGuilds())
+		const guilds = GuildStore.getGuilds()
+		
+        return Object.values(guilds)
             .filter(guild =>
                 (PermissionStore.getGuildPermissions({id: guild.id}) & PermissionsBits.CREATE_GUILD_EXPRESSIONS) === PermissionsBits.CREATE_GUILD_EXPRESSIONS
                 || guild.ownerId === id
             )
             .filter(guild =>
-                isSticker ||
-                (guild._emojiMap > (EmojiStore.getGuilds()[guild.id]?.emojis || [])
-                    .filter(emoji => emoji.animated === isAnimated && !emoji.managed).length)
+			{
+				return isSticker || EmojiStore.getGuilds()[guild.id]?.emojis
+			}
             )
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [data]);
@@ -1870,7 +1872,7 @@ const css = `
     align-items: center;
     justify-content: center;
     height: 200px;
-    color: var(--text-muted);
+    color: var(--text-default);
 }
 
 .bd-gp-empty-icon {
@@ -1912,12 +1914,12 @@ const css = `
 
 .bd-gp-sound-name {
     font-weight: 500;
-    color: var(--text-normal);
+    color: var(--text-default);
 }
 
 .bd-gp-sound-user {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-default);
     margin-top: 2px;
 }
 
@@ -1931,7 +1933,7 @@ const css = `
     border-radius: 4px;
     border: none;
     background: var(--background-base-lower);
-    color: var(--text-normal);
+    color: var(--text-default);
     font-size: 14px;
 }
 
@@ -1977,7 +1979,7 @@ const css = `
 
 .bd-gp-emoji-name {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-default);
     word-break: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2052,7 +2054,7 @@ const css = `
   cursor: pointer;
   line-height: 30px;
   padding: 4px;
-  color: var(--text-normal);
+  color: var(--text-default);
   border-radius: 4px;
   margin: 1px 0 1px 8px;
 }
@@ -2082,7 +2084,7 @@ const css = `
 }
 .bd-gp-user-sub {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--text-default);
 }
 
 .bd-gp-page {
@@ -2146,7 +2148,7 @@ const css = `
   font-size: 14px;
   line-height: 1.2857142857142858;
   font-weight: 400;
-  color: var(--text-normal);
+  color: var(--text-default);
 }
 
 .bd-gp-content[data-tab-id="0"] .bd-gp-user {
@@ -2156,7 +2158,7 @@ const css = `
 .bd-gp-stats {
   display: flex;
   gap: 10px;
-  color: var(--text-normal);
+  color: var(--text-default);
 }
 .bd-gp-guild-selector-content {
     padding: 16px;
@@ -2207,7 +2209,7 @@ const css = `
 
 .bd-gp-guild-name {
     font-size: 16px;
-    color: var(--text-normal);
+    color: var(--text-default);
 }
 
 .bd-gp-guild-selector-buttons {
