@@ -1,6 +1,6 @@
 /**
  * @name BetterMedia
- * @description Makes media better? or at least try lmao
+ * @description Expands image and emoji features. Reverse image search, download, copy url, copy image, and more!
  * @version 1.0.0
  * @author Kaan
  * @keyframes barrel-roll {
@@ -337,7 +337,7 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
         { color: engine.mayContainNSFW ? "danger" : "brand" }
       );
     });
-    const elements = [createContextMenuItem("blur-image", "Blur", () => setHide(true)), createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems, {}, /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null)), createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
+    const elements = [createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems, {}, /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null)), createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
       setShouldShow(false);
       DataStore.settings.showToolbar = false;
     }), createContextMenuItem("open-settings", "Open Settings", () => {
@@ -995,7 +995,6 @@ var BetterMedia = class {
         const mediaMap = /* @__PURE__ */ new Map();
         messages.forEach((message) => {
           message.attachments?.forEach((attachment) => {
-            console.log(attachment);
             if (attachment.url && attachment.height) {
               const url = processUrl(attachment.url);
               if (!mediaMap.has(attachment.id)) {

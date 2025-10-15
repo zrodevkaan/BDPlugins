@@ -369,7 +369,7 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
             );
         });
 
-        const elements = [createContextMenuItem('blur-image', "Blur", () => setHide(true)), createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems, {}, <SearchIcon />), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
+        const elements = [createSubmenuItem('reverse-search', 'Reverse Search', reverseSearchItems, {}, <SearchIcon />), createContextMenuItem('disable-toolbar', "Disable Toolbar", () => {
             setShouldShow(false);
             DataStore.settings.showToolbar = false;
         }), createContextMenuItem('open-settings', "Open Settings", () => {
