@@ -4,7 +4,6 @@
  * @author Kaan
  * @version 1.0.0
  */
-
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button } = Components
