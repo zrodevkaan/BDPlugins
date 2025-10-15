@@ -68,7 +68,7 @@ var defaultLinks = [
   },
   {
     type: "twitter",
-    replacements: ["https://stupidpenisx.com", "https://girlcockx.com"],
+    replacements: ["https://fixupx.com"],
     selected: 0
   },
   {
