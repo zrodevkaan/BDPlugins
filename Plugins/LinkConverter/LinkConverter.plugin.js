@@ -63,17 +63,48 @@ var DataStore = new Proxy(
 var defaultLinks = [
   {
     type: "reddit",
-    replacements: ["https://rxddit.com"],
+    replacements: [
+      "https://rxddit.com",
+      "https://vxreddit.com"
+    ],
     selected: 0
   },
   {
     type: "twitter",
-    replacements: ["https://fixupx.com"],
+    replacements: [
+      "https://fxtwitter.com",
+      "https://fixupx.com",
+      "https://vxtwitter.com",
+      "https://fixvx.com",
+      "https://twittpr.com"
+    ],
     selected: 0
   },
   {
     type: "instagram",
     replacements: ["https://vxinstagram.com"],
+    selected: 0
+  },
+  {
+    type: "tiktok",
+    replacements: [
+      "https://tnktok.com",
+      "https://tfxktok.com"
+    ],
+    selected: 0
+  },
+  {
+    type: "youtube",
+    replacements: [
+      "https://yout-ube.com"
+    ],
+    selected: 0
+  },
+  {
+    type: "bluesky",
+    replacements: [
+      "https://fxbsky.app"
+    ],
     selected: 0
   }
 ];
@@ -246,22 +277,24 @@ var LinkConverter = class {
     ContextMenu.patch("textarea-context", this.PTAC);
     Patcher.before(MessageActions, "sendMessage", (a, b, c) => {
       const obj = b[1];
-      obj.content = obj.content.replace(/https?:\/\/([^\s/]+)/gi, (url, domain) => {
-        let s = DataStore.settings.find((x) => x.type === domain);
+      obj.content = obj.content.replace(/https?:\/\/(?:[a-zA-Z0-9-]+\.)*([a-zA-Z0-9-]+\.[a-zA-Z]{2,})((?:[\/?#][^\s]*)?)/gm, (url, domain, path) => {
+        const baseDomain = domain.split(".").slice(-2).join(".");
+        let s = DataStore.settings.find((x) => x.type === baseDomain);
         if (!s) {
-          const seralizedDomain = domain.split(".")[0];
-          s = DataStore.settings.find((x) => x.type === seralizedDomain);
+          const mainDomain = domain.split(".").slice(-2)[0];
+          s = DataStore.settings.find((x) => x.type === mainDomain);
         }
-        return s ? s.replacements[s.selected] : url;
+        return s ? s.replacements[s.selected] + (path || "") : url;
       });
     });
     Patcher.before(LinkWrapper.Z, "type", (_, b, original) => {
       const originalUrl = b[0].href;
       const urlObj = new URL(originalUrl);
-      let data = DataStore.settings.find((x) => x.type === urlObj.host);
+      const baseDomain = urlObj.host.split(".").slice(-2).join(".");
+      let data = DataStore.settings.find((x) => x.type === baseDomain);
       if (!data) {
-        const domain = urlObj.host.split(".")[0];
-        data = DataStore.settings.find((x) => x.type === domain);
+        const mainDomain = urlObj.host.split(".").slice(-2)[0];
+        data = DataStore.settings.find((x) => x.type === mainDomain);
       }
       if (!data) return;
       const replacementDomain = new URL(data.replacements[data.selected]).host;
@@ -274,10 +307,11 @@ var LinkConverter = class {
     Patcher.instead(Sanitize, "sanitizeUrl", (_, [props], original) => {
       if (!props) return original;
       const urlObj = new URL(props);
-      let data = DataStore.settings.find((x) => x.type === urlObj.host);
+      const baseDomain = urlObj.host.split(".").slice(-2).join(".");
+      let data = DataStore.settings.find((x) => x.type === baseDomain);
       if (!data) {
-        const domain = urlObj.host.split(".")[0];
-        data = DataStore.settings.find((x) => x.type === domain);
+        const mainDomain = urlObj.host.split(".").slice(-2)[0];
+        data = DataStore.settings.find((x) => x.type === mainDomain);
       }
       if (!data) return props;
       const replacementDomain = new URL(data.replacements[data.selected]).host;

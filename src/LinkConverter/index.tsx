@@ -36,23 +36,56 @@ const DataStore = new Proxy(
         },
     }
 );
+
 const defaultLinks = [
-    {
-        type: 'reddit',
-        replacements: ['https://rxddit.com'],
-        selected: 0
-    },
-    {
-        type: 'twitter',
-        replacements: ['https://fixupx.com'],
-        selected: 0
-    },
-    {
-        type: 'instagram',
-        replacements: ['https://vxinstagram.com'],
-        selected: 0
-    }
-]
+  {
+    type: 'reddit',
+    replacements: [
+      'https://rxddit.com',
+      'https://vxreddit.com'
+    ],
+    selected: 0
+  },
+  {
+    type: 'twitter',
+    replacements: [
+      'https://fxtwitter.com',
+      'https://fixupx.com',
+      'https://vxtwitter.com',
+      'https://fixvx.com',
+      'https://twittpr.com'
+    ],
+    selected: 0
+  },
+  {
+    type: 'instagram',
+    replacements: ['https://vxinstagram.com'],
+    selected: 0
+  },
+  {
+    type: 'tiktok',
+    replacements: [
+      'https://tnktok.com',
+      'https://tfxktok.com'
+    ],
+    selected: 0
+  },
+  {
+    type: 'youtube',
+    replacements: [
+      'https://yout-ube.com'
+    ],
+    selected: 0
+  },
+  {
+    type: 'bluesky',
+    replacements: [
+      'https://fxbsky.app'
+    ],
+    selected: 0
+  }
+];
+
 const replacementsToSelectable = (linkObject: any) => (linkObject?.replacements || []).map((x: string) => ({ label: x, value: x }))
 const getReplacementsByDomain = (domain: string) => (DataStore as any).settings.find((x: any) => x.type == domain)
 
@@ -281,23 +314,25 @@ export default class LinkConverter {
         ContextMenu.patch('textarea-context', this.PTAC)
         Patcher.before(MessageActions, 'sendMessage', (a, b, c) => {
             const obj = b[1];
-            obj.content = obj.content.replace(/https?:\/\/([^\s/]+)/gi, (url, domain) => {
-                let s = DataStore.settings.find(x => x.type === domain);
+            obj.content = obj.content.replace(/https?:\/\/(?:[a-zA-Z0-9-]+\.)*([a-zA-Z0-9-]+\.[a-zA-Z]{2,})((?:[\/?#][^\s]*)?)/gm, (url: string, domain: string, path: string) => {
+                const baseDomain = domain.split('.').slice(-2).join('.');
+                let s = DataStore.settings.find(x => x.type === baseDomain);
                 if (!s) {
-                    const seralizedDomain = domain.split('.')[0];
-                    s = DataStore.settings.find(x => x.type === seralizedDomain);
+                    const mainDomain = domain.split('.').slice(-2)[0];
+                    s = DataStore.settings.find(x => x.type === mainDomain);
                 }
-                return s ? s.replacements[s.selected] : url;
+                return s ? s.replacements[s.selected] + (path || '') : url;
             });
         });
 
-        Patcher.before(LinkWrapper.Z, 'type', (_, b, original) => {
+        Patcher.before(LinkWrapper.Z, 'type', (_: any, b: any, original: any) => {
             const originalUrl = b[0].href;
             const urlObj = new URL(originalUrl);
-            let data = DataStore.settings.find(x => x.type === urlObj.host);
+            const baseDomain = urlObj.host.split('.').slice(-2).join('.');
+            let data = (DataStore as any).settings.find((x: any) => x.type === baseDomain);
             if (!data) {
-                const domain = urlObj.host.split('.')[0];
-                data = DataStore.settings.find(x => x.type === domain);
+                const mainDomain = urlObj.host.split('.').slice(-2)[0];
+                data = (DataStore as any).settings.find((x: any) => x.type === mainDomain);
             }
 
             if (!data) return;
@@ -311,13 +346,14 @@ export default class LinkConverter {
             return b
         })
 
-        Patcher.instead(Sanitize, 'sanitizeUrl', (_, [props], original) => {
+        Patcher.instead(Sanitize, 'sanitizeUrl', (_: any, [props]: [string], original: any) => {
             if (!props) return original;
             const urlObj = new URL(props);
-            let data = DataStore.settings.find(x => x.type === urlObj.host);
+            const baseDomain = urlObj.host.split('.').slice(-2).join('.');
+            let data = (DataStore as any).settings.find((x: any) => x.type === baseDomain);
             if (!data) {
-                const domain = urlObj.host.split('.')[0];
-                data = DataStore.settings.find(x => x.type === domain);
+                const mainDomain = urlObj.host.split('.').slice(-2)[0];
+                data = (DataStore as any).settings.find((x: any) => x.type === mainDomain);
             }
 
             if (!data) return props;
@@ -326,12 +362,12 @@ export default class LinkConverter {
             return props.replace(urlObj.host, replacementDomain);
         })
     }
-    PTAC(res, props) {
+    PTAC(res: any, props: any) {
         res.props.children.push(
             ContextMenu.buildItem({
                 label: 'LinkConverter',
                 id: 'link-converter-settings',
-                action: () => ModalSystem.openModal((props) => <Modal {...props} title="LinkConverter Settings">
+                action: () => ModalSystem.openModal((props: any) => <Modal {...props} title="LinkConverter Settings">
                     <SettingsPanel />
                 </Modal>)
             })
