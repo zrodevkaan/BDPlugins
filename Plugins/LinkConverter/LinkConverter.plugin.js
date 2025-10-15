@@ -31,7 +31,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter");
 var { useState } = React;
-var { Button, ColorInput } = Components;
+var { Button, ColorInput, SwitchInput } = Components;
 var SelectableSearch = Webpack.getByStrings("customMatchSorter", { searchExports: true });
 var Textarea = Webpack.getByStrings("setShouldValidate", "trailingContent", { searchExports: true });
 var Sanitize = Webpack.getByKeys("sanitizeUrl");
@@ -67,7 +67,8 @@ var defaultLinks = [
       "https://rxddit.com",
       "https://vxreddit.com"
     ],
-    selected: 0
+    selected: 0,
+    enabled: true
   },
   {
     type: "twitter",
@@ -78,12 +79,14 @@ var defaultLinks = [
       "https://fixvx.com",
       "https://twittpr.com"
     ],
-    selected: 0
+    selected: 0,
+    enabled: true
   },
   {
     type: "instagram",
     replacements: ["https://vxinstagram.com"],
-    selected: 0
+    selected: 0,
+    enabled: true
   },
   {
     type: "tiktok",
@@ -91,21 +94,24 @@ var defaultLinks = [
       "https://tnktok.com",
       "https://tfxktok.com"
     ],
-    selected: 0
+    selected: 0,
+    enabled: true
   },
   {
     type: "youtube",
     replacements: [
       "https://yout-ube.com"
     ],
-    selected: 0
+    selected: 0,
+    enabled: true
   },
   {
     type: "bluesky",
     replacements: [
       "https://fxbsky.app"
     ],
-    selected: 0
+    selected: 0,
+    enabled: true
   }
 ];
 var replacementsToSelectable = (linkObject) => (linkObject?.replacements || []).map((x) => ({ label: x, value: x }));
@@ -174,7 +180,20 @@ function DomainCard({ domainObj, onChange }) {
     display: "flex",
     flexDirection: "column",
     gap: 8
-  } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" } }, !didError ? /* @__PURE__ */ BdApi.React.createElement("img", { style: { width: "24px" }, onError: () => setDidError((prev) => !prev), src: generateFaviconURL(domainObj.type) }) : /* @__PURE__ */ BdApi.React.createElement("span", null, domainObj.type.substring(0, 1).toUpperCase())), /* @__PURE__ */ BdApi.React.createElement("div", { style: { fontWeight: 600 } }, domainObj.type)), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ BdApi.React.createElement(Button, { onClick: () => setEditing((e) => !e), size: Button.Sizes.SMALL }, editing ? "Done" : "Edit"), /* @__PURE__ */ BdApi.React.createElement(Button, { color: Button.Colors.RED, onClick: deleteDomain, size: Button.Sizes.SMALL }, "Delete"))), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: 8, flexDirection: "column" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ BdApi.React.createElement(
+  } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { width: 36, height: 36, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" } }, !didError ? /* @__PURE__ */ BdApi.React.createElement("img", { style: { width: "24px" }, onError: () => setDidError((prev) => !prev), src: generateFaviconURL(domainObj.type) }) : /* @__PURE__ */ BdApi.React.createElement("span", null, domainObj.type.substring(0, 1).toUpperCase())), /* @__PURE__ */ BdApi.React.createElement("div", { style: { fontWeight: 600 } }, domainObj.type)), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ BdApi.React.createElement(
+    SwitchInput,
+    {
+      value: linkObject?.enabled,
+      onChange: (value) => {
+        const org = DataStore.settings;
+        const i = org.findIndex((a) => a.type === domainObj.type);
+        if (i === -1) return;
+        org[i].enabled = value;
+        DataStore.settings = [...org];
+        onChange();
+      }
+    }
+  ), /* @__PURE__ */ BdApi.React.createElement(Button, { onClick: () => setEditing((e) => !e), size: Button.Sizes.SMALL }, editing ? "Done" : "Edit"), /* @__PURE__ */ BdApi.React.createElement(Button, { color: Button.Colors.RED, onClick: deleteDomain, size: Button.Sizes.SMALL }, "Delete"))), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: 8, flexDirection: "column" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ BdApi.React.createElement(
     SelectableSearch,
     {
       placeholder: replacements.length ? "Select default replacement" : "No replacements yet",
@@ -217,7 +236,8 @@ function SettingsPanel() {
       settings.push({
         type,
         replacements: replacement ? [replacement] : [],
-        selected: 0
+        selected: 0,
+        enabled: true
       });
     }
     DataStore.settings = settings;
@@ -270,7 +290,7 @@ function AddDomainInline({ onAdd }) {
 }
 var LinkConverter = class {
   load() {
-    DataStore.settings ??= defaultLinks;
+    DataStore.settings ??= JSON.parse(JSON.stringify(defaultLinks));
   }
   start() {
     DOM.addStyle("link-convert", ".discor-moment textarea {max-height: 36px !important; min-height: 36x !important;}");
@@ -284,7 +304,7 @@ var LinkConverter = class {
           const mainDomain = domain.split(".").slice(-2)[0];
           s = DataStore.settings.find((x) => x.type === mainDomain);
         }
-        return s ? s.replacements[s.selected] + (path || "") : url;
+        return s && s.enabled !== false ? s.replacements[s.selected] + (path || "") : url;
       });
     });
     Patcher.before(LinkWrapper.Z, "type", (_, b, original) => {
@@ -296,7 +316,7 @@ var LinkConverter = class {
         const mainDomain = urlObj.host.split(".").slice(-2)[0];
         data = DataStore.settings.find((x) => x.type === mainDomain);
       }
-      if (!data) return;
+      if (!data || data.enabled === false) return;
       const replacementDomain = new URL(data.replacements[data.selected]).host;
       const newUrl = originalUrl.replace(urlObj.host, replacementDomain);
       b[0].href = newUrl;
@@ -313,7 +333,7 @@ var LinkConverter = class {
         const mainDomain = urlObj.host.split(".").slice(-2)[0];
         data = DataStore.settings.find((x) => x.type === mainDomain);
       }
-      if (!data) return props;
+      if (!data || data.enabled === false) return props;
       const replacementDomain = new URL(data.replacements[data.selected]).host;
       return props.replace(urlObj.host, replacementDomain);
     });

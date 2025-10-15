@@ -6,7 +6,7 @@
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
-const { Button, ColorInput } = Components
+const { Button, ColorInput, SwitchInput } = Components
 const SelectableSearch = Webpack.getByStrings('customMatchSorter', { searchExports: true })
 const Textarea = Webpack.getByStrings('setShouldValidate', 'trailingContent', { searchExports: true })
 const Sanitize = Webpack.getByKeys('sanitizeUrl')
@@ -38,52 +38,58 @@ const DataStore = new Proxy(
 );
 
 const defaultLinks = [
-  {
-    type: 'reddit',
-    replacements: [
-      'https://rxddit.com',
-      'https://vxreddit.com'
-    ],
-    selected: 0
-  },
-  {
-    type: 'twitter',
-    replacements: [
-      'https://fxtwitter.com',
-      'https://fixupx.com',
-      'https://vxtwitter.com',
-      'https://fixvx.com',
-      'https://twittpr.com'
-    ],
-    selected: 0
-  },
-  {
-    type: 'instagram',
-    replacements: ['https://vxinstagram.com'],
-    selected: 0
-  },
-  {
-    type: 'tiktok',
-    replacements: [
-      'https://tnktok.com',
-      'https://tfxktok.com'
-    ],
-    selected: 0
-  },
-  {
-    type: 'youtube',
-    replacements: [
-      'https://yout-ube.com'
-    ],
-    selected: 0
-  },
-  {
-    type: 'bluesky',
-    replacements: [
-      'https://fxbsky.app'
-    ],
-    selected: 0
-  }
+    {
+        type: 'reddit',
+        replacements: [
+            'https://rxddit.com',
+            'https://vxreddit.com'
+        ],
+        selected: 0,
+        enabled: true
+    },
+    {
+        type: 'twitter',
+        replacements: [
+            'https://fxtwitter.com',
+            'https://fixupx.com',
+            'https://vxtwitter.com',
+            'https://fixvx.com',
+            'https://twittpr.com'
+        ],
+        selected: 0,
+        enabled: true
+    },
+    {
+        type: 'instagram',
+        replacements: ['https://vxinstagram.com'],
+        selected: 0,
+        enabled: true
+    },
+    {
+        type: 'tiktok',
+        replacements: [
+            'https://tnktok.com',
+            'https://tfxktok.com'
+        ],
+        selected: 0,
+        enabled: true
+    },
+    {
+        type: 'youtube',
+        replacements: [
+            'https://yout-ube.com'
+        ],
+        selected: 0,
+        enabled: true
+    },
+    {
+        type: 'bluesky',
+        replacements: [
+            'https://fxbsky.app'
+        ],
+        selected: 0,
+        enabled: true
+    }
 ];
 
 const replacementsToSelectable = (linkObject: any) => (linkObject?.replacements || []).map((x: string) => ({ label: x, value: x }))
@@ -169,7 +175,18 @@ function DomainCard({ domainObj, onChange }: { domainObj: { type: string; replac
                     </div>
                     <div style={{ fontWeight: 600 }}>{domainObj.type}</div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <SwitchInput
+                        value={linkObject?.enabled}
+                        onChange={value => {
+                            const org = (DataStore as any).settings;
+                            const i = org.findIndex((a: any) => a.type === domainObj.type);
+                            if (i === -1) return;
+                            org[i].enabled = value;
+                            (DataStore as any).settings = [...org];
+                            onChange();
+                        }}
+                    />
                     <Button onClick={() => setEditing(e => !e)} size={Button.Sizes.SMALL}>{editing ? 'Done' : 'Edit'}</Button>
                     <Button color={Button.Colors.RED} onClick={deleteDomain} size={Button.Sizes.SMALL}>Delete</Button>
                 </div>
@@ -227,8 +244,8 @@ function SettingsPanel() {
 
     const handleAddDomain = (type, replacement) => {
         if (!type) return;
-        const settings = DataStore.settings;
-        const existing = settings.find(x => x.type === type);
+        const settings = (DataStore as any).settings;
+        const existing = settings.find((x: any) => x.type === type);
 
         if (existing) {
             if (replacement) existing.replacements.push(replacement);
@@ -236,7 +253,8 @@ function SettingsPanel() {
             settings.push({
                 type,
                 replacements: replacement ? [replacement] : [],
-                selected: 0
+                selected: 0,
+                enabled: true
             });
         }
 
@@ -308,7 +326,9 @@ function AddDomainInline({ onAdd }) {
 }
 
 export default class LinkConverter {
-    load() { DataStore.settings ??= defaultLinks }
+    load() {
+        DataStore.settings ??= defaultLinks
+    }
     start() {
         DOM.addStyle('link-convert', '.discor-moment textarea {max-height: 36px !important; min-height: 36x !important;}')
         ContextMenu.patch('textarea-context', this.PTAC)
@@ -321,7 +341,7 @@ export default class LinkConverter {
                     const mainDomain = domain.split('.').slice(-2)[0];
                     s = DataStore.settings.find(x => x.type === mainDomain);
                 }
-                return s ? s.replacements[s.selected] + (path || '') : url;
+                return s && s.enabled !== false ? s.replacements[s.selected] + (path || '') : url;
             });
         });
 
@@ -335,7 +355,7 @@ export default class LinkConverter {
                 data = (DataStore as any).settings.find((x: any) => x.type === mainDomain);
             }
 
-            if (!data) return;
+            if (!data || data.enabled === false) return;
 
             const replacementDomain = new URL(data.replacements[data.selected]).host;
             const newUrl = originalUrl.replace(urlObj.host, replacementDomain);
@@ -356,7 +376,7 @@ export default class LinkConverter {
                 data = (DataStore as any).settings.find((x: any) => x.type === mainDomain);
             }
 
-            if (!data) return props;
+            if (!data || data.enabled === false) return props;
 
             const replacementDomain = new URL(data.replacements[data.selected]).host;
             return props.replace(urlObj.host, replacementDomain);
