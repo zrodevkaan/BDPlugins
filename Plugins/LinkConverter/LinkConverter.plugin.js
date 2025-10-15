@@ -31,7 +31,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter");
 var { useState } = React;
-var { Button } = Components;
+var { Button, ColorInput } = Components;
 var SelectableSearch = Webpack.getByStrings("customMatchSorter", { searchExports: true });
 var Textarea = Webpack.getByStrings("setShouldValidate", "trailingContent", { searchExports: true });
 var Sanitize = Webpack.getByKeys("sanitizeUrl");

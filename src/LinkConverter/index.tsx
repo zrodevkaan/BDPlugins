@@ -6,7 +6,7 @@
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
-const { Button } = Components
+const { Button, ColorInput } = Components
 const SelectableSearch = Webpack.getByStrings('customMatchSorter', { searchExports: true })
 const Textarea = Webpack.getByStrings('setShouldValidate', 'trailingContent', { searchExports: true })
 const Sanitize = Webpack.getByKeys('sanitizeUrl')
