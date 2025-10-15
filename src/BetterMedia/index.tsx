@@ -1,6 +1,6 @@
 /**
  * @name BetterMedia
- * @description Makes media better? or at least try lmao
+ * @description Expands image and emoji features. Reverse image search, download, copy url, copy image, and more!
  * @version 1.0.0
  * @author Kaan
  */
