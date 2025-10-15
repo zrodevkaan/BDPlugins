@@ -29,7 +29,7 @@ __export(index_exports, {
   default: () => LinkConverter
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Plugins } = new BdApi("LinkConverter");
+var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter");
 var { useState } = React;
 var { Button } = Components;
 var SelectableSearch = Webpack.getByStrings("customMatchSorter", { searchExports: true });

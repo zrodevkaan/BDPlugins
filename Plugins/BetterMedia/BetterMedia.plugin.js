@@ -986,13 +986,83 @@ var BetterMedia = class {
         if (args[0].BetterMediaModal !== void 0 || args[0].location === "ChannelAttachmentUpload") {
           return;
         }
-        return;
+        if (!args[0].items?.length) return;
+        const selectedItem = args[0].items[0];
+        const selectedUrl = selectedItem?.url;
+        const selectedId = selectedItem?.id;
         const messages = MessageStore.getMessages(SelectedChannelStore.getChannelId())._array;
-        let newArray = messages;
-        const sortedArray = DataStore.settings.reverseModalGallery ? newArray.reverse() : newArray;
-        const sortedImages = sortedArray.map((x) => {
-          return { attachments: x.attachments, message: x };
-        }).filter((x) => x.attachments.length > 0);
+        const processUrl = (url) => url?.replace(/\.webp(\?|$)/i, ".png$1");
+        const mediaMap = /* @__PURE__ */ new Map();
+        messages.forEach((message) => {
+          message.attachments?.forEach((attachment) => {
+            console.log(attachment);
+            if (attachment.url && attachment.height) {
+              const url = processUrl(attachment.url);
+              if (!mediaMap.has(attachment.id)) {
+                mediaMap.set(attachment.id, {
+                  id: attachment.id,
+                  url,
+                  original: url,
+                  proxyUrl: url,
+                  animated: true,
+                  type: "IMAGE",
+                  height: attachment.height,
+                  width: attachment.width,
+                  messageId: message.id,
+                  sourceMetadata: { message }
+                });
+              }
+            }
+          });
+          message.embeds?.forEach((embed, embedIndex) => {
+            if (embed.video?.proxyURL) {
+              const uniqueId = `${message.id}-embed-${embedIndex}`;
+              if (!mediaMap.has(uniqueId)) {
+                mediaMap.set(uniqueId, {
+                  id: uniqueId,
+                  url: embed.url,
+                  proxyUrl: embed.video.proxyURL,
+                  width: embed.video.width || 500,
+                  height: embed.video.height || 500,
+                  type: "IMAGE",
+                  messageId: message.id,
+                  children: ({ size, src: poster }) => {
+                    return React.createElement("video", {
+                      ...size,
+                      alt: "GIF",
+                      poster,
+                      src: embed.video.proxyURL,
+                      autoPlay: true,
+                      loop: true
+                    });
+                  }
+                });
+              }
+            } else if (embed.image?.proxyURL) {
+              const uniqueId = `${message.id}-embed-${embedIndex}`;
+              const url = processUrl(embed.image.proxyURL);
+              if (!mediaMap.has(uniqueId)) {
+                mediaMap.set(uniqueId, {
+                  id: uniqueId,
+                  url,
+                  original: url,
+                  proxyUrl: url,
+                  animated: true,
+                  type: "IMAGE",
+                  height: embed.image.height,
+                  width: embed.image.width,
+                  messageId: message.id,
+                  sourceMetadata: { message }
+                });
+              }
+            }
+          });
+        });
+        let mediaItems = Array.from(mediaMap.values());
+        DataStore.settings.reverseModalGallery ? mediaItems.push(selectedItem) : mediaItems.unshift(selectedItem);
+        const yeah = DataStore.settings.reverseModalGallery ? mediaItems.reverse() : mediaItems;
+        args[0].startingIndex = yeah.findIndex((x) => x.url === selectedUrl) || 0;
+        args[0].items = yeah;
       }
     );
     Patcher.instead(ImageRenderComponent.uo, "test", (a, b, c) => {
