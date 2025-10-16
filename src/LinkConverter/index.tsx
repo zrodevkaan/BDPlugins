@@ -2,15 +2,14 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  */
-const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
+const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components
 const SelectableSearch = Webpack.getByStrings('customMatchSorter', { searchExports: true })
 const Textarea = Webpack.getByStrings('setShouldValidate', 'trailingContent', { searchExports: true })
-const Sanitize = Webpack.getByKeys('sanitizeUrl')
-const LinkWrapper = Webpack.getModule(x => x.Z.type.toString().includes('sanitizeUrl'))
+const AboutMe = Webpack.getModule(x => x.Z.toString().includes('disableInteractions'))
 const MessageActions = Webpack.getByKeys('_sendMessage')
 const Modal = Webpack.getModule(x => x.Modal).Modal
 const ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -94,6 +93,65 @@ const defaultLinks = [
 
 const replacementsToSelectable = (linkObject: any) => (linkObject?.replacements || []).map((x: string) => ({ label: x, value: x }))
 const getReplacementsByDomain = (domain: string) => (DataStore as any).settings.find((x: any) => x.type == domain)
+
+function getDomainKey(domain: string): string {
+    domain = domain.replace(/^www\./, '');
+
+    const parts = domain.split('.');
+
+    if (parts.length === 2) {
+        return parts[0];
+    }
+
+    const twoPartTLDs = ['co.uk', 'com.au', 'co.jp', 'com.br', 'co.za', 'co.in',
+        'com.mx', 'co.nz', 'com.ar', 'co.kr', 'com.tr', 'com.tw',
+        'com.sg', 'co.id', 'com.my', 'com.ph', 'com.hk', 'com.vn'];
+
+    if (parts.length >= 3) {
+        const lastTwo = parts.slice(-2).join('.');
+        if (twoPartTLDs.includes(lastTwo)) {
+            return parts[parts.length - 3] || domain;
+        }
+    }
+
+    return parts[parts.length - 2] || domain;
+}
+
+function normalizeDomainInput(input: string): string {
+    input = input.replace(/^https?:\/\//, '');
+    input = input.split('/')[0];
+    input = input.replace(/^www\./, ''); // domi ;-;
+
+    if (!input.includes('.')) {
+        return input.toLowerCase();
+    }
+
+    return getDomainKey(input).toLowerCase();
+}
+
+function matchDomain(fullDomain: string, settings: any[]): any {
+    const domainKey = getDomainKey(fullDomain);
+    const normalized = fullDomain.replace(/^www\./, '').toLowerCase();
+
+    for (const setting of settings) {
+        const settingNormalized = setting.type.replace(/^www\./, '').toLowerCase();
+
+        if (settingNormalized === normalized) {
+            return setting;
+        }
+
+        if (setting.type === domainKey) {
+            return setting;
+        }
+
+        const settingKey = getDomainKey(settingNormalized);
+        if (settingKey === domainKey) {
+            return setting;
+        }
+    }
+
+    return null;
+}
 
 function generateFaviconURL(website) {
     const domain = website.includes('.') ? website : `${website}.com`;
@@ -244,14 +302,15 @@ function SettingsPanel() {
 
     const handleAddDomain = (type, replacement) => {
         if (!type) return;
+        const normalizedType = normalizeDomainInput(type);
         const settings = (DataStore as any).settings;
-        const existing = settings.find((x: any) => x.type === type);
+        const existing = settings.find((x: any) => normalizeDomainInput(x.type) === normalizedType);
 
         if (existing) {
             if (replacement) existing.replacements.push(replacement);
         } else {
             settings.push({
-                type,
+                type: normalizedType,
                 replacements: replacement ? [replacement] : [],
                 selected: 0,
                 enabled: true
@@ -298,7 +357,7 @@ function AddDomainInline({ onAdd }) {
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', width: '100%' }}>
             <div style={{ flex: 2 }}>
                 <Textarea
-                    placeholder="Domain (e.g. reddit or reddit.com)"
+                    placeholder="Domain (e.g. reddit, amazon.co.uk)"
                     value={type}
                     onChange={(e) => setType(e)}
                     style={{ marginBottom: 0 }}
@@ -334,53 +393,27 @@ export default class LinkConverter {
         ContextMenu.patch('textarea-context', this.PTAC)
         Patcher.before(MessageActions, 'sendMessage', (a, b, c) => {
             const obj = b[1];
-            obj.content = obj.content.replace(/https?:\/\/(?:[a-zA-Z0-9-]+\.)*([a-zA-Z0-9-]+\.[a-zA-Z]{2,})((?:[\/?#][^\s]*)?)/gm, (url: string, domain: string, path: string) => {
-                const baseDomain = domain.split('.').slice(-2).join('.');
-                let s = DataStore.settings.find(x => x.type === baseDomain);
-                if (!s) {
-                    const mainDomain = domain.split('.').slice(-2)[0];
-                    s = DataStore.settings.find(x => x.type === mainDomain);
+            obj.content = obj.content.replace(/https?:\/\/((?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)((?:[\/?#][^\s]*)?)/gm, (fullMatch: string, fullDomain: string, path: string) => {
+                const s = matchDomain(fullDomain, DataStore.settings);
+                if (s && s.enabled !== false) {
+                    const replacementUrl = s.replacements[s.selected];
+                    return replacementUrl + (path || '');
                 }
-                return s && s.enabled !== false ? s.replacements[s.selected] + (path || '') : url;
+                return fullMatch;
             });
         });
 
-        Patcher.before(LinkWrapper.Z, 'type', (_: any, b: any, original: any) => {
-            const originalUrl = b[0].href;
-            const urlObj = new URL(originalUrl);
-            const baseDomain = urlObj.host.split('.').slice(-2).join('.');
-            let data = (DataStore as any).settings.find((x: any) => x.type === baseDomain);
-            if (!data) {
-                const mainDomain = urlObj.host.split('.').slice(-2)[0];
-                data = (DataStore as any).settings.find((x: any) => x.type === mainDomain);
-            }
-
-            if (!data || data.enabled === false) return;
-
-            const replacementDomain = new URL(data.replacements[data.selected]).host;
-            const newUrl = originalUrl.replace(urlObj.host, replacementDomain);
-
-            b[0].href = newUrl;
-            b[0].title = newUrl;
-            b[0].children = [<span>{newUrl}</span>];
-            return b
-        })
-
-        Patcher.instead(Sanitize, 'sanitizeUrl', (_: any, [props]: [string], original: any) => {
-            if (!props) return original;
-            const urlObj = new URL(props);
-            const baseDomain = urlObj.host.split('.').slice(-2).join('.');
-            let data = (DataStore as any).settings.find((x: any) => x.type === baseDomain);
-            if (!data) {
-                const mainDomain = urlObj.host.split('.').slice(-2)[0];
-                data = (DataStore as any).settings.find((x: any) => x.type === mainDomain);
-            }
-
-            if (!data || data.enabled === false) return props;
-
-            const replacementDomain = new URL(data.replacements[data.selected]).host;
-            return props.replace(urlObj.host, replacementDomain);
-        })
+        Patcher.before(AboutMe, 'Z', (_: any, [args]: [any], res: any) => {
+            args.userBio = args.userBio.replace(/https?:\/\/((?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)((?:[\/?#][^\s]*)?)/gm, (fullMatch: string, fullDomain: string, path: string) => {
+                const s = matchDomain(fullDomain, DataStore.settings);
+                if (s && s.enabled !== false) {
+                    const replacementUrl = s.replacements[s.selected];
+                    return replacementUrl + (path || '');
+                }
+                return fullMatch;
+            });
+            return res;
+        });
     }
     PTAC(res: any, props: any) {
         res.props.children.push(

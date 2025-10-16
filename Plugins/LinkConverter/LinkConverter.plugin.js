@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -29,13 +29,12 @@ __export(index_exports, {
   default: () => LinkConverter
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter");
+var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter");
 var { useState } = React;
 var { Button, ColorInput, SwitchInput } = Components;
 var SelectableSearch = Webpack.getByStrings("customMatchSorter", { searchExports: true });
 var Textarea = Webpack.getByStrings("setShouldValidate", "trailingContent", { searchExports: true });
-var Sanitize = Webpack.getByKeys("sanitizeUrl");
-var LinkWrapper = Webpack.getModule((x) => x.Z.type.toString().includes("sanitizeUrl"));
+var AboutMe = Webpack.getModule((x) => x.Z.toString().includes("disableInteractions"));
 var MessageActions = Webpack.getByKeys("_sendMessage");
 var Modal = Webpack.getModule((x) => x.Modal).Modal;
 var ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -116,6 +115,67 @@ var defaultLinks = [
 ];
 var replacementsToSelectable = (linkObject) => (linkObject?.replacements || []).map((x) => ({ label: x, value: x }));
 var getReplacementsByDomain = (domain) => DataStore.settings.find((x) => x.type == domain);
+function getDomainKey(domain) {
+  domain = domain.replace(/^www\./, "");
+  const parts = domain.split(".");
+  if (parts.length === 2) {
+    return parts[0];
+  }
+  const twoPartTLDs = [
+    "co.uk",
+    "com.au",
+    "co.jp",
+    "com.br",
+    "co.za",
+    "co.in",
+    "com.mx",
+    "co.nz",
+    "com.ar",
+    "co.kr",
+    "com.tr",
+    "com.tw",
+    "com.sg",
+    "co.id",
+    "com.my",
+    "com.ph",
+    "com.hk",
+    "com.vn"
+  ];
+  if (parts.length >= 3) {
+    const lastTwo = parts.slice(-2).join(".");
+    if (twoPartTLDs.includes(lastTwo)) {
+      return parts[parts.length - 3] || domain;
+    }
+  }
+  return parts[parts.length - 2] || domain;
+}
+function normalizeDomainInput(input) {
+  input = input.replace(/^https?:\/\//, "");
+  input = input.split("/")[0];
+  input = input.replace(/^www\./, "");
+  if (!input.includes(".")) {
+    return input.toLowerCase();
+  }
+  return getDomainKey(input).toLowerCase();
+}
+function matchDomain(fullDomain, settings) {
+  const domainKey = getDomainKey(fullDomain);
+  const normalized = fullDomain.replace(/^www\./, "").toLowerCase();
+  for (const setting of settings) {
+    const settingNormalized = setting.type.replace(/^www\./, "").toLowerCase();
+    if (settingNormalized === normalized) {
+      return setting;
+    }
+    if (setting.type === domainKey) {
+      return setting;
+    }
+    const settingKey = getDomainKey(settingNormalized);
+    if (settingKey === domainKey) {
+      return setting;
+    }
+  }
+  return null;
+}
 function generateFaviconURL(website) {
   const domain = website.includes(".") ? website : `${website}.com`;
   const url = new URL(`https://twenty-icons.com/${domain}`);
@@ -228,13 +288,14 @@ function SettingsPanel() {
   const refresh = () => forceUpdate({});
   const handleAddDomain = (type, replacement) => {
     if (!type) return;
+    const normalizedType = normalizeDomainInput(type);
     const settings = DataStore.settings;
-    const existing = settings.find((x) => x.type === type);
+    const existing = settings.find((x) => normalizeDomainInput(x.type) === normalizedType);
     if (existing) {
       if (replacement) existing.replacements.push(replacement);
     } else {
       settings.push({
-        type,
+        type: normalizedType,
         replacements: replacement ? [replacement] : [],
         selected: 0,
         enabled: true
@@ -263,7 +324,7 @@ function AddDomainInline({ onAdd }) {
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-start", width: "100%" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { flex: 2 } }, /* @__PURE__ */ BdApi.React.createElement(
     Textarea,
     {
-      placeholder: "Domain (e.g. reddit or reddit.com)",
+      placeholder: "Domain (e.g. reddit, amazon.co.uk)",
       value: type,
       onChange: (e) => setType(e),
       style: { marginBottom: 0 }
@@ -271,7 +332,7 @@ function AddDomainInline({ onAdd }) {
   )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { flex: 3 } }, /* @__PURE__ */ BdApi.React.createElement(
     Textarea,
     {
-      placeholder: "Replacement URL (e.g. https://rxddit.com)",
+      placeholder: "Replacement URL (e.g. https://amazon.com)",
       value: replacement,
       onChange: (e) => setReplacement(e),
       style: { marginBottom: 0 },
@@ -290,52 +351,32 @@ function AddDomainInline({ onAdd }) {
 }
 var LinkConverter = class {
   load() {
-    DataStore.settings ??= JSON.parse(JSON.stringify(defaultLinks));
+    DataStore.settings ??= defaultLinks;
   }
   start() {
     DOM.addStyle("link-convert", ".discor-moment textarea {max-height: 36px !important; min-height: 36x !important;}");
     ContextMenu.patch("textarea-context", this.PTAC);
     Patcher.before(MessageActions, "sendMessage", (a, b, c) => {
       const obj = b[1];
-      obj.content = obj.content.replace(/https?:\/\/(?:[a-zA-Z0-9-]+\.)*([a-zA-Z0-9-]+\.[a-zA-Z]{2,})((?:[\/?#][^\s]*)?)/gm, (url, domain, path) => {
-        const baseDomain = domain.split(".").slice(-2).join(".");
-        let s = DataStore.settings.find((x) => x.type === baseDomain);
-        if (!s) {
-          const mainDomain = domain.split(".").slice(-2)[0];
-          s = DataStore.settings.find((x) => x.type === mainDomain);
+      obj.content = obj.content.replace(/https?:\/\/((?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)((?:[\/?#][^\s]*)?)/gm, (fullMatch, fullDomain, path) => {
+        const s = matchDomain(fullDomain, DataStore.settings);
+        if (s && s.enabled !== false) {
+          const replacementUrl = s.replacements[s.selected];
+          return replacementUrl + (path || "");
         }
-        return s && s.enabled !== false ? s.replacements[s.selected] + (path || "") : url;
+        return fullMatch;
       });
     });
-    Patcher.before(LinkWrapper.Z, "type", (_, b, original) => {
-      const originalUrl = b[0].href;
-      const urlObj = new URL(originalUrl);
-      const baseDomain = urlObj.host.split(".").slice(-2).join(".");
-      let data = DataStore.settings.find((x) => x.type === baseDomain);
-      if (!data) {
-        const mainDomain = urlObj.host.split(".").slice(-2)[0];
-        data = DataStore.settings.find((x) => x.type === mainDomain);
-      }
-      if (!data || data.enabled === false) return;
-      const replacementDomain = new URL(data.replacements[data.selected]).host;
-      const newUrl = originalUrl.replace(urlObj.host, replacementDomain);
-      b[0].href = newUrl;
-      b[0].title = newUrl;
-      b[0].children = [/* @__PURE__ */ BdApi.React.createElement("span", null, newUrl)];
-      return b;
-    });
-    Patcher.instead(Sanitize, "sanitizeUrl", (_, [props], original) => {
-      if (!props) return original;
-      const urlObj = new URL(props);
-      const baseDomain = urlObj.host.split(".").slice(-2).join(".");
-      let data = DataStore.settings.find((x) => x.type === baseDomain);
-      if (!data) {
-        const mainDomain = urlObj.host.split(".").slice(-2)[0];
-        data = DataStore.settings.find((x) => x.type === mainDomain);
-      }
-      if (!data || data.enabled === false) return props;
-      const replacementDomain = new URL(data.replacements[data.selected]).host;
-      return props.replace(urlObj.host, replacementDomain);
+    Patcher.before(AboutMe, "Z", (_, [args], res) => {
+      args.userBio = args.userBio.replace(/https?:\/\/((?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)((?:[\/?#][^\s]*)?)/gm, (fullMatch, fullDomain, path) => {
+        const s = matchDomain(fullDomain, DataStore.settings);
+        if (s && s.enabled !== false) {
+          const replacementUrl = s.replacements[s.selected];
+          return replacementUrl + (path || "");
+        }
+        return fullMatch;
+      });
+      return res;
     });
   }
   PTAC(res, props) {
