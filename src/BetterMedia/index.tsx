@@ -374,7 +374,6 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
             DataStore.settings.showToolbar = false;
         }), createContextMenuItem('open-settings', "Open Settings", () => {
             const SettingsPanel = Plugins.get('BetterMedia').instance.getSettingsPanel()
-            console.log(SettingsPanel)
             ModalSystem.openModal((props) => <Modal {...props} title="BetterMedia Settings">
                 <SettingsPanel />
             </Modal>)
@@ -887,6 +886,7 @@ const settings = {
     showToolbar: { value: true, title: 'Show Toolbar', note: 'Shows or hides the Toolbar on media' },
     reverseModalGallery: { value: true, title: 'Image Gallery Reverse', note: 'Reverses the images on the Media modal gallery at the bottom.' },
     canvasFeatures: { value: true, title: 'Canvas Methods', note: 'Adds Canvas Methods to Media like Glow or Deep Fry' },
+    enabledGallery: { value: true, title: 'Enable Gallery', note: 'When opening images, gives you the most recent images in the bottom of every image modal. (W.I.P) This feature is buggy and will be fixed' },
 }
 
 class InternalStore {
@@ -1251,7 +1251,7 @@ export default class BetterMedia {
             }).exports,
             'K',
             (_, args) => {
-                if (args[0].BetterMediaModal !== undefined || args[0].location === "ChannelAttachmentUpload") {
+                if (args[0].BetterMediaModal !== undefined || args[0].location === "ChannelAttachmentUpload" || DataStore.settings.enabledGallery == false) {
                     return;
                 }
 
@@ -1351,6 +1351,7 @@ export default class BetterMedia {
 
         ContextMenu.patch("user-context", this.AUCM)
         ContextMenu.patch("image-context", this.AICM)
+        ContextMenu.patch("guild-context", this.SICM)
         ContextMenu.patch("message", this.MICM)
     }
 
@@ -1818,11 +1819,48 @@ export default class BetterMedia {
             return elements;
         };
     }
+
+    SICM = (res, props) => {
+        const guild = props.guild
+
+        const betterMediaMenu = {
+            type: 'submenu',
+            id: 'better-media-guild',
+            label: 'BetterMedia',
+            iconLeft: () => <MainMenuIcon />,
+            items: [
+                {
+                    type: 'button',
+                    id: 'open-guild-icon',
+                    label: 'Open Guild Icon',
+                    iconLeft: () => <GuildIcon />,
+                    action: () => {
+                        const guildIcon = mediautils.getGuildIconURL({id: guild.id, icon: guild.icon, size: 4096});
+                        openMedia(guildIcon, false, undefined, false);
+                    }
+                },
+                {
+                    type: 'button',
+                    id: 'copy-guild-icon',
+                    label: 'Copy Guild Icon URL',
+                    iconLeft: () => <CopyIcon />,
+                    action: () => {
+                        const guildIcon = mediautils.getGuildIconURL({id: guild.id, icon: guild.icon, size: 4096});
+                        copyURL(guildIcon);
+                    }
+                },
+            ]
+        };
+
+        res.props.children.push(ContextMenu.buildItem(betterMediaMenu));
+    }
+
     stop() {
         DOM.removeStyle('BetterMedia')
         Patcher.unpatchAll()
         ContextMenu.unpatch('user-context', this.AUCM)
         ContextMenu.unpatch("message", this.MICM)
         ContextMenu.unpatch("image-context", this.AICM)
+        ContextMenu.unpatch("guild-context", this.SICM)
     }
 }
