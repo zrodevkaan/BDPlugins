@@ -416,7 +416,7 @@ export default class LinkConverter {
         });
     }
     PTAC(res: any, props: any) {
-        res.props.children.push(
+        res.props.children.splice(3,0,
             ContextMenu.buildItem({
                 label: 'LinkConverter',
                 id: 'link-converter-settings',

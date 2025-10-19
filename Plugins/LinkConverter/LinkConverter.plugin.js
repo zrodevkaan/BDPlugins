@@ -332,7 +332,7 @@ function AddDomainInline({ onAdd }) {
   )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { flex: 3 } }, /* @__PURE__ */ BdApi.React.createElement(
     Textarea,
     {
-      placeholder: "Replacement URL (e.g. https://amazon.com)",
+      placeholder: "Replacement URL (e.g. https://rxddit.com)",
       value: replacement,
       onChange: (e) => setReplacement(e),
       style: { marginBottom: 0 },
@@ -380,7 +380,9 @@ var LinkConverter = class {
     });
   }
   PTAC(res, props) {
-    res.props.children.push(
+    res.props.children.splice(
+      3,
+      0,
       ContextMenu.buildItem({
         label: "LinkConverter",
         id: "link-converter-settings",
