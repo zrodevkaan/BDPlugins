@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.1.4
+ * @version 1.1.5
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  */
@@ -448,7 +448,6 @@ var LiveTyping = class {
   patchDMTyping() {
     Patcher.after(scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]], "render", (that, [props], res) => {
       if (shouldIgnoreItem("ignoreDMs")) return res;
-      console.log(props, res);
       const isGuildObject = Utils.findInTree(res, (x) => x?.lurkingGuildIds, { walkable: ["props", "children"] });
       isGuildObject && res.props.children.props.children.unshift(React.createElement("div", {}, React.createElement(TypingIndicatorDMBar)));
     });
