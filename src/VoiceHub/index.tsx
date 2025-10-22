@@ -158,7 +158,7 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
                 {users.map(user => {
                     const member = guild?.id ? GuildMemberStore.getMember(guild.id, user.id) : null;
                     const directUser = member?.avatar ? member : user;
-                    const userState = voiceStates[user.id];
+                    const userState = voiceStates?.[user?.id] || {selfVideo: false, selfStream: false};
 
                     return (
                         <div
@@ -353,14 +353,14 @@ const VoiceChannelList = () => {
                                     </h2>
                                 </div>
                                 {!dropped[guild.id] ? (
-                                    activeChannels.map(channel => (
-                                        <CustomVoiceChannel
+                                    activeChannels.map(channel => {
+                                        return channel && <CustomVoiceChannel
                                             key={channel.id}
                                             channel={channel}
                                             guild={guild}
                                             voiceStates={voiceStates}
                                         />
-                                    ))
+                                    })
                                 ) : (
                                     <div />
                                 )}

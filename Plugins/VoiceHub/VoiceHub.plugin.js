@@ -175,7 +175,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
     } }, users.map((user) => {
       const member = guild?.id ? GuildMemberStore.getMember(guild.id, user.id) : null;
       const directUser = member?.avatar ? member : user;
-      const userState = voiceStates[user.id];
+      const userState = voiceStates?.[user?.id] || { selfVideo: false, selfStream: false };
       return /* @__PURE__ */ BdApi.React.createElement(
         "div",
         {
@@ -332,15 +332,17 @@ var VoiceChannelList = () => {
             alignItems: "center"
           } }, guild.name, dropped[guild.id] ? /* @__PURE__ */ BdApi.React.createElement(EyeClose, { width: "24px", height: "24px" }) : /* @__PURE__ */ BdApi.React.createElement(Eye, { width: "24px", height: "24px" }))
         ),
-        !dropped[guild.id] ? activeChannels.map((channel) => /* @__PURE__ */ BdApi.React.createElement(
-          CustomVoiceChannel,
-          {
-            key: channel.id,
-            channel,
-            guild,
-            voiceStates
-          }
-        )) : /* @__PURE__ */ BdApi.React.createElement("div", null)
+        !dropped[guild.id] ? activeChannels.map((channel) => {
+          return channel && /* @__PURE__ */ BdApi.React.createElement(
+            CustomVoiceChannel,
+            {
+              key: channel.id,
+              channel,
+              guild,
+              voiceStates
+            }
+          );
+        }) : /* @__PURE__ */ BdApi.React.createElement("div", null)
       );
     })
   ));
