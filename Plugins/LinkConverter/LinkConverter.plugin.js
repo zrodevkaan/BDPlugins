@@ -70,7 +70,7 @@ var defaultLinks = [
     enabled: true
   },
   {
-    type: "twitter",
+    type: "x",
     replacements: [
       "https://fxtwitter.com",
       "https://fixupx.com",
