@@ -70,7 +70,7 @@ var DynamicChatButtons = class {
         const key = String(button.type?.type)?.includes?.("entryPointCommandButtonRef") ? "app_launcher" : button.key;
         return DataStore[key] !== true;
       });
-      return filteredButtons;
+      return /* @__PURE__ */ BdApi.React.createElement("div", { className: "dynanmic-chat-buttons", style: { display: "flex" } }, filteredButtons);
     });
     ContextMenu.patch("textarea-context", this.patchSlate);
   }

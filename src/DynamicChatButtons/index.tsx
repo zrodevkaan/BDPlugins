@@ -23,7 +23,7 @@ const DataStore = new Proxy(
     }
 );
 
-const Buttons = Webpack.getBySource("isSubmitButtonEnabled",'.Z.getActiveOption(')
+const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.Z.getActiveOption(')
 
 export default class DynamicChatButtons {
     protected allKnownButtons: any[];
@@ -59,7 +59,9 @@ export default class DynamicChatButtons {
                 return DataStore[key] !== true;
             });
 
-            return filteredButtons
+            return <div className={'dynanmic-chat-buttons'} style={{display: 'flex'}}>
+                {filteredButtons}
+            </div>
         });
 
         ContextMenu.patch('textarea-context', this.patchSlate);
