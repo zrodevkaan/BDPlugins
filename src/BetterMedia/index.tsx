@@ -200,7 +200,9 @@ const openMedia = async (url: string, doBarrelRoll: boolean, buffer?: Buffer, sh
                 {
                     type: 'button',
                     label: 'Copy Image',
-                    action: () => setClipboard(mediaBuffer, FileTypes.includes(extension.toLowerCase()) ? 'image/png' : 'image/gif') //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
+                    action: () => {
+                        setClipboard(mediaBuffer, 'image/png')
+                    } //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
                 }
             ]
         }])
@@ -1165,7 +1167,7 @@ const FileTypes = [
     "png",
     "ppm",
     "psd",
-    "webp"
+    "webp",
 ]
 
 async function getMediaDimensions(src, type = 'image') {
@@ -1835,7 +1837,7 @@ export default class BetterMedia {
                     label: 'Open Guild Icon',
                     iconLeft: () => <GuildIcon />,
                     action: () => {
-                        const guildIcon = mediautils.getGuildIconURL({id: guild.id, icon: guild.icon, size: 4096});
+                        const guildIcon = mediautils.getGuildIconURL({ id: guild.id, icon: guild.icon, size: 4096 });
                         openMedia(guildIcon, false, undefined, false);
                     }
                 },
@@ -1845,7 +1847,7 @@ export default class BetterMedia {
                     label: 'Copy Guild Icon URL',
                     iconLeft: () => <CopyIcon />,
                     action: () => {
-                        const guildIcon = mediautils.getGuildIconURL({id: guild.id, icon: guild.icon, size: 4096});
+                        const guildIcon = mediautils.getGuildIconURL({ id: guild.id, icon: guild.icon, size: 4096 });
                         copyURL(guildIcon);
                     }
                 },

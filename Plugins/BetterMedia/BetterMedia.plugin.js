@@ -205,7 +205,9 @@ var openMedia = async (url, doBarrelRoll, buffer, shouldReverse = true) => {
         {
           type: "button",
           label: "Copy Image",
-          action: () => setClipboard(mediaBuffer, FileTypes.includes(extension.toLowerCase()) ? "image/png" : "image/gif")
+          action: () => {
+            setClipboard(mediaBuffer, "image/png");
+          }
           //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
         }
       ]
@@ -915,23 +917,6 @@ var useSetting = (key, defaultValue) => {
   };
   return [value, setSetting];
 };
-var FileTypes = [
-  "avif",
-  "bmp",
-  "bpg",
-  "cr2",
-  "exr",
-  "gif",
-  "heic",
-  "ico",
-  "jpeg",
-  "pbm",
-  "pgm",
-  "png",
-  "ppm",
-  "psd",
-  "webp"
-];
 var getMessageEmojis = (message) => {
   const guildEmojis = EmojiStore.getGuilds();
   const emojiMatches = [...message.content.matchAll(/<a?:(.*?):(\d+)>/g)];

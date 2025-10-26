@@ -236,21 +236,7 @@ var VoiceChannelList = () => {
   const filteredGuilds = Object.values(guilds).filter((guild) => {
     const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
     if (!Object.keys(voiceStates).length) return false;
-    if (filterType === "servers") {
-      return guild.name.toLowerCase().includes(searchLower);
-    }
     const activeChannels = [...new Set(Object.values(voiceStates).map((state) => state.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
-    if (filterType === "channels") {
-      return activeChannels.some(
-        (channel) => channel.name.toLowerCase().includes(searchLower)
-      );
-    }
-    if (filterType === "users") {
-      return Object.keys(voiceStates).some((userId) => {
-        const user = UserStore.getUser(userId);
-        return user && user.username.toLowerCase().includes(searchLower);
-      });
-    }
     return guild.name.toLowerCase().includes(searchLower) || activeChannels.some((channel) => channel.name.toLowerCase().includes(searchLower)) || Object.keys(voiceStates).some((userId) => {
       const user = UserStore.getUser(userId);
       return user && user.username.toLowerCase().includes(searchLower);
@@ -296,7 +282,7 @@ var VoiceChannelList = () => {
       backgroundImage: "url(/assets/99ad5845cf7de1c326e2.svg)",
       margin: "auto"
     } }) : filteredGuilds.map((guild) => {
-      const voiceStates = useStateFromStore([VoiceStateStore], () => VoiceStateStore.getVoiceStates(guild.id));
+      const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
       const activeChannels = [...new Set(Object.values(voiceStates).map((state) => state.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
       return /* @__PURE__ */ BdApi.React.createElement(
         "div",
