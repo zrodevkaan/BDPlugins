@@ -381,7 +381,7 @@ var LinkConverter = class {
   }
   PTAC(res, props) {
     res.props.children.splice(
-      3,
+      1,
       0,
       ContextMenu.buildItem({
         label: "LinkConverter",

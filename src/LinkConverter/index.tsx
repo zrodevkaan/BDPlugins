@@ -415,8 +415,9 @@ export default class LinkConverter {
             return res;
         });
     }
+
     PTAC(res: any, props: any) {
-        res.props.children.splice(3,0,
+        res.props.children.splice(1,0,
             ContextMenu.buildItem({
                 label: 'LinkConverter',
                 id: 'link-converter-settings',
@@ -426,6 +427,7 @@ export default class LinkConverter {
             })
         )
     }
+
     stop() {
         DOM.removeStyle('link-convert')
         ContextMenu.unpatch('textarea-context', this.PTAC)
