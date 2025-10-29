@@ -1,7 +1,7 @@
 /**
  * @name VoiceHub
  * @author Kaan
- * @version 1.0.9
+ * @version 1.0.10
  * @description Wanna know what people are in VCs? Here ya go.
  */
 "use strict";
