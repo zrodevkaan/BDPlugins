@@ -14,7 +14,7 @@ const [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdA
     { filter: BdApi.Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'instant', 'backdropStyle'), searchExports: true },
     { filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'), searchExports: true },
     { filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'), searchExports: true },
-    { filter: BdApi.Webpack.Filters.byStrings('dI3q4u'), searchExports: true }
+    { filter: BdApi.Webpack.Filters.byStrings('dI3q4h'), searchExports: true }
 );
 
 const Eye = ({ width, height }) => (
