@@ -1393,6 +1393,7 @@ export default class BetterMedia {
         const stickerItems = message.stickerItems?.map(stickerId => {
             const x = StickersStore.getStickerById(stickerId.id);
             const img = `https://media.discordapp.net/stickers/${x.id}.webp?size=24${x.animated ? "&animated=true" : ""}`;
+            const owo = img.replace('?size=24', '?size=512') + "&animated=true"
             return {
                 label: x.name,
                 id: x.id + Math.random(),
@@ -1402,12 +1403,12 @@ export default class BetterMedia {
                     {
                         type: 'button',
                         label: 'Copy Sticker Link',
-                        action: () => copyURL(img)
+                        action: () => copyURL(owo)
                     },
                     {
                         type: 'button',
                         label: 'Open Sticker',
-                        action: () => openMedia(img.replace('?size=24', '?size=4096') + "&animated=true", false, undefined, false)
+                        action: () => openMedia(owo, false, undefined, false)
                     },
                     {
                         type: 'submenu',
