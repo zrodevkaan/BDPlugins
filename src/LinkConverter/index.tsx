@@ -8,7 +8,7 @@ const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = n
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components
 const SelectableSearch = Webpack.getByStrings('customMatchSorter', { searchExports: true })
-const Textarea = Webpack.getByStrings('setShouldValidate', 'trailingContent', { searchExports: true })
+const Textarea = Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
 const AboutMe = Webpack.getModule(x => x.Z.toString().includes('disableInteractions'))
 const MessageActions = Webpack.getByKeys('_sendMessage')
 const Modal = Webpack.getModule(x => x.Modal).Modal

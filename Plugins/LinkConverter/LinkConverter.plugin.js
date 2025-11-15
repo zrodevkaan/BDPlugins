@@ -33,7 +33,7 @@ var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new
 var { useState } = React;
 var { Button, ColorInput, SwitchInput } = Components;
 var SelectableSearch = Webpack.getByStrings("customMatchSorter", { searchExports: true });
-var Textarea = Webpack.getByStrings("setShouldValidate", "trailingContent", { searchExports: true });
+var Textarea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
 var AboutMe = Webpack.getModule((x) => x.Z.toString().includes("disableInteractions"));
 var MessageActions = Webpack.getByKeys("_sendMessage");
 var Modal = Webpack.getModule((x) => x.Modal).Modal;
