@@ -58,7 +58,7 @@ function calculateFontSize({
   return Math.max(16, Math.min(baseSize, 60));
 }
 var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, height = 530) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -92,49 +92,58 @@ var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, heigh
       }
       return currentY;
     }
-    const img = new Image();
-    img.onload = () => {
-      try {
-        ctx.drawImage(img, 0, 0, 600, height);
-        const grad = ctx.createLinearGradient(0, 45, 530, 0);
-        grad.addColorStop(0, "rgba(0, 0, 0, 0)");
-        grad.addColorStop(1, "rgba(0, 0, 0, 1)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-        const availableWidth = 400;
-        const availableHeight = height;
-        const fontSize = calculateFontSize({
-          charCount: text.length,
-          width: availableWidth,
-          height: availableHeight
-        });
-        const lineHeight = fontSize * 1.2;
-        ctx.fillStyle = "white";
-        ctx.font = `bold ${fontSize}px Arial`;
-        const centerX = 650;
-        const centerY = height / 2;
-        const endY = wrapTextCentered(ctx, text, centerX, centerY, availableWidth, lineHeight);
-        ctx.fillStyle = "rgba(104, 104, 104, 1)";
-        ctx.font = "italic 20px Arial";
-        const attrWidth = ctx.measureText(attribution).width;
-        const attrX = centerX + (availableWidth - attrWidth) / 2;
-        ctx.fillText("- @" + attribution, attrX - 10, endY + 5);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("Failed to create blob"));
-          }
-        }, "image/png");
-      } catch (err) {
-        reject(err);
-      }
-    };
-    img.onerror = () => {
-      reject(new Error("Failed to load image"));
-    };
-    img.crossOrigin = "anonymous";
-    img.src = imageUrl;
+    try {
+      const res = await BdApi.Net.fetch(imageUrl);
+      const dataA = await res.blob();
+      const url = URL.createObjectURL(dataA);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          URL.revokeObjectURL(url);
+          ctx.drawImage(img, 0, 0, 600, height);
+          const grad = ctx.createLinearGradient(0, 45, 530, 0);
+          grad.addColorStop(0, "rgba(0, 0, 0, 0)");
+          grad.addColorStop(1, "rgba(0, 0, 0, 1)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, width, height);
+          const availableWidth = 400;
+          const availableHeight = height;
+          const fontSize = calculateFontSize({
+            charCount: text.length,
+            width: availableWidth,
+            height: availableHeight
+          });
+          const lineHeight = fontSize * 1.2;
+          ctx.fillStyle = "white";
+          ctx.font = `bold ${fontSize}px Arial`;
+          const centerX = 650;
+          const centerY = height / 2;
+          const endY = wrapTextCentered(ctx, text, centerX, centerY, availableWidth, lineHeight);
+          ctx.fillStyle = "rgba(104, 104, 104, 1)";
+          ctx.font = "italic 20px Arial";
+          const attrWidth = ctx.measureText(attribution).width;
+          const attrX = centerX + (availableWidth - attrWidth) / 2;
+          ctx.fillText("- @" + attribution, attrX - 10, endY + 5);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Failed to create blob"));
+            }
+          }, "image/png");
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to load image"));
+      };
+      img.crossOrigin = "anonymous";
+      img.src = url;
+    } catch (err) {
+      reject(new Error("Failed to fetch image: " + err.message));
+    }
   });
 };
 var CloudUploader = Webpack.getByStrings("uploadFileToCloud", { searchExports: true });
