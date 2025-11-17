@@ -175,7 +175,7 @@ async function upload(a, b, c, channelId) {
     sticker_ids: [],
     validNonShortcutEmojis: [],
     type: 0,
-    message_reference: replyOptions?.messageReference || null,
+    messageReference: replyOptions?.messageReference || null,
     nonce: timestampToSnowflake(Date.now())
   };
   mods.sendMessage(channelId, messagePayload, null, {
