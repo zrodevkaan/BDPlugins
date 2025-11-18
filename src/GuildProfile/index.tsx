@@ -704,7 +704,6 @@ async function fetchBlob(url) {
 }
 
 function getUrl(data, fileExt) {
-    console.log(data)
     if (data.type === 2) {
         return `https://media.discordapp.net/stickers/${data.id}.${fileExt}?size=1280&quality=lossless`;
     } else {
