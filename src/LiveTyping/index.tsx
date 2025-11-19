@@ -5,7 +5,7 @@
  * @description Typing status per user on servers, channels or threads.
  */
 
-const { Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu } = new BdApi("LiveTyping");
+const {Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu} = new BdApi("LiveTyping");
 
 const {
     getStore,
@@ -20,7 +20,7 @@ const getBulkStore = (() => {
     const storeCache = new Map();
 
     return (storeNames, options = {}) => {
-        const { throwOnMissing = false, cache = true } = options;
+        const {throwOnMissing = false, cache = true} = options;
         const result = {};
 
         if (!Array.isArray(storeNames)) {
@@ -77,13 +77,16 @@ const {
 
 /* when will Webpack.Stores be merged.... :( */
 
-const [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: x => x && String(x.Z?.render).includes('.charCode===') && String(x.Z?.render).includes("onKeyPress") }, { filter: Filters.byStrings("Unsupported animation config:"), searchExports: true }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true })
+const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.Z?.render).includes('.charCode===') && String(x.Z?.render).includes("onKeyPress")}, {
+    filter: Filters.byStrings("Unsupported animation config:"),
+    searchExports: true
+}, {filter: Filters.byStrings("useStateFromStores"), searchExports: true})
 
 const Spinner = Components.Spinner
-const scrollersModule = getBySource(".customTheme)", { raw: true });
+const scrollersModule = getBySource(".customTheme)", {raw: true});
 const RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers")
 
-const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip', 'guild'), { raw: true }).exports
+// const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip'), {raw: true}).exports
 
 const GuildObject = getByStrings('.guildbar.AVATAR_SIZE', 'backgroundStyle', {
     searchExports: true,
@@ -103,7 +106,7 @@ const CONFIG = {
             note: "Allows you to select which indicator you'd like.",
             type: "dropdown",
             value: DEFAULT_INDICATOR_TYPE,
-            options: SPINNER_TYPES.map(type => ({ label: type, value: type })),
+            options: SPINNER_TYPES.map(type => ({label: type, value: type})),
             disabled: false,
         },
         {
@@ -112,7 +115,7 @@ const CONFIG = {
             note: "Allows you to display the indicator on the left or right of channels.",
             type: "dropdown",
             value: DEFAULT_INDICATOR_LOCATION,
-            options: INDICATOR_DIRECTIONS.map(dir => ({ label: dir, value: dir })),
+            options: INDICATOR_DIRECTIONS.map(dir => ({label: dir, value: dir})),
             disabled: false,
         },
         {
@@ -246,7 +249,7 @@ const KeyboardSVG = (props) =>
         })
     );
 
-const UserAvatarList = ({ users, guild }) => {
+const UserAvatarList = ({users, guild}) => {
     const SelectedGuild = SelectedGuildStore.getGuildId();
     const users_ = Object.values(users).map(x => x.id).map(x => UserStore.getUser(x))
 
@@ -262,7 +265,12 @@ const UserAvatarList = ({ users, guild }) => {
             justifyContent: 'left',
             backgroundColor: !guild ? 'var(--background-base-lower)' : 'transparent'
         }
-    }, [guild && React.createElement(KeyboardSVG, { key: 'balls' }), React.createElement(RenderAvatars, { key: 'balls_', guildId: SelectedGuild, max: 6, users: users_ })])
+    }, [guild && React.createElement(KeyboardSVG, {key: 'balls'}), React.createElement(RenderAvatars, {
+        key: 'balls_',
+        guildId: SelectedGuild,
+        max: 6,
+        users: users_
+    })])
 };
 
 const isEmpty = o => !o || !Object.keys(o).length;
@@ -297,9 +305,9 @@ const TypingIndicatorDMBar = React.memo(() => {
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
-    return React.createElement('div', { ref },
+    return React.createElement('div', {ref},
         React.createElement(Popout, {
-            renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
+            renderPopout: () => React.createElement(UserAvatarList, {users: typingUsers}),
             position: "left",
             shouldShow: showPopout,
             className: 'moreCorners',
@@ -311,18 +319,18 @@ const TypingIndicatorDMBar = React.memo(() => {
                 onMouseLeave: () => setShowPopout(false),
                 onClick: () => setShowPopout(x => !x),
                 ref,
-                style: { cursor: 'pointer' }
+                style: {cursor: 'pointer'}
             }, React.createElement(Spinner, {
                 ...props,
                 type: Spinner.Type[indicatorType],
                 animated: true,
-                style: { gap: 'var(--space-xs)', padding: 'var(--space-0)' }
+                style: {gap: 'var(--space-xs)', padding: 'var(--space-0)'}
             }))
         })
     )
 });
 
-const TypingIndicator = React.memo(({ channelId }) => {
+const TypingIndicator = React.memo(({channelId}) => {
     const ref = React.useRef(null);
     const isMuted = useStateFromStores([UserGuildSettingsStore, SelectedGuildStore], (a, b) => {
         const isMuted = UserGuildSettingsStore.isChannelMuted(SelectedGuildStore.getGuildId(), channelId)
@@ -338,9 +346,9 @@ const TypingIndicator = React.memo(({ channelId }) => {
 
     const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
 
-    return !isMuted && React.createElement('div', { ref },
+    return !isMuted && React.createElement('div', {ref},
         React.createElement(Popout, {
-            renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
+            renderPopout: () => React.createElement(UserAvatarList, {users: typingUsers}),
             position: "right",
             shouldShow: showPopout,
             className: 'moreCorners',
@@ -350,49 +358,49 @@ const TypingIndicator = React.memo(({ channelId }) => {
                 onMouseEnter: () => setShowPopout(true),
                 onMouseLeave: () => setShowPopout(false),
                 onClick: () => setShowPopout(x => !x),
-                style: { cursor: 'pointer' },
+                style: {cursor: 'pointer'},
                 ref
             }, React.createElement(
                 Components.Tooltip,
-                { text: getTypingTooltip(typingUsers) },
+                {text: getTypingTooltip(typingUsers)},
                 (tooltipProps) => React.createElement(Spinner, {
                     ...tooltipProps,
                     ...props,
                     type: Spinner.Type[indicatorType],
                     animated: true,
-                    style: { width: "16px", height: "16px" }
+                    style: {width: "16px", height: "16px"}
                 })
             ))
         })
     )
 });
 
-const GuildTypingIndicator = React.memo(({ guildId }) => {
+const GuildTypingIndicator = React.memo(({guildId}) => {
     if (shouldIgnoreItem('ignoreServers', guildId)) return null;
 
     const allTypingUsers = useStateFromStores([TypingStore], () => {
-        const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
+        const {VOCAL = {}, SELECTABLE = {}} = GuildChannelStore.getChannels(guildId) || {};
         const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
-        return allChannels.reduce((acc, { channel }) => {
+        return allChannels.reduce((acc, {channel}) => {
             if (shouldIgnoreItem('ignoreChannels', channel.id)) return acc;
-            return { ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) };
+            return {...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id))};
         }, {});
     }, [guildId]);
 
     if (isEmpty(allTypingUsers)) return null;
 
-    return React.createElement(UserAvatarList, { key: "UserAvatarList_Main", users: allTypingUsers, guild: true })
+    return React.createElement(UserAvatarList, {key: "UserAvatarList_Main", users: allTypingUsers, guild: true})
 });
 
-const GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
+const GuildTypingIndicatorV2 = React.memo(({guildId}) => {
     if (shouldIgnoreItem('ignoreServers', guildId)) return null;
 
     const allTypingUsers = useStateFromStores([TypingStore], () => {
-        const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
+        const {VOCAL = {}, SELECTABLE = {}} = GuildChannelStore.getChannels(guildId) || {};
         const allChannels = [...Object.values(VOCAL), ...Object.values(SELECTABLE)];
-        return allChannels.reduce((acc, { channel }) => {
+        return allChannels.reduce((acc, {channel}) => {
             if (shouldIgnoreItem('ignoreChannels', channel.id)) return acc;
-            return { ...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id)) };
+            return {...acc, ...getTypingUsers(TypingStore.getTypingUsers(channel.id))};
         }, {});
     }, [guildId]);
 
@@ -521,10 +529,11 @@ class LiveTyping {
     }
 
     patchDMTyping() {
-        Patcher.after(scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]], "render", (that, [props], res) => {
+        const module = scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]]
+        Patcher.after(module, "render", (that, [props], res) => {
             if (shouldIgnoreItem('ignoreDMs')) return res;
 
-            const isGuildObject = Utils.findInTree(res, x => x?.lurkingGuildIds, {walkable: ['props','children']})
+            const isGuildObject = Utils.findInTree(res, x => x?.lurkingGuildIds, {walkable: ['props', 'children']})
             isGuildObject && res.props.children.props.children.unshift(React.createElement('div', {}, React.createElement(TypingIndicatorDMBar)))
         });
     }
@@ -539,7 +548,7 @@ class LiveTyping {
             if (shouldIgnoreItem('ignoreChannels', channelId)) return ret;
 
             const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children; // BetterChanneList made me do this.......
-            const component = React.createElement("div", null, React.createElement(TypingIndicator, { channelId }))
+            const component = React.createElement("div", null, React.createElement(TypingIndicator, {channelId}))
 
             const location = DataStore.settings.indicatorLocation || DEFAULT_INDICATOR_LOCATION;
 
@@ -552,31 +561,32 @@ class LiveTyping {
     }
 
     patchGuildObject() {
-        Patcher.after(GuildTooltip, "Z", (_, [props], ret) => {
+        /* okay well goodbye. thanks Discord^tm*/
+        /*
+                Patcher.after(n(593618), "Z", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
 
             const guild = props.guild;
             if (shouldIgnoreItem('ignoreServers', guild.id)) return ret;
 
-            const originalType = ret.props.text.type;
+            const retChildren = ret.props.children;
 
-            ret.props.text.type = function (...args) { // this stops the GuildTypingIndicator to stop randomly disappearing.
-                const result = originalType.apply(this, args);
-
-                if (result?.props?.children) {
-                    const children = Array.isArray(result.props.children) ? result.props.children : [result.props.children];
-
-                    if (!children.some(child => child?.type === GuildTypingIndicator)) {
-                        children.push(React.createElement('div', {}, React.createElement(GuildTypingIndicator, { guildId: guild.id })));
-                        result.props.children = children;
+            ret.props.children = (a, b, c) => {
+                const rets = retChildren()
+                const extra = rets.props.children?.type?.render
+                if (extra) {
+                    rets.props.children.type.render = (aa,bb,cc) => {
+                        const renderChildren = extra(a, b, c)
+                        console.log(renderChildren,aa,bb,cc)
+                        return renderChildren
                     }
                 }
-
-                return result;
-            };
+                return rets
+            }
 
             return ret;
         });
+         */
 
         Patcher.after(GuildObject, "L", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
@@ -588,9 +598,9 @@ class LiveTyping {
 
             const unpatch = Patcher.after(ret.type.prototype, "render", (thisObj, _, renderRet) => {
                 unpatch();
-                const guild = Utils.findInTree(renderRet, x => x?.['data-list-item-id'], { walkable: ['props', 'children'] });
+                const guild = Utils.findInTree(renderRet, x => x?.['data-list-item-id'], {walkable: ['props', 'children']});
                 if (guild && guild.children) {
-                    guild.children?.push?.(React.createElement('div', {}, React.createElement(GuildTypingIndicatorV2, { guildId })));
+                    guild.children?.push?.(React.createElement('div', {}, React.createElement(GuildTypingIndicatorV2, {guildId})));
                 }
             });
         });
@@ -616,7 +626,7 @@ class LiveTyping {
         return UI.buildSettingsPanel({
             settings: configWithCurrentValues,
             onChange: (_, id, value) => {
-                const settings = { ...DataStore.settings };
+                const settings = {...DataStore.settings};
                 settings[id] = value;
                 DataStore.settings = settings;
             }

@@ -66,11 +66,13 @@ var {
   "ChannelStore",
   "UserGuildSettingsStore"
 ]);
-var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.Z?.render).includes(".charCode===") && String(x.Z?.render).includes("onKeyPress") }, { filter: Filters.byStrings("Unsupported animation config:"), searchExports: true }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
+var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.Z?.render).includes(".charCode===") && String(x.Z?.render).includes("onKeyPress") }, {
+  filter: Filters.byStrings("Unsupported animation config:"),
+  searchExports: true
+}, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
 var Spinner = Components.Spinner;
 var scrollersModule = getBySource(".customTheme)", { raw: true });
 var RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers");
-var GuildTooltip = Webpack.getModule(Filters.byStrings("listItemTooltip", "guild"), { raw: true }).exports;
 var GuildObject = getByStrings(".guildbar.AVATAR_SIZE", "backgroundStyle", {
   searchExports: true,
   raw: true
@@ -224,7 +226,12 @@ var UserAvatarList = ({ users, guild }) => {
       justifyContent: "left",
       backgroundColor: !guild ? "var(--background-base-lower)" : "transparent"
     }
-  }, [guild && React.createElement(KeyboardSVG, { key: "balls" }), React.createElement(RenderAvatars, { key: "balls_", guildId: SelectedGuild, max: 6, users: users_ })]);
+  }, [guild && React.createElement(KeyboardSVG, { key: "balls" }), React.createElement(RenderAvatars, {
+    key: "balls_",
+    guildId: SelectedGuild,
+    max: 6,
+    users: users_
+  })]);
 };
 var isEmpty = (o) => !o || !Object.keys(o).length;
 var TypingIndicatorDMBar = React.memo(() => {
@@ -446,7 +453,8 @@ var LiveTyping = class {
     ContextMenu.patch("gdm-context", this.patchChannelContextMenu);
   }
   patchDMTyping() {
-    Patcher.after(scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]], "render", (that, [props], res) => {
+    const module2 = scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]];
+    Patcher.after(module2, "render", (that, [props], res) => {
       if (shouldIgnoreItem("ignoreDMs")) return res;
       const isGuildObject = Utils.findInTree(res, (x) => x?.lurkingGuildIds, { walkable: ["props", "children"] });
       isGuildObject && res.props.children.props.children.unshift(React.createElement("div", {}, React.createElement(TypingIndicatorDMBar)));
@@ -469,24 +477,6 @@ var LiveTyping = class {
     });
   }
   patchGuildObject() {
-    Patcher.after(GuildTooltip, "Z", (_, [props], ret) => {
-      if (shouldIgnoreItem("ignoreServers")) return ret;
-      const guild = props.guild;
-      if (shouldIgnoreItem("ignoreServers", guild.id)) return ret;
-      const originalType = ret.props.text.type;
-      ret.props.text.type = function(...args) {
-        const result = originalType.apply(this, args);
-        if (result?.props?.children) {
-          const children = Array.isArray(result.props.children) ? result.props.children : [result.props.children];
-          if (!children.some((child) => child?.type === GuildTypingIndicator)) {
-            children.push(React.createElement("div", {}, React.createElement(GuildTypingIndicator, { guildId: guild.id })));
-            result.props.children = children;
-          }
-        }
-        return result;
-      };
-      return ret;
-    });
     Patcher.after(GuildObject, "L", (_, [props], ret) => {
       if (shouldIgnoreItem("ignoreServers")) return ret;
       const guildId = ExtractItemID(props["data-list-item-id"]);
