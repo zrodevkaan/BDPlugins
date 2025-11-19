@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.1.5
+ * @version 1.1.6
  * @description Typing status per user on servers, channels or threads.
  */
 
