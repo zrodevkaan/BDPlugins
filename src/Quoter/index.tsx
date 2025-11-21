@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Quote your friends wild statements.
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 const { Webpack, Patcher, ContextMenu } = new BdApi("Quoter")
@@ -194,8 +194,8 @@ export default class Quoter {
             res.props.children.props.children.push(ContextMenu.buildItem({
                 label: 'Quote User',
                 action: async () => {
-                    const yesImage = UserStore.getUser(props.message.author.id).getAvatarURL({ size: (1 << 12), animated: true })
-                    const img = yesImage.slice(0, yesImage.length - 2) + (1 << 12), text = props.message.content, attribution = props.message.author.username
+                    const yesImage = UserStore.getUser(props.message.author.id).getAvatarURL(null, (1 << 12))
+                    const img = yesImage, text = props.message.content, attribution = props.message.author.username
                     await upload(img, text, attribution, props.message.channel_id);
                 }
             }));
