@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Quote your friends wild statements.
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  */
 "use strict";
 var __defProp = Object.defineProperty;

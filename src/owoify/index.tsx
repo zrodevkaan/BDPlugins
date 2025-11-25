@@ -69563,7 +69563,7 @@ export default class owoify {
                 },
                 {
                     type: Commands.Types.OptionTypes.STRING,
-                    name: 'post id',
+                    name: 'translator',
                     description: 'The post id of what translator you want to use.',
                     required: true,
                     choices: options.splice(options.length / 8).map(post => ({ name: post.title, value: post.postID }))
