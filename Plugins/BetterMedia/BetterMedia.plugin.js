@@ -30,11 +30,20 @@ __export(index_exports, {
   default: () => BetterMedia
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, DOM, Components, React, ContextMenu, UI, Net, Data, Plugins } = new BdApi("BetterMedia");
+var { Webpack, Patcher, DOM, Components, React, ContextMenu, UI, Net, Data, Plugins } = new BdApi(
+  "BetterMedia"
+);
 var ImageComp = Webpack.getModule((x) => x?.displayName == "Image", { searchExports: true });
 var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.y;
-var ImageRenderComponent = Webpack.getModule((x) => x?.isAnimated && x?.getFormatQuality, { raw: true }).exports;
-var MediaModal = Webpack.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true });
+var ImageRenderComponent = Webpack.getModule((x) => x?.isAnimated && x?.getFormatQuality, {
+  raw: true
+}).exports;
+var MediaModal = Webpack.getByStrings(
+  ".shouldHideMediaOptions",
+  "hasMediaOptions:",
+  "numMediaItems:",
+  { searchExports: true }
+);
 var mediautils = Webpack.getModule((x) => x?.getUserBannerURL);
 var UserProfileStore = Webpack.getStore("UserProfileStore");
 var GuildStoreCurrent = Webpack.getStore("SelectedGuildStore");
@@ -50,7 +59,9 @@ var ModalSystem = Webpack.getMangled(".modalKey?", {
   closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
 var Modal = Webpack.getModule((x) => x.Modal).Modal;
-var FormSwitch = Webpack.getByStrings(".Z.colors.INTERACTIVE_MUTED).spring()", { searchExports: true });
+var FormSwitch = Webpack.getByStrings(".Z.colors.INTERACTIVE_MUTED).spring()", {
+  searchExports: true
+});
 var searchEngines = {
   Google: {
     url: "https://www.google.com/searchbyimage?sbisrc=cr_1&image_url=",
@@ -143,7 +154,9 @@ function extractDomain(url) {
   return matches && matches[1];
 }
 function generateFaviconURL(website, size = 16) {
-  const url = new URL("https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL");
+  const url = new URL(
+    "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+  );
   url.searchParams.set("url", `https://${website}`);
   url.searchParams.set("size", String(size));
   return url.href;
@@ -198,20 +211,22 @@ var openMedia = async (url, doBarrelRoll, buffer, shouldReverse = true) => {
     }
   }
   const menuStuff = () => {
-    return ContextMenu.buildMenu([{
-      type: "submenu",
-      label: "BetterMedia",
-      items: [
-        {
-          type: "button",
-          label: "Copy Image",
-          action: () => {
-            setClipboard(mediaBuffer, "image/png");
+    return ContextMenu.buildMenu([
+      {
+        type: "submenu",
+        label: "BetterMedia",
+        items: [
+          {
+            type: "button",
+            label: "Copy Image",
+            action: () => {
+              setClipboard(mediaBuffer, "image/png");
+            }
+            //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
           }
-          //DiscordNative.clipboard.copyImage(mediaBuffer || discordDoesntEncodeWebpsInDiscordNative)
-        }
-      ]
-    }]);
+        ]
+      }
+    ]);
   };
   const modalIndex = MediaModal({
     BetterMediaModal: true,
@@ -339,19 +354,47 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
         { color: engine.mayContainNSFW ? "danger" : "brand" }
       );
     });
-    const elements = [createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems, {}, /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null)), createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
-      setShouldShow(false);
-      DataStore.settings.showToolbar = false;
-    }), createContextMenuItem("open-settings", "Open Settings", () => {
-      const SettingsPanel = Plugins.get("BetterMedia").instance.getSettingsPanel();
-      ModalSystem.openModal((props) => /* @__PURE__ */ BdApi.React.createElement(Modal, { ...props, title: "BetterMedia Settings" }, /* @__PURE__ */ BdApi.React.createElement(SettingsPanel, null)));
-    })];
+    const elements = [
+      createSubmenuItem("reverse-search", "Reverse Search", reverseSearchItems, {}, /* @__PURE__ */ BdApi.React.createElement(SearchIcon, null)),
+      createContextMenuItem("disable-toolbar", "Disable Toolbar", () => {
+        setShouldShow(false);
+        DataStore.settings.showToolbar = false;
+      }),
+      createContextMenuItem("open-settings", "Open Settings", () => {
+        const SettingsPanel = Plugins.get("BetterMedia").instance.getSettingsPanel();
+        ModalSystem.openModal((props) => /* @__PURE__ */ BdApi.React.createElement(Modal, { ...props, title: "BetterMedia Settings" }, /* @__PURE__ */ BdApi.React.createElement(SettingsPanel, null)));
+      })
+    ];
     if (DataStore.settings.canvasFeatures) {
-      elements.splice(1, 0, createSubmenuItem("canvas-methods", "Canvas Methods", createCanvasMenu(url), {}, /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null)));
+      elements.splice(
+        1,
+        0,
+        createSubmenuItem(
+          "canvas-methods",
+          "Canvas Methods",
+          createCanvasMenu(url),
+          {},
+          /* @__PURE__ */ BdApi.React.createElement(CanvasIcon, null)
+        )
+      );
     }
     return elements;
   };
-  return shouldShow && /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-container" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-controls", style: { gap: `${gap}px` } }, /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Download" }, (props) => /* @__PURE__ */ BdApi.React.createElement(ArrowDownload, { ...props, className: "bm-icon", onClick: () => createDownloadLink(url, Date.now()) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Copy URL" }, (props) => /* @__PURE__ */ BdApi.React.createElement(Clipboard, { ...props, className: "bm-icon", onClick: () => copyURL(url) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Open in Browser" }, (props) => /* @__PURE__ */ BdApi.React.createElement(ArrowUpRightDashes, { ...props, className: "bm-icon", onClick: () => openInBrowser(url) })), /* @__PURE__ */ BdApi.React.createElement("div", { ref: owoRef }, /* @__PURE__ */ BdApi.React.createElement(
+  return shouldShow && /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-container" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "bm-media-controls", style: { gap: `${gap}px` } }, /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Download" }, (props) => /* @__PURE__ */ BdApi.React.createElement(
+    ArrowDownload,
+    {
+      ...props,
+      className: "bm-icon",
+      onClick: () => createDownloadLink(url, Date.now())
+    }
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Copy URL" }, (props) => /* @__PURE__ */ BdApi.React.createElement(Clipboard, { ...props, className: "bm-icon", onClick: () => copyURL(url) })), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Open in Browser" }, (props) => /* @__PURE__ */ BdApi.React.createElement(
+    ArrowUpRightDashes,
+    {
+      ...props,
+      className: "bm-icon",
+      onClick: () => openInBrowser(url)
+    }
+  )), /* @__PURE__ */ BdApi.React.createElement("div", { ref: owoRef }, /* @__PURE__ */ BdApi.React.createElement(
     Popout,
     {
       shouldShow: open,
@@ -362,22 +405,85 @@ var MediaContainer = ({ url: urlA, width, isThirdParty, provider: provider2 }) =
       renderPopout: (props) => /* @__PURE__ */ BdApi.React.createElement(InformationPopout, { provider: provider2, url, ...props })
     },
     (props) => /* @__PURE__ */ BdApi.React.createElement("div", { ...props, ref: owoRef, onClick: () => setOpen(true) }, /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "Information" }, (propsA) => /* @__PURE__ */ BdApi.React.createElement(BookInformation24Regular, { ...propsA, className: "bm-icon" })))
-  )), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "More" }, (props) => /* @__PURE__ */ BdApi.React.createElement(Settings16Filled, { ...props, onClick: (e) => {
-    ContextMenu.open(e, ContextMenu.buildMenu(buildSearchMenu2()));
-  }, className: "bm-icon" }))));
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: "More" }, (props) => /* @__PURE__ */ BdApi.React.createElement(
+    Settings16Filled,
+    {
+      ...props,
+      onClick: (e) => {
+        ContextMenu.open(e, ContextMenu.buildMenu(buildSearchMenu2()));
+      },
+      className: "bm-icon"
+    }
+  ))));
 };
 var CopyIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" }));
 var SearchIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" }));
-var CanvasIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "20", height: "20", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement("g", { fill: "currentColor", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "1.5", color: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M4 8c0-2.828 0-4.243 1.004-5.121S7.624 2 10.857 2h2.286c3.232 0 4.849 0 5.853.879C20 3.757 20 5.172 20 8v9H4zm-1 9h18" }), /* @__PURE__ */ BdApi.React.createElement("path", { d: "M10.699 5.566c1.23-.176 3.268-.106 1.581 1.587c-2.108 2.115-5.272 6.876-1.581 5.29c3.69-1.588 5.272-.53 3.69 1.057M12 17v4m-7 1l3-5m11 5l-3-5" })));
+var CanvasIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "20", height: "20", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "g",
+  {
+    fill: "currentColor",
+    stroke: "currentColor",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    strokeWidth: "1.5",
+    color: "currentColor"
+  },
+  /* @__PURE__ */ BdApi.React.createElement("path", { d: "M4 8c0-2.828 0-4.243 1.004-5.121S7.624 2 10.857 2h2.286c3.232 0 4.849 0 5.853.879C20 3.757 20 5.172 20 8v9H4zm-1 9h18" }),
+  /* @__PURE__ */ BdApi.React.createElement("path", { d: "M10.699 5.566c1.23-.176 3.268-.106 1.581 1.587c-2.108 2.115-5.272 6.876-1.581 5.29c3.69-1.588 5.272-.53 3.69 1.057M12 17v4m-7 1l3-5m11 5l-3-5" })
+));
 var ImageIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" }));
 var BannerIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "currentColor" }, /* @__PURE__ */ BdApi.React.createElement("path", { d: "M5 17h14v2H5zm4.5-4.2h1l.9 2.2h.9l-2.1-5h-.9L7.2 15h.9l.4-2.2zm.2-1.5L10.2 9l.5 2.3h-1zm4.3 3.7h.9v-1.3h1.3v-.8h-1.3V12h1.5v-.8h-2.4V15z" }));
-var MainMenuIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "20", height: "20", viewBox: "0 0 16 16", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "currentColor", fillRule: "evenodd", d: "M13 2.5H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V3a.5.5 0 0 0-.5-.5ZM3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3Zm9 9.857L9.5 8l-2.476 2.83L5.5 9L4 10.8V12h8v-1.143ZM6.5 8a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3Z", clipRule: "evenodd" }));
-var BookInformation24Regular = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5v-15ZM12.25 8a1 1 0 1 0 0-2a1 1 0 0 0 0 2Zm-.75 1.75v5a.75.75 0 0 0 1.5 0v-5a.75.75 0 0 0-1.5 0Z" }));
-var ArrowDownload = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M3.5 13h9a.75.75 0 0 1 .102 1.493l-.102.007h-9a.75.75 0 0 1-.102-1.493L3.5 13h9h-9ZM7.898 1.007L8 1a.75.75 0 0 1 .743.648l.007.102v7.688l2.255-2.254a.75.75 0 0 1 .977-.072l.084.072a.75.75 0 0 1 .072.977l-.072.084L8.53 11.78a.75.75 0 0 1-.976.073l-.084-.073l-3.536-3.535a.75.75 0 0 1 .977-1.133l.084.072L7.25 9.44V1.75a.75.75 0 0 1 .648-.743L8 1l-.102.007Z" }));
-var Clipboard = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 18 18", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M11.873 3H12.75A2.25 2.25 0 0 1 15 5.25v9A2.25 2.25 0 0 1 12.75 16.5h-7.5A2.25 2.25 0 0 1 3 14.25v-9A2.25 2.25 0 0 1 5.25 3h.877A2.25 2.25 0 0 1 8.25 1.5h1.5a2.25 2.25 0 0 1 2.123 1.5M7.5 3.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0-.75.75" }));
-var ArrowUpRightDashes = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M11 3a1 1 0 1 0 0 2h6.586l-2.293 2.293a1 1 0 0 0 1.414 1.414L19 6.414V13a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1zm2.707 8.707a1 1 0 0 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414zm-6 6a1 1 0 1 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414z" }));
-var Settings16Filled = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 20 20", ...props }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M7.999 2c-.37 0-.731.036-1.08.106a.5.5 0 0 0-.394.396l-.262 1.354a.417.417 0 0 1-.545.315l-1.307-.45a.5.5 0 0 0-.538.141A5.495 5.495 0 0 0 2.786 5.74a.5.5 0 0 0 .146.538l1.045.907a.417.417 0 0 1 0 .63l-1.045.907a.5.5 0 0 0-.146.537a5.5 5.5 0 0 0 1.087 1.878a.5.5 0 0 0 .538.142l1.307-.45a.417.417 0 0 1 .545.314l.262 1.355a.5.5 0 0 0 .393.396a5.525 5.525 0 0 0 2.17-.002a.5.5 0 0 0 .393-.395l.262-1.354a.417.417 0 0 1 .545-.315l1.3.45a.5.5 0 0 0 .538-.143a5.495 5.495 0 0 0 1.087-1.882a.5.5 0 0 0-.146-.537l-1.039-.902a.417.417 0 0 1 0-.629l1.04-.902a.5.5 0 0 0 .145-.537a5.496 5.496 0 0 0-1.087-1.881a.5.5 0 0 0-.538-.143l-1.3.45a.417.417 0 0 1-.545-.316l-.262-1.353a.5.5 0 0 0-.392-.395A5.524 5.524 0 0 0 7.999 2ZM6.5 7.5a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0Zm4.663 4.947a.459.459 0 0 1 .526-.152l.8.276a.455.455 0 0 0 .594-.343l.16-.83a.459.459 0 0 1 .396-.38a3.554 3.554 0 0 1 .719 0c.202.02.356.18.395.38l.16.83a.455.455 0 0 0 .595.343l.8-.276a.46.46 0 0 1 .526.152c.14.194.261.403.36.623a.459.459 0 0 1-.13.532l-.64.555a.455.455 0 0 0 0 .686l.64.555a.459.459 0 0 1 .13.532c-.099.22-.22.429-.36.623a.46.46 0 0 1-.526.152l-.8-.276a.455.455 0 0 0-.594.343l-.16.83a.459.459 0 0 1-.396.38a3.554 3.554 0 0 1-.719 0a.459.459 0 0 1-.395-.38l-.161-.83a.455.455 0 0 0-.595-.343l-.799.276a.46.46 0 0 1-.526-.152a3.493 3.493 0 0 1-.36-.623a.459.459 0 0 1 .13-.532l.64-.555a.455.455 0 0 0 0-.686l-.64-.555a.459.459 0 0 1-.13-.532c.099-.22.22-.429.36-.623ZM15 14.5a1 1 0 1 0-2 0a1 1 0 0 0 2 0Z" }));
-var GuildIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16" }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-normal)", d: "M11.414 1.586A2 2 0 0 0 10 1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V3a2 2 0 0 0-.586-1.414ZM9.853 12.854a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-2a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-6A.5.5 0 0 1 9.499 5h-3a.498.498 0 0 1-.5-.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .354.854Z" }));
+var MainMenuIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "20", height: "20", viewBox: "0 0 16 16", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "currentColor",
+    fillRule: "evenodd",
+    d: "M13 2.5H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V3a.5.5 0 0 0-.5-.5ZM3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3Zm9 9.857L9.5 8l-2.476 2.83L5.5 9L4 10.8V12h8v-1.143ZM6.5 8a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3Z",
+    clipRule: "evenodd"
+  }
+));
+var BookInformation24Regular = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "var(--interactive-normal)",
+    d: "M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5v-15ZM12.25 8a1 1 0 1 0 0-2a1 1 0 0 0 0 2Zm-.75 1.75v5a.75.75 0 0 0 1.5 0v-5a.75.75 0 0 0-1.5 0Z"
+  }
+));
+var ArrowDownload = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "var(--interactive-normal)",
+    d: "M3.5 13h9a.75.75 0 0 1 .102 1.493l-.102.007h-9a.75.75 0 0 1-.102-1.493L3.5 13h9h-9ZM7.898 1.007L8 1a.75.75 0 0 1 .743.648l.007.102v7.688l2.255-2.254a.75.75 0 0 1 .977-.072l.084.072a.75.75 0 0 1 .072.977l-.072.084L8.53 11.78a.75.75 0 0 1-.976.073l-.084-.073l-3.536-3.535a.75.75 0 0 1 .977-1.133l.084.072L7.25 9.44V1.75a.75.75 0 0 1 .648-.743L8 1l-.102.007Z"
+  }
+));
+var Clipboard = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 18 18", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "var(--interactive-normal)",
+    d: "M11.873 3H12.75A2.25 2.25 0 0 1 15 5.25v9A2.25 2.25 0 0 1 12.75 16.5h-7.5A2.25 2.25 0 0 1 3 14.25v-9A2.25 2.25 0 0 1 5.25 3h.877A2.25 2.25 0 0 1 8.25 1.5h1.5a2.25 2.25 0 0 1 2.123 1.5M7.5 3.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0-.75.75"
+  }
+));
+var ArrowUpRightDashes = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "var(--interactive-normal)",
+    d: "M11 3a1 1 0 1 0 0 2h6.586l-2.293 2.293a1 1 0 0 0 1.414 1.414L19 6.414V13a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1zm2.707 8.707a1 1 0 0 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414zm-6 6a1 1 0 1 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414z"
+  }
+));
+var Settings16Filled = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 20 20", ...props }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "var(--interactive-normal)",
+    d: "M7.999 2c-.37 0-.731.036-1.08.106a.5.5 0 0 0-.394.396l-.262 1.354a.417.417 0 0 1-.545.315l-1.307-.45a.5.5 0 0 0-.538.141A5.495 5.495 0 0 0 2.786 5.74a.5.5 0 0 0 .146.538l1.045.907a.417.417 0 0 1 0 .63l-1.045.907a.5.5 0 0 0-.146.537a5.5 5.5 0 0 0 1.087 1.878a.5.5 0 0 0 .538.142l1.307-.45a.417.417 0 0 1 .545.314l.262 1.355a.5.5 0 0 0 .393.396a5.525 5.525 0 0 0 2.17-.002a.5.5 0 0 0 .393-.395l.262-1.354a.417.417 0 0 1 .545-.315l1.3.45a.5.5 0 0 0 .538-.143a5.495 5.495 0 0 0 1.087-1.882a.5.5 0 0 0-.146-.537l-1.039-.902a.417.417 0 0 1 0-.629l1.04-.902a.5.5 0 0 0 .145-.537a5.496 5.496 0 0 0-1.087-1.881a.5.5 0 0 0-.538-.143l-1.3.45a.417.417 0 0 1-.545-.316l-.262-1.353a.5.5 0 0 0-.392-.395A5.524 5.524 0 0 0 7.999 2ZM6.5 7.5a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0Zm4.663 4.947a.459.459 0 0 1 .526-.152l.8.276a.455.455 0 0 0 .594-.343l.16-.83a.459.459 0 0 1 .396-.38a3.554 3.554 0 0 1 .719 0c.202.02.356.18.395.38l.16.83a.455.455 0 0 0 .595.343l.8-.276a.46.46 0 0 1 .526.152c.14.194.261.403.36.623a.459.459 0 0 1-.13.532l-.64.555a.455.455 0 0 0 0 .686l.64.555a.459.459 0 0 1 .13.532c-.099.22-.22.429-.36.623a.46.46 0 0 1-.526.152l-.8-.276a.455.455 0 0 0-.594.343l-.16.83a.459.459 0 0 1-.396.38a3.554 3.554 0 0 1-.719 0a.459.459 0 0 1-.395-.38l-.161-.83a.455.455 0 0 0-.595-.343l-.799.276a.46.46 0 0 1-.526-.152a3.493 3.493 0 0 1-.36-.623a.459.459 0 0 1 .13-.532l.64-.555a.455.455 0 0 0 0-.686l-.64-.555a.459.459 0 0 1-.13-.532c.099-.22.22-.429.36-.623ZM15 14.5a1 1 0 1 0-2 0a1 1 0 0 0 2 0Z"
+  }
+));
+var GuildIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16" }, /* @__PURE__ */ BdApi.React.createElement(
+  "path",
+  {
+    fill: "var(--interactive-normal)",
+    d: "M11.414 1.586A2 2 0 0 0 10 1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V3a2 2 0 0 0-.586-1.414ZM9.853 12.854a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-2a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-6A.5.5 0 0 1 9.499 5h-3a.498.498 0 0 1-.5-.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .354.854Z"
+  }
+));
 var rotateImage = (url, rotation) => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
@@ -679,9 +785,21 @@ var DataStore = new Proxy(
 var settings = {
   allImagesAreGifs: { value: true, title: "All Media are GIFs", note: "Show all media as GIFs" },
   showToolbar: { value: true, title: "Show Toolbar", note: "Shows or hides the Toolbar on media" },
-  reverseModalGallery: { value: true, title: "Image Gallery Reverse", note: "Reverses the images on the Media modal gallery at the bottom." },
-  canvasFeatures: { value: true, title: "Canvas Methods", note: "Adds Canvas Methods to Media like Glow or Deep Fry" },
-  enabledGallery: { value: true, title: "Enable Gallery", note: "When opening images, gives you the most recent images in the bottom of every image modal. (W.I.P) This feature is buggy and will be fixed" }
+  reverseModalGallery: {
+    value: true,
+    title: "Image Gallery Reverse",
+    note: "Reverses the images on the Media modal gallery at the bottom."
+  },
+  canvasFeatures: {
+    value: true,
+    title: "Canvas Methods",
+    note: "Adds Canvas Methods to Media like Glow or Deep Fry"
+  },
+  enabledGallery: {
+    value: true,
+    title: "Enable Gallery",
+    note: "When opening images, gives you the most recent images in the bottom of every image modal. (W.I.P) This feature is buggy and will be fixed"
+  }
 };
 var InternalStore = class _InternalStore {
   static stores = /* @__PURE__ */ new Set();
@@ -900,9 +1018,7 @@ function getImageProvider(imageArgs, mainURL) {
   return "UNKNOWN";
 }
 var useSetting = (key, defaultValue) => {
-  const [value, setValue] = React.useState(
-    () => settingsStore.getSetting(key, defaultValue)
-  );
+  const [value, setValue] = React.useState(() => settingsStore.getSetting(key, defaultValue));
   React.useEffect(() => {
     const updateValue = () => {
       setValue(settingsStore.getSetting(key, defaultValue));
@@ -1079,7 +1195,12 @@ var BetterMedia = class {
           {
             type: "button",
             label: "Open Emoji",
-            action: () => openMedia(img.replace("?size=24", "?size=4096") + "&animated=true", false, void 0, false)
+            action: () => openMedia(
+              img.replace("?size=24", "?size=4096") + "&animated=true",
+              false,
+              void 0,
+              false
+            )
           },
           {
             type: "submenu",
@@ -1181,12 +1302,18 @@ var BetterMedia = class {
       size: 4096,
       canAnimate: true
     });
-    const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL({
-      guildId: currentGuildId,
-      userId: user.id,
-      avatar: guildMember?.avatar,
-      discriminator: null
-    }, true, 4096, "png", false)?.replace("?size=96", "?size=4096") : null;
+    const guildImg = isInGuild ? mediautils.getGuildMemberAvatarURL(
+      {
+        guildId: currentGuildId,
+        userId: user.id,
+        avatar: guildMember?.avatar,
+        discriminator: null
+      },
+      true,
+      4096,
+      "png",
+      false
+    )?.replace("?size=96", "?size=4096") : null;
     const guildBanner = isInGuild ? mediautils.getGuildMemberBannerURL({
       id: user.id,
       guildId: currentGuildId,
@@ -1465,7 +1592,15 @@ var BetterMedia = class {
           DataStore.settings[object[0]] = settingObject.value;
         }
         const [showObject, setShowObject] = useSetting(object[0], DataStore.settings[object[0]]);
-        return /* @__PURE__ */ BdApi.React.createElement(FormSwitch, { description: settingObject.note, label: settingObject.title, checked: showObject, onChange: setShowObject });
+        return /* @__PURE__ */ BdApi.React.createElement(
+          FormSwitch,
+          {
+            description: settingObject.note,
+            label: settingObject.title,
+            checked: showObject,
+            onChange: setShowObject
+          }
+        );
       });
       return elements;
     };
@@ -1484,7 +1619,11 @@ var BetterMedia = class {
           label: "Open Guild Icon",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(GuildIcon, null),
           action: () => {
-            const guildIcon = mediautils.getGuildIconURL({ id: guild.id, icon: guild.icon, size: 4096 });
+            const guildIcon = mediautils.getGuildIconURL({
+              id: guild.id,
+              icon: guild.icon,
+              size: 4096
+            });
             openMedia(guildIcon, false, void 0, false);
           }
         },
@@ -1494,7 +1633,11 @@ var BetterMedia = class {
           label: "Copy Guild Icon URL",
           iconLeft: () => /* @__PURE__ */ BdApi.React.createElement(CopyIcon, null),
           action: () => {
-            const guildIcon = mediautils.getGuildIconURL({ id: guild.id, icon: guild.icon, size: 4096 });
+            const guildIcon = mediautils.getGuildIconURL({
+              id: guild.id,
+              icon: guild.icon,
+              size: 4096
+            });
             copyURL(guildIcon);
           }
         }
