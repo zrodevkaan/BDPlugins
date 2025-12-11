@@ -1,8 +1,8 @@
 /**
  * @name Quoter
- * @description Quote your friends wild statements.
+ * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.1
+ * @version 1.0.2
  */
 "use strict";
 var __defProp = Object.defineProperty;

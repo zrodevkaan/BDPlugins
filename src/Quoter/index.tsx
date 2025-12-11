@@ -1,8 +1,8 @@
 /**
  * @name Quoter
- * @description Quote your friends wild statements.
+ * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.1
+ * @version 1.0.2
  */
 
 const { Webpack, Patcher, ContextMenu } = new BdApi("Quoter")
