@@ -39,7 +39,7 @@ var DEFAULT_SETTINGS = {
   tooltipFormat: "Last seen: {lastOnline}, Last message: {lastMessage}",
   excludeUsers: [],
   fontSize: "0.85em",
-  textColor: "var(--interactive-normal)",
+  textColor: "var(--interactive-icon-default)",
   trackMode: "all",
   maxTrackAge: 30,
   showOnlyIfRecent: false,

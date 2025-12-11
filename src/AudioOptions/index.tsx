@@ -17,7 +17,7 @@ const PathIcon = () => {
             viewBox: '0 0 24 24',
             width: 24,
             height: 24,
-            fill: 'var(--interactive-normal)'
+            fill: 'var(--interactive-icon-default)'
         },
         React.createElement('path', {
             d: 'M4 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10-2a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm8 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z'

@@ -1,0 +1,43 @@
+.audioBackground {
+  border-radius: var(--radius-sm);
+}
+.audio-base {
+  display: flex;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+}
+.audio-base-controls {
+  display: grid;
+  grid-template-columns: auto 10px auto;
+  align-self: center;
+}
+.audio-base-controls .play-button {
+  background-color: var(--bg-brand);
+  color: var(--text-primary);
+  width: 50px;
+  height: 50px;
+  margin-top: 16px;
+  border-radius: 50%;
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+.audio-base-controls span {
+  color: var(--text-primary);
+  margin-top: 8px;
+  grid-row: 2;
+  justify-self: center;
+  &:first-of-type {
+    justify-self: start;
+  }
+  &:last-of-type {
+    justify-self: end;
+  }
+}
+.audioCloseButton {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: var(--text-primary);
+  border-radius: 50%;
+}

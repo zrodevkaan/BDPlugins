@@ -92,7 +92,7 @@
 }
 
 .snippet-header-message {
-    color: var(--interactive-normal);
+    color: var(--interactive-icon-default);
     padding: 2px 0;
     text-transform: uppercase;
     font-family: var(--font-display);

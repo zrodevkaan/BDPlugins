@@ -32,18 +32,15 @@ module.exports = __toCommonJS(index_exports);
 // src/Helpers/index.tsx
 var { React, ContextMenu } = BdApi;
 var { createElement, forwardRef } = React;
-function styledBase(type, css) {
-  return forwardRef((props, ref) => {
-    return createElement(type, {
-      ...props,
-      style: Object.assign({}, css, props.style),
-      ref
-    });
-  });
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
 }
 var styled = new Proxy(styledBase, {
   get(target, p, receiver) {
-    return (css) => target(p, css);
+    return (cssOrFn) => target(p, cssOrFn);
   }
 });
 var ContextMenuHelper = (patches) => {

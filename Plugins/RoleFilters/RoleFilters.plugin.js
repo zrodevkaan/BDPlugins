@@ -79,6 +79,7 @@ var EyeIcon = React.memo(({ isVisible }) => /* @__PURE__ */ BdApi.React.createEl
     }
   )
 ));
+var GuildMemberContextMenu = Webpack.getBySource("2021-07_role_popout", { raw: true });
 var MemberItemComponent = React.memo(({ member, user, channel }) => {
   const [selected, setSelected] = React.useState(false);
   const userData = UseStateFromStores([UserStore, PresenceStore, TypingStore], () => {
@@ -300,30 +301,6 @@ var MemberListComponent = React.memo(({ channel }) => {
   }, []);
   const containerRef = React.useRef(null);
   const ROW_HEIGHT = 42;
-  const originalScrollHandler = window.arven.Webpack.getById(941028).exports.TV;
-  const handleScroll = React.useCallback(() => {
-    if (!containerRef.current) return;
-    const { scrollTop: y, clientHeight: height } = containerRef.current;
-    originalScrollHandler({
-      guildId: channel.guild_id,
-      channelId: channel.id,
-      y,
-      height,
-      rowHeight: ROW_HEIGHT
-    });
-  }, [channel.guild_id, channel.id]);
-  React.useEffect(() => {
-    if (containerRef.current) {
-      const { clientHeight: height } = containerRef.current;
-      originalScrollHandler({
-        guildId: channel.guild_id,
-        channelId: channel.id,
-        y: 0,
-        height,
-        rowHeight: ROW_HEIGHT
-      });
-    }
-  }, [channel.guild_id, channel.id]);
   const roleGroups = React.useMemo(() => {
     let groups = {};
     for (let index = 0; index < members.length; index++) {
@@ -359,7 +336,7 @@ var MemberListComponent = React.memo(({ channel }) => {
     }
     return result;
   }, [sortedRoleGroups, channel, settings]);
-  return /* @__PURE__ */ BdApi.React.createElement("div", { className: "container_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("aside", { className: "membersWrap_c8ffbb hiddenMembers_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("div", { ref: containerRef, onScroll: handleScroll, style: { overflow: "scroll", paddingRight: "0px" }, className: "members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c" }, /* @__PURE__ */ BdApi.React.createElement("div", { role: "list", className: "content__99f8c", style: { height: "fit-content" } }, reactMembers))));
+  return /* @__PURE__ */ BdApi.React.createElement("div", { className: "container_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("aside", { className: "membersWrap_c8ffbb hiddenMembers_c8ffbb" }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { overflow: "scroll", paddingRight: "0px" }, className: "members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c" }, /* @__PURE__ */ BdApi.React.createElement("div", { role: "list", className: "content__99f8c", style: { height: "fit-content" } }, reactMembers))));
 }, (prevProps, nextProps) => {
   return prevProps.channel.id === nextProps.channel.id;
 });

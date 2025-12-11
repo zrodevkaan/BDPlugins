@@ -29,7 +29,7 @@ var { useState } = React;
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
 var Margins = Webpack.getByKeys("marginBottom40", "marginTop4");
 var ToolbarButton = Webpack.getByStrings("actionBarIcon");
-var FoodIcon = ({ size = 24, color = "var(--interactive-normal)", ...props }) => {
+var FoodIcon = ({ size = 24, color = "var(--interactive-icon-default)", ...props }) => {
   return React.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg",
     width: size,
@@ -61,7 +61,7 @@ var DataStore = new Proxy(
 );
 var IncognitoButton = () => {
   const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
-  const color = enabled ? "var(--interactive-normal)" : "var(--status-danger)";
+  const color = enabled ? "var(--interactive-icon-default)" : "var(--status-danger)";
   return React.createElement(ToolbarButton, {
     tooltip: enabled ? "Randomization (Enabled)" : "Randomization (Disabled)",
     color: enabled,

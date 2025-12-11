@@ -48,6 +48,20 @@ async function getPluginFolders() {
     });
 }
 
+let reactPlugin = {
+    name: 'reactPlugin',
+    setup(build) {
+        build.onResolve({ filter: /^react$/ }, args => ({
+            path: args.path,
+            namespace: 'react-ns',
+        }))
+        build.onLoad({ filter: /.*/, namespace: 'react-ns' }, () => ({
+            contents: `export default BdApi.React;export const {PureComponent} = BdApi.React;`,
+            loader: 'js',
+        }))
+    },
+}
+
 async function createBuildConfig(pluginName) {
     const entryFile = path.join(srcDir, pluginName, "index.tsx");
 
@@ -79,14 +93,14 @@ async function createBuildConfig(pluginName) {
             ".jsx": "jsx",
             ".ts": "tsx",
             ".tsx": "tsx",
-            ".css": "css"
+            ".css": "text"
         },
         resolveExtensions: ['.tsx', '.ts', '.jsx', '.js'],
         jsxFactory: "BdApi.React.createElement",
         jsxFragment: "BdApi.React.Fragment",
         logLevel: "info",
         external: ['discord-types/*', 'discord-types/other'],
-        plugins: [{
+        plugins: [reactPlugin, {
             name: "build-notifier",
             setup(build) {
                 build.onEnd((result) => {

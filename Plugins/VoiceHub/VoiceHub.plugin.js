@@ -160,7 +160,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
       {
         width: "14",
         height: "14",
-        color: "var(--interactive-normal)"
+        color: "var(--interactive-icon-default)"
       }
     ), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
       color: "var(--header-secondary)",
@@ -217,7 +217,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
           }
         ),
         /* @__PURE__ */ BdApi.React.createElement("span", { style: {
-          color: "var(--interactive-normal)",
+          color: "var(--interactive-icon-default)",
           fontSize: "13px"
         } }, user.username),
         userState.selfVideo && /* @__PURE__ */ BdApi.React.createElement(VideoIcon, null),

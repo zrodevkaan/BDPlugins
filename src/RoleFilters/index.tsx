@@ -110,6 +110,8 @@ const EyeIcon = React.memo(({ isVisible }: { isVisible: boolean }) => (
     </svg>
 ));
 
+const GuildMemberContextMenu = Webpack.getBySource('2021-07_role_popout',{raw:true})
+
 const MemberItemComponent = React.memo(({ member, user, channel }: {
     member: GuildMember,
     user: any,
@@ -374,34 +376,6 @@ const MemberListComponent = React.memo(({ channel }: { channel: Channel }) => {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const ROW_HEIGHT = 42;
 
-    const originalScrollHandler = window.arven.Webpack.getById(941028).exports.TV;
-
-    const handleScroll = React.useCallback(() => {
-        if (!containerRef.current) return;
-
-        const { scrollTop: y, clientHeight: height } = containerRef.current;
-        originalScrollHandler({
-            guildId: channel.guild_id,
-            channelId: channel.id,
-            y,
-            height,
-            rowHeight: ROW_HEIGHT
-        });
-    }, [channel.guild_id, channel.id]);
-
-    React.useEffect(() => {
-        if (containerRef.current) {
-            const { clientHeight: height } = containerRef.current;
-            originalScrollHandler({
-                guildId: channel.guild_id,
-                channelId: channel.id,
-                y: 0,
-                height,
-                rowHeight: ROW_HEIGHT
-            });
-        }
-    }, [channel.guild_id, channel.id]);
-
     const roleGroups = React.useMemo(() => {
         let groups = {};
 
@@ -453,7 +427,7 @@ const MemberListComponent = React.memo(({ channel }: { channel: Channel }) => {
     return (
         <div className={'container_c8ffbb'}>
             <aside className={'membersWrap_c8ffbb hiddenMembers_c8ffbb'}>
-                <div ref={containerRef} onScroll={handleScroll} style={{ overflow: 'scroll', paddingRight: '0px' }} className={'members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c'}>
+                <div style={{ overflow: 'scroll', paddingRight: '0px' }} className={'members_c8ffbb thin__99f8c scrollerBase__99f8c fade__99f8c'}>
                     <div role={'list'} className={'content__99f8c'} style={{ height: 'fit-content' }}>
                         {reactMembers}
                     </div>

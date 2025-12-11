@@ -139,7 +139,7 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
                 <VoiceIcon
                     width="14"
                     height="14"
-                    color="var(--interactive-normal)"
+                    color="var(--interactive-icon-default)"
                 />
                 <span style={{
                     color: 'var(--header-secondary)',
@@ -203,7 +203,7 @@ const CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
                                 }}
                             />
                             <span style={{
-                                color: 'var(--interactive-normal)',
+                                color: 'var(--interactive-icon-default)',
                                 fontSize: '13px'
                             }}>
                                 {user.username}

@@ -13,13 +13,13 @@ const Modules = {
     GuildStore: Webpack.getStore('GuildStore'),
 
     ImageUtils: Webpack.getModule(m => m.copyImage),
-    Media: Webpack.getByPrototypeKeys("renderAttachments", { searchExports: true }).prototype,
-    ImageAnimated: Webpack.getByKeys('isAnimated','isSrcPNG',{raw:true}),
+    Media: Webpack.getByPrototypeKeys("renderAttachments", {searchExports: true}).prototype,
+    ImageAnimated: Webpack.getByKeys('isAnimated', 'isSrcPNG', {raw: true}).exports,
 
     ModalClass: Webpack.getModule(m => m.modal && Object.keys(m).length === 3),
-    openImageModal: Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, { searchExports: true }),
+    openImageModal: Webpack.getByRegex(/hasMediaOptions:!\w+\.shouldHideMediaOptions/, {searchExports: true}),
 
-    Clickable: Webpack.getBySource('BaseHeaderBar').ZP.Icon
+    Clickable: Webpack.getByKeys('Icon').Icon
 };
 
 const ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -1663,6 +1663,7 @@ class ImageUtilsEnhanced {
     handleUserContext(res, props) {
         const user = Modules.GuildMemberStore.getMember(props.channel.guild_id, props.user.id) ?? Modules.UserStore.getUser(props.user.id);
         const guild = Modules.GuildStore.getGuild(props.channel.guild_id)
+        console.log(user, guild)
         if (!user) return;
 
         const items = this.getUserAvatarItems(user, guild);

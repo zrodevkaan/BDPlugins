@@ -445,42 +445,42 @@ var MainMenuIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", {
 var BookInformation24Regular = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     d: "M4 4.5A2.5 2.5 0 0 1 6.5 2H18a2.5 2.5 0 0 1 2.5 2.5v14.25a.75.75 0 0 1-.75.75H5.5a1 1 0 0 0 1 1h13.25a.75.75 0 0 1 0 1.5H6.5A2.5 2.5 0 0 1 4 19.5v-15ZM12.25 8a1 1 0 1 0 0-2a1 1 0 0 0 0 2Zm-.75 1.75v5a.75.75 0 0 0 1.5 0v-5a.75.75 0 0 0-1.5 0Z"
   }
 ));
 var ArrowDownload = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16", ...props }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     d: "M3.5 13h9a.75.75 0 0 1 .102 1.493l-.102.007h-9a.75.75 0 0 1-.102-1.493L3.5 13h9h-9ZM7.898 1.007L8 1a.75.75 0 0 1 .743.648l.007.102v7.688l2.255-2.254a.75.75 0 0 1 .977-.072l.084.072a.75.75 0 0 1 .072.977l-.072.084L8.53 11.78a.75.75 0 0 1-.976.073l-.084-.073l-3.536-3.535a.75.75 0 0 1 .977-1.133l.084.072L7.25 9.44V1.75a.75.75 0 0 1 .648-.743L8 1l-.102.007Z"
   }
 ));
 var Clipboard = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 18 18", ...props }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     d: "M11.873 3H12.75A2.25 2.25 0 0 1 15 5.25v9A2.25 2.25 0 0 1 12.75 16.5h-7.5A2.25 2.25 0 0 1 3 14.25v-9A2.25 2.25 0 0 1 5.25 3h.877A2.25 2.25 0 0 1 8.25 1.5h1.5a2.25 2.25 0 0 1 2.123 1.5M7.5 3.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 0-1.5h-1.5a.75.75 0 0 0-.75.75"
   }
 ));
 var ArrowUpRightDashes = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     d: "M11 3a1 1 0 1 0 0 2h6.586l-2.293 2.293a1 1 0 0 0 1.414 1.414L19 6.414V13a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1zm2.707 8.707a1 1 0 0 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414zm-6 6a1 1 0 1 0-1.414-1.414l-3 3a1 1 0 1 0 1.414 1.414z"
   }
 ));
 var Settings16Filled = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 20 20", ...props }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     d: "M7.999 2c-.37 0-.731.036-1.08.106a.5.5 0 0 0-.394.396l-.262 1.354a.417.417 0 0 1-.545.315l-1.307-.45a.5.5 0 0 0-.538.141A5.495 5.495 0 0 0 2.786 5.74a.5.5 0 0 0 .146.538l1.045.907a.417.417 0 0 1 0 .63l-1.045.907a.5.5 0 0 0-.146.537a5.5 5.5 0 0 0 1.087 1.878a.5.5 0 0 0 .538.142l1.307-.45a.417.417 0 0 1 .545.314l.262 1.355a.5.5 0 0 0 .393.396a5.525 5.525 0 0 0 2.17-.002a.5.5 0 0 0 .393-.395l.262-1.354a.417.417 0 0 1 .545-.315l1.3.45a.5.5 0 0 0 .538-.143a5.495 5.495 0 0 0 1.087-1.882a.5.5 0 0 0-.146-.537l-1.039-.902a.417.417 0 0 1 0-.629l1.04-.902a.5.5 0 0 0 .145-.537a5.496 5.496 0 0 0-1.087-1.881a.5.5 0 0 0-.538-.143l-1.3.45a.417.417 0 0 1-.545-.316l-.262-1.353a.5.5 0 0 0-.392-.395A5.524 5.524 0 0 0 7.999 2ZM6.5 7.5a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0Zm4.663 4.947a.459.459 0 0 1 .526-.152l.8.276a.455.455 0 0 0 .594-.343l.16-.83a.459.459 0 0 1 .396-.38a3.554 3.554 0 0 1 .719 0c.202.02.356.18.395.38l.16.83a.455.455 0 0 0 .595.343l.8-.276a.46.46 0 0 1 .526.152c.14.194.261.403.36.623a.459.459 0 0 1-.13.532l-.64.555a.455.455 0 0 0 0 .686l.64.555a.459.459 0 0 1 .13.532c-.099.22-.22.429-.36.623a.46.46 0 0 1-.526.152l-.8-.276a.455.455 0 0 0-.594.343l-.16.83a.459.459 0 0 1-.396.38a3.554 3.554 0 0 1-.719 0a.459.459 0 0 1-.395-.38l-.161-.83a.455.455 0 0 0-.595-.343l-.799.276a.46.46 0 0 1-.526-.152a3.493 3.493 0 0 1-.36-.623a.459.459 0 0 1 .13-.532l.64-.555a.455.455 0 0 0 0-.686l-.64-.555a.459.459 0 0 1-.13-.532c.099-.22.22-.429.36-.623ZM15 14.5a1 1 0 1 0-2 0a1 1 0 0 0 2 0Z"
   }
 ));
 var GuildIcon = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 16 16" }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     d: "M11.414 1.586A2 2 0 0 0 10 1H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V3a2 2 0 0 0-.586-1.414ZM9.853 12.854a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-2a.5.5 0 0 1-.354.146h-3a.5.5 0 1 1 0-1h3a.5.5 0 0 1 .354.854Zm0-6A.5.5 0 0 1 9.499 5h-3a.498.498 0 0 1-.5-.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .354.854Z"
   }
 ));
@@ -757,7 +757,7 @@ var css = `
     cursor: pointer;
     opacity: 0.8;
     transition: opacity 0.2s ease;
-    color: var(--interactive-normal);
+    color: var(--interactive-icon-default);
     width: 24px;
     height: 24px;
 }

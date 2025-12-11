@@ -204,7 +204,7 @@ var KeyboardSVG = (props) => React.createElement(
     width: "24",
     height: "24",
     viewBox: "0 0 24 24",
-    fill: "var(--interactive-normal)",
+    fill: "var(--interactive-icon-default)",
     ...props
   },
   React.createElement("path", {
