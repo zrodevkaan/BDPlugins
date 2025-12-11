@@ -2,3 +2,7 @@ Plugins/Translator/bun.lock
 /node_modules
 /Plugins/Translator/node_modules
 .idea
+/Plugins/Arven
+/src/Arven
+/Plugins/Silly
+src/Silly/index.tsx
