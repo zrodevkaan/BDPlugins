@@ -33,21 +33,16 @@ var RootSectionModule = Webpack.getModule((x) => x.E?.key == "$Root");
 var layoutUtils = Webpack.getMangled(
   Webpack.Filters.bySource("$Root", ".ACCORDION"),
   {
-    Pane: (x) => String(x).includes(".PANE,"),
     Panel: (x) => String(x).includes(".PANEL,"),
     Button: (x) => String(x).includes(".SIDEBAR_ITEM,"),
     Section: (x) => String(x).includes(".SECTION,")
   }
 );
-var TestPane = layoutUtils.Pane("test_pane", {
-  StronglyDiscouragedCustomComponent: () => React.createElement("div", {}, "hi"),
-  buildLayout: () => [],
-  render: () => /* @__PURE__ */ BdApi.React.createElement("div", null, "hi ;3")
-});
 var TestPanel = layoutUtils.Panel("test_panel", {
   useTitle: () => "Test Settings",
-  useBadge: () => 3,
-  buildLayout: () => [TestPane]
+  // useBadge: () => 3,
+  StronglyDiscouragedCustomComponent: () => /* @__PURE__ */ BdApi.React.createElement("div", null, "hi :D"),
+  buildLayout: () => []
 });
 var TestSettingsItem = layoutUtils.Button("test_sidebar_item", {
   icon: () => /* @__PURE__ */ BdApi.React.createElement("div", null, "X"),
@@ -59,6 +54,7 @@ var TestSettingsItem = layoutUtils.Button("test_sidebar_item", {
 var NewTestSection = layoutUtils.Section("test_section", {
   type: 1,
   useLabel: () => "Test Settings",
+  useTitle: () => "balls",
   key: "test_section",
   buildLayout: () => [TestSettingsItem]
 });

@@ -134,10 +134,13 @@ const createIconItem = (id, label, icon, action, options = {}) => ({
 });
 
 function extractDomain(url) {
-  const matches = url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im);
-  return matches && matches[1];
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : 'https://' + url);
+    return urlObj.hostname.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
 }
-
 function generateFaviconURL(website, size = 16) {
   const url = new URL(
     'https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL'
@@ -356,19 +359,19 @@ const MediaContainer = ({ url: urlA, width, isThirdParty, provider }) => {
   const url = isThirdParty
     ? urlA || ''
     : (() => {
-        if (urlA == undefined || urlA == null || urlA == '') return '';
+      if (urlA == undefined || urlA == null || urlA == '') return '';
 
-        try {
-          const urlObj = new URL(urlA);
-          urlObj.searchParams.delete('width');
-          urlObj.searchParams.delete('height');
-          urlObj.searchParams.set('size', '4096');
-          return urlObj.toString();
-        } catch (error) {
-          console.warn('Invalid URL provided to MediaContainer:', urlA, error);
-          return urlA || '';
-        }
-      })() || '';
+      try {
+        const urlObj = new URL(urlA);
+        urlObj.searchParams.delete('width');
+        urlObj.searchParams.delete('height');
+        urlObj.searchParams.set('size', '4096');
+        return urlObj.toString();
+      } catch (error) {
+        console.warn('Invalid URL provided to MediaContainer:', urlA, error);
+        return urlA || '';
+      }
+    })() || '';
 
   const owoRef = React.useRef(null);
   const containerWidth = Math.max(width - 20, 60);
@@ -1031,7 +1034,7 @@ class InternalStore {
     this[InternalStore.idSymbol] = InternalStore.id++;
     InternalStore.stores.add(this);
   }
-  initialize() {}
+  initialize() { }
   static displayName;
   displayName;
   getName() {
@@ -1510,9 +1513,8 @@ export default class BetterMedia {
     const emojis = getMessageEmojis(message);
 
     const emojiItems = emojis.map(x => {
-      const img = `https://cdn.discordapp.com/emojis/${x.id}.webp?size=24${
-        x.animated ? '&animated=true' : ''
-      }`;
+      const img = `https://cdn.discordapp.com/emojis/${x.id}.webp?size=24${x.animated ? '&animated=true' : ''
+        }`;
       return {
         label: x.name,
         id: x.id + Math.random(),
@@ -1549,9 +1551,8 @@ export default class BetterMedia {
     const stickerItems =
       message.stickerItems?.map(stickerId => {
         const x = StickersStore.getStickerById(stickerId.id);
-        const img = `https://media.discordapp.net/stickers/${x.id}.webp?size=24${
-          x.animated ? '&animated=true' : ''
-        }`;
+        const img = `https://media.discordapp.net/stickers/${x.id}.webp?size=24${x.animated ? '&animated=true' : ''
+          }`;
         const owo = img.replace('?size=24', '?size=512') + '&animated=true';
         return {
           label: x.name,
@@ -1654,29 +1655,29 @@ export default class BetterMedia {
 
     const guildImg = isInGuild
       ? mediautils
-          .getGuildMemberAvatarURL(
-            {
-              guildId: currentGuildId,
-              userId: user.id,
-              avatar: guildMember?.avatar,
-              discriminator: null,
-            },
-            true,
-            4096,
-            'png',
-            false
-          )
-          ?.replace('?size=96', '?size=4096')
+        .getGuildMemberAvatarURL(
+          {
+            guildId: currentGuildId,
+            userId: user.id,
+            avatar: guildMember?.avatar,
+            discriminator: null,
+          },
+          true,
+          4096,
+          'png',
+          false
+        )
+        ?.replace('?size=96', '?size=4096')
       : null;
 
     const guildBanner = isInGuild
       ? mediautils.getGuildMemberBannerURL({
-          id: user.id,
-          guildId: currentGuildId,
-          banner: guildMemberProfile?.banner,
-          size: 4096,
-          canAnimate: true,
-        })
+        id: user.id,
+        guildId: currentGuildId,
+        banner: guildMemberProfile?.banner,
+        size: 4096,
+        canAnimate: true,
+      })
       : null;
 
     const isAnimatedAvatar = user.avatar && user.avatar.startsWith('a_');

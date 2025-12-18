@@ -9,7 +9,6 @@ const { Webpack, Patcher, React } = new BdApi("SettingsRepro")
 const RootSectionModule = Webpack.getModule(x => x.E?.key == "$Root")
 const layoutUtils = Webpack.getMangled(Webpack.Filters.bySource('$Root', '.ACCORDION'),
     {
-        Pane: x => String(x).includes('.PANE,'),
         Panel: x => String(x).includes('.PANEL,'),
         Button: x => String(x).includes('.SIDEBAR_ITEM,'),
         Section: x => String(x).includes('.SECTION,')
@@ -17,20 +16,13 @@ const layoutUtils = Webpack.getMangled(Webpack.Filters.bySource('$Root', '.ACCOR
 )
 // m7 sidebar item
 // wf panel
-// x1 pane
-
-const TestPane = layoutUtils.Pane("test_pane", {
-    StronglyDiscouragedCustomComponent: () => React.createElement('div',{},'hi'),
-    buildLayout: () => [],
-    render: () => (
-        <div>hi ;3</div>
-    )
-});
+// x1 pane // removed???
 
 const TestPanel = layoutUtils.Panel("test_panel", {
     useTitle: () => "Test Settings",
-    useBadge: () => 3,
-    buildLayout: () => [TestPane],
+    // useBadge: () => 3,
+    StronglyDiscouragedCustomComponent: () => <div>hi :D</div>,
+    buildLayout: () => [],
 });
 
 const TestSettingsItem = layoutUtils.Button("test_sidebar_item", {
@@ -44,6 +36,7 @@ const TestSettingsItem = layoutUtils.Button("test_sidebar_item", {
 const NewTestSection = layoutUtils.Section('test_section', {
     type: 1,
     useLabel: () => "Test Settings",
+    useTitle: () => 'balls',
     key: 'test_section',
     buildLayout: () => [TestSettingsItem]
 })

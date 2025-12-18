@@ -150,8 +150,12 @@ var createIconItem = (id, label, icon, action, options = {}) => ({
   ...options
 });
 function extractDomain(url) {
-  const matches = url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im);
-  return matches && matches[1];
+  try {
+    const urlObj = new URL(url.startsWith("http") ? url : "https://" + url);
+    return urlObj.hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
 }
 function generateFaviconURL(website, size = 16) {
   const url = new URL(
