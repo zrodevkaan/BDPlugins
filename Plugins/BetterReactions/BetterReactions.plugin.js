@@ -30,7 +30,7 @@ __export(index_exports, {
   default: () => BetterReactions
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, DOM, React, Hooks } = new BdApi("BetterReactions");
+var { Webpack, Patcher, DOM, React, Hooks, Components } = new BdApi("BetterReactions");
 var { useStateFromStores } = Hooks;
 var Reactions = Webpack.getByPrototypeKeys("renderReactions", { searchExports: true });
 var MessageStore = Webpack.getStore("MessageStore");
@@ -39,6 +39,28 @@ var UserStore = Webpack.getStore("UserStore");
 var EmojiHelpers = Webpack.getByKeys("getEmojiURL");
 var addReaction = BdApi.Webpack.getByStrings("uaUU/g", { searchExports: true });
 var removeReaction = BdApi.Webpack.getByStrings("3l9f6u", { searchExports: true });
+function RenderReaction({ reaction, withText, size = 24, offset = 24 }) {
+  return reaction.emoji.id == null ? /* @__PURE__ */ BdApi.React.createElement("span", { className: "emoji" }, reaction.emoji.name) : /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: !withText ? /* @__PURE__ */ BdApi.React.createElement(
+    "img",
+    {
+      src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size: size + offset }),
+      alt: reaction.emoji.name
+    }
+  ) : /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
+    "img",
+    {
+      src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size: size + offset }),
+      alt: reaction.emoji.name
+    }
+  ), /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "16px", color: "var(--text-default)" } }, ":", reaction.emoji.name, ":")), position: "top" }, (props) => /* @__PURE__ */ BdApi.React.createElement(
+    "img",
+    {
+      ...props,
+      src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size }),
+      alt: reaction.emoji.name
+    }
+  ));
+}
 var ReactionRenderer = ({ message, channel }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const [fullReactions, setFullReactions] = React.useState({});
@@ -104,21 +126,20 @@ var ReactionRenderer = ({ message, channel }) => {
         {
           key: `${message.id}-${emojiKey}-${index}`,
           onClick: () => {
-            console.log(reaction);
+            const isBurst = reaction.burst_count > 0;
             if (isUserReacted) {
               removeReaction({
                 channelId: message.channel_id,
                 messageId: message.id,
                 emoji: reaction.emoji,
-                location: "Message"
+                location: "deez nutz"
               });
             } else {
-              const isBurst = reaction.burst_count > 0;
               addReaction(
                 channel.id,
                 message.id,
                 reaction.emoji,
-                "Message",
+                "deez nutz",
                 {
                   burst: isBurst
                 }
@@ -127,7 +148,7 @@ var ReactionRenderer = ({ message, channel }) => {
           },
           className: `better-reaction ${isUserReacted ? "user-reacted" : ""}`
         },
-        reaction.emoji.id == null ? /* @__PURE__ */ BdApi.React.createElement("span", { className: "emoji" }, reaction.emoji.name) : /* @__PURE__ */ BdApi.React.createElement("img", { src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size: 24 }), alt: reaction.emoji.name }),
+        /* @__PURE__ */ BdApi.React.createElement(RenderReaction, { withText: true, reaction, size: 24, offset: 24 }),
         hasUserData && /* @__PURE__ */ BdApi.React.createElement(
           "div",
           {

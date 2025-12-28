@@ -4,10 +4,9 @@
  * @author Kaan
  * @version 2.4.0
  */
-
-const { Webpack, Patcher, DOM, React, Hooks } = new BdApi('BetterReactions')
-const { useStateFromStores } = Hooks;
-const Reactions = Webpack.getByPrototypeKeys('renderReactions', { searchExports: true })
+const {Webpack, Patcher, DOM, React, Hooks, Components} = new BdApi('BetterReactions')
+const {useStateFromStores} = Hooks;
+const Reactions = Webpack.getByPrototypeKeys('renderReactions', {searchExports: true})
 const MessageStore = Webpack.getStore("MessageStore")
 const MessageReactionsStore = Webpack.getStore("MessageReactionsStore")
 const UserStore = Webpack.getStore("UserStore")
@@ -15,7 +14,22 @@ const EmojiHelpers = Webpack.getByKeys("getEmojiURL")
 const addReaction = BdApi.Webpack.getByStrings('uaUU/g', {searchExports: true})
 const removeReaction = BdApi.Webpack.getByStrings('3l9f6u', {searchExports: true})
 
-const ReactionRenderer = ({ message, channel }) => {
+function RenderReaction({reaction, withText, size = 24, offset = 24}) {
+    return reaction.emoji.id == null ? <span className={'emoji'}>
+        {reaction.emoji.name}
+    </span> : <Components.Tooltip text={!withText ?
+        <img src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size + offset})}
+             alt={reaction.emoji.name}/> : <div>
+            <img src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size + offset})}
+                 alt={reaction.emoji.name}/>
+            <span style={{fontSize: '16px', color: 'var(--text-default)'}}>:{reaction.emoji.name}:</span>
+        </div>} position={"top"}>
+        {(props) => <img {...props} src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size})}
+                         alt={reaction.emoji.name}/>}
+    </Components.Tooltip>
+}
+
+const ReactionRenderer = ({message, channel}) => {
     const [isHovered, setIsHovered] = React.useState(false)
     const [fullReactions, setFullReactions] = React.useState({})
     const [hasLoadedOnce, setHasLoadedOnce] = React.useState(false)
@@ -29,7 +43,7 @@ const ReactionRenderer = ({ message, channel }) => {
     )
 
     const totalReactionCount = React.useMemo(() =>
-        Object.values(messageReactions).reduce((sum, reaction) => sum + reaction.count, 0),
+            Object.values(messageReactions).reduce((sum, reaction) => sum + reaction.count, 0),
         [messageReactions]
     )
 
@@ -59,7 +73,7 @@ const ReactionRenderer = ({ message, channel }) => {
     }, [isHovered, shouldFetchOnHover, messageReactions, hasLoadedOnce, channel.id, message.id])
 
     const formattedReactions = React.useMemo(() =>
-        Object.values(messageReactions),
+            Object.values(messageReactions),
         [messageReactions]
     )
 
@@ -112,10 +126,7 @@ const ReactionRenderer = ({ message, channel }) => {
                             }
                         }}
                         className={`better-reaction ${isUserReacted ? 'user-reacted' : ''}`}>
-
-                        {
-                            reaction.emoji.id == null ? <span className="emoji">{reaction.emoji.name}</span> : <img src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: 24})}  alt={reaction.emoji.name}/>
-                        }
+                        <RenderReaction withText={true} reaction={reaction} size={24} offset={24}/>
 
                         {hasUserData && (
                             <div
@@ -124,7 +135,7 @@ const ReactionRenderer = ({ message, channel }) => {
                             >
                                 {displayUsers.map((user, userIndex) => {
                                     const userData = UserStore.getUser(user.id) || user
-                                    const avatarUrl = userData?.getAvatarURL?.({ size: 24, animated: true })
+                                    const avatarUrl = userData?.getAvatarURL?.({size: 24, animated: true})
 
                                     return (
                                         <div
@@ -151,7 +162,7 @@ const ReactionRenderer = ({ message, channel }) => {
 
                         {shouldFetchOnHover && !hasUserData && !isHovered && (
                             <div className="reaction-loading">
-                                <div className="loading-placeholder" />
+                                <div className="loading-placeholder"/>
                             </div>
                         )}
 
@@ -291,7 +302,7 @@ export default class BetterReactions {
     start() {
         DOM.addStyle('betterReactionsStyles', styles)
         Patcher.after(Reactions.prototype, 'renderReactions', (thisObject, args, returnValue) => {
-            return <ReactionRenderer message={returnValue.props.message} channel={returnValue.props.channel} />
+            return <ReactionRenderer message={returnValue.props.message} channel={returnValue.props.channel}/>
         })
     }
 
