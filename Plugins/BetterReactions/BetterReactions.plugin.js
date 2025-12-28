@@ -30,12 +30,15 @@ __export(index_exports, {
   default: () => BetterReactions
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, DOM, React } = new BdApi("BetterReactions");
+var { Webpack, Patcher, DOM, React, Hooks } = new BdApi("BetterReactions");
+var { useStateFromStores } = Hooks;
 var Reactions = Webpack.getByPrototypeKeys("renderReactions", { searchExports: true });
-var useStateFromStores = Webpack.getByStrings("useStateFromStores", { searchExports: true });
 var MessageStore = Webpack.getStore("MessageStore");
 var MessageReactionsStore = Webpack.getStore("MessageReactionsStore");
 var UserStore = Webpack.getStore("UserStore");
+var EmojiHelpers = Webpack.getByKeys("getEmojiURL");
+var addReaction = BdApi.Webpack.getByStrings("uaUU/g", { searchExports: true });
+var removeReaction = BdApi.Webpack.getByStrings("3l9f6u", { searchExports: true });
 var ReactionRenderer = ({ message, channel }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const [fullReactions, setFullReactions] = React.useState({});
@@ -58,16 +61,19 @@ var ReactionRenderer = ({ message, channel }) => {
         const reactionUsersMap = {};
         for (const reaction of Object.values(messageReactions)) {
           const emoji = reaction.emoji;
-          const users = MessageReactionsStore.getReactions(channel.id, message.id, emoji);
-          console.log(reaction);
-          reactionUsersMap[emoji.name] = Array.from(users?.values() || []);
+          const users1 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 0);
+          const users2 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 1);
+          const mergedUsers = new Map([
+            ...users1 || /* @__PURE__ */ new Map(),
+            ...users2 || /* @__PURE__ */ new Map()
+          ]);
+          reactionUsersMap[emoji.name] = Array.from(mergedUsers.values());
         }
         setFullReactions(reactionUsersMap);
         if (!hasLoadedOnce) setHasLoadedOnce(true);
       }
     };
-    const timeoutId = setTimeout(loadUserData, 50);
-    return () => clearTimeout(timeoutId);
+    loadUserData();
   }, [isHovered, shouldFetchOnHover, messageReactions, hasLoadedOnce, channel.id, message.id]);
   const formattedReactions = React.useMemo(
     () => Object.values(messageReactions),
@@ -97,11 +103,31 @@ var ReactionRenderer = ({ message, channel }) => {
         "div",
         {
           key: `${message.id}-${emojiKey}-${index}`,
-          className: `better-reaction ${isUserReacted ? "user-reacted" : ""}`,
           onClick: () => {
-          }
+            console.log(reaction);
+            if (isUserReacted) {
+              removeReaction({
+                channelId: message.channel_id,
+                messageId: message.id,
+                emoji: reaction.emoji,
+                location: "Message"
+              });
+            } else {
+              const isBurst = reaction.burst_count > 0;
+              addReaction(
+                channel.id,
+                message.id,
+                reaction.emoji,
+                "Message",
+                {
+                  burst: isBurst
+                }
+              );
+            }
+          },
+          className: `better-reaction ${isUserReacted ? "user-reacted" : ""}`
         },
-        /* @__PURE__ */ BdApi.React.createElement("span", { className: "emoji" }, reaction.emoji.name),
+        reaction.emoji.id == null ? /* @__PURE__ */ BdApi.React.createElement("span", { className: "emoji" }, reaction.emoji.name) : /* @__PURE__ */ BdApi.React.createElement("img", { src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size: 24 }), alt: reaction.emoji.name }),
         hasUserData && /* @__PURE__ */ BdApi.React.createElement(
           "div",
           {
@@ -119,8 +145,7 @@ var ReactionRenderer = ({ message, channel }) => {
                 style: {
                   backgroundImage: avatarUrl ? `url(${avatarUrl})` : "none",
                   backgroundColor: !avatarUrl ? "var(--background-secondary)" : "transparent"
-                },
-                title: userData?.username || userData?.globalName || "Unknown User"
+                }
               }
             );
           }),
@@ -128,14 +153,13 @@ var ReactionRenderer = ({ message, channel }) => {
             "div",
             {
               key: `more-${reactionUsers.length}`,
-              className: "reaction-avatar more-users",
-              title: `+${reactionUsers.length - 4} more`
+              className: "reaction-avatar more-users"
             },
             /* @__PURE__ */ BdApi.React.createElement("span", { className: "more-count" }, "+", reactionUsers.length - 4)
           )
         ),
         shouldFetchOnHover && !hasUserData && !isHovered && /* @__PURE__ */ BdApi.React.createElement("div", { className: "reaction-loading" }, /* @__PURE__ */ BdApi.React.createElement("div", { className: "loading-placeholder" })),
-        /* @__PURE__ */ BdApi.React.createElement("span", { className: "reaction-count" }, reaction.count)
+        /* @__PURE__ */ BdApi.React.createElement("span", { className: "reaction-count" }, reaction.burst_count + reaction.count)
       );
     })
   );
@@ -143,6 +167,7 @@ var ReactionRenderer = ({ message, channel }) => {
 var styles = `
 .better-reactions-container {
     display: flex;
+    font: inherit;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 6px;
@@ -159,18 +184,19 @@ var styles = `
 .better-reaction {
     display: flex;
     align-items: center;
-    background-color: var(--background-secondary);
+    background-color: var(--background-base-lower);
     border: 1px solid var(--background-modifier-accent);
     border-radius: 8px;
     padding: 2px 6px;
     cursor: pointer;
     gap: 6px;
+    font-family: var(--font-primary);
     min-height: 28px;
     transition: background-color 0.15s ease;
 }
 
 .better-reaction.user-reacted {
-    background-color: var(--background-primary);
+    background-color: var(--background-base-low);
     border-color: var(--brand-500);
 }
 
@@ -194,14 +220,14 @@ var styles = `
 .loading-placeholder {
     width: 18px;
     height: 18px;
-    background-color: var(--background-tertiary);
+    background-color: var(--background-base-lowest);
     border-radius: 50%;
     opacity: 0.6;
     animation: pulse 1.5s infinite ease-in-out;
 }
 
-.emoji {
-    font-size: 16px;
+.better-reaction > .emoji {
+    font-size: 18px;
     display: flex;
     align-items: center;
 }
@@ -217,7 +243,7 @@ var styles = `
     margin-left: -6px;
     z-index: 1;
     box-shadow:
-        0 0 0 2px var(--background-secondary),
+        0 0 0 2px var(--background-base-low),
         0 0 1px rgba(0, 0, 0, 0.2);
     transition: opacity 0.15s ease;
     opacity: 1;
@@ -233,7 +259,7 @@ var styles = `
 .reaction-avatar:nth-child(4) { z-index: 3; }
 
 .reaction-avatar.more-users {
-    background-color: var(--background-secondary-alt);
+    background-color: var(--background-base-lower);
     display: flex;
     align-items: center;
     justify-content: center;
