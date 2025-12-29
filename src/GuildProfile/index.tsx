@@ -49,7 +49,7 @@ const [
 const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve")})
 const getGuildIconURL = BdApi.Webpack.getByKeys('getGuildIconURL').getGuildIconURL
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
-const Section = Webpack.getByStrings("cancelAnimationFrame(", "text-xs/semibold", ".useReducedMotion)")
+const Section = Webpack.getByStrings('headingColor:','heading:','section',{searchExports:true})
 const snowflakeUtils = Webpack.getByKeys('extractTimestamp')
 const quantize = Webpack.getMangled('[[0,0,0]]', {
     quantize: Webpack.Filters.byStrings(".getImageData(0,0,")
@@ -1833,7 +1833,7 @@ const css = `
   background-color: var(--bg-mod-faint);
   align-items: center;
   justify-content: center;
-  color: var(--header-primary);
+  color: var(--text-strong);
   font-size: 34px;
 }
 
@@ -1989,7 +1989,7 @@ const css = `
 .bd-gp-name {
   user-select: text;
   word-break: break-word;
-  color: var(--header-primary);
+  color: var(--text-strong);
   font-family: var(--font-display);
   font-size: 24px;
   font-weight: 700;
@@ -2042,9 +2042,9 @@ const css = `
   flex-shrink: 0;
 }
 .bd-gp-tab[aria-selected="true"] {
-  border-bottom-color: var(--interactive-active);
+  border-bottom-color: var(--interactive-text-default);
   cursor: default;
-  color: var(--interactive-active);
+  color: var(--interactive-text-hover);
 }
 
 .bd-gp-user {
@@ -2172,7 +2172,7 @@ const css = `
     margin: 0;
     font-size: 20px;
     font-weight: 600;
-    color: var(--header-primary);
+    color: var(--text-strong);
 }
 
 .bd-gp-guild-list {
