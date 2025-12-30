@@ -30,8 +30,9 @@ __export(index_exports, {
   default: () => BetterReactions
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, DOM, React, Hooks, Components } = new BdApi("BetterReactions");
+var { Webpack, Patcher, DOM, React, Hooks, Components, Utils } = new BdApi("BetterReactions");
 var { useStateFromStores } = Hooks;
+var { Store } = Utils;
 var Reactions = Webpack.getByPrototypeKeys("renderReactions", { searchExports: true });
 var MessageStore = Webpack.getStore("MessageStore");
 var MessageReactionsStore = Webpack.getStore("MessageReactionsStore");
@@ -40,27 +41,39 @@ var EmojiHelpers = Webpack.getByKeys("getEmojiURL");
 var addReaction = BdApi.Webpack.getByStrings("uaUU/g", { searchExports: true });
 var removeReaction = BdApi.Webpack.getByStrings("3l9f6u", { searchExports: true });
 function RenderReaction({ reaction, withText, size = 24, offset = 24 }) {
+  const img = EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size });
   return reaction.emoji.id == null ? /* @__PURE__ */ BdApi.React.createElement("span", { className: "emoji" }, reaction.emoji.name) : /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: !withText ? /* @__PURE__ */ BdApi.React.createElement(
     "img",
     {
-      src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size: size + offset }),
+      src: img,
       alt: reaction.emoji.name
     }
   ) : /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
     "img",
     {
-      src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size: size + offset }),
+      src: img,
       alt: reaction.emoji.name
     }
   ), /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "16px", color: "var(--text-default)" } }, ":", reaction.emoji.name, ":")), position: "top" }, (props) => /* @__PURE__ */ BdApi.React.createElement(
     "img",
     {
       ...props,
-      src: EmojiHelpers.getEmojiURL({ id: reaction.emoji.id, animated: true, size }),
+      src: img,
       alt: reaction.emoji.name
     }
   ));
 }
+var ReactionStore = new class ReactionStore2 extends Store {
+  displayName = "ReactionStore";
+  cachedMessages = /* @__PURE__ */ new Map();
+  isLoaded(id) {
+    return this.cachedMessages.has(id);
+  }
+  setIsLoaded(id) {
+    this.cachedMessages.set(id, true);
+    this.emitChange();
+  }
+}();
 var ReactionRenderer = ({ message, channel }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const [fullReactions, setFullReactions] = React.useState({});
@@ -72,29 +85,31 @@ var ReactionRenderer = ({ message, channel }) => {
       return msg?.reactions || {};
     }
   );
+  const isLoaded = useStateFromStores([ReactionStore], () => ReactionStore.isLoaded(message.id));
   const totalReactionCount = React.useMemo(
     () => Object.values(messageReactions).reduce((sum, reaction) => sum + reaction.count, 0),
     [messageReactions]
   );
   const shouldFetchOnHover = totalReactionCount >= 5;
-  React.useEffect(() => {
-    const loadUserData = () => {
-      if (!shouldFetchOnHover || isHovered || hasLoadedOnce) {
-        const reactionUsersMap = {};
-        for (const reaction of Object.values(messageReactions)) {
-          const emoji = reaction.emoji;
-          const users1 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 0);
-          const users2 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 1);
-          const mergedUsers = new Map([
-            ...users1 || /* @__PURE__ */ new Map(),
-            ...users2 || /* @__PURE__ */ new Map()
-          ]);
-          reactionUsersMap[emoji.name] = Array.from(mergedUsers.values());
-        }
-        setFullReactions(reactionUsersMap);
-        if (!hasLoadedOnce) setHasLoadedOnce(true);
+  const loadUserData = () => {
+    if (!shouldFetchOnHover || isHovered || hasLoadedOnce || isLoaded) {
+      const reactionUsersMap = {};
+      for (const reaction of Object.values(messageReactions)) {
+        const emoji = reaction.emoji;
+        const users1 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 0);
+        const users2 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 1);
+        const mergedUsers = new Map([
+          ...users1 || /* @__PURE__ */ new Map(),
+          ...users2 || /* @__PURE__ */ new Map()
+        ]);
+        reactionUsersMap[emoji.name] = Array.from(mergedUsers.values());
       }
-    };
+      setFullReactions(reactionUsersMap);
+      ReactionStore.setIsLoaded(message.id);
+      if (!hasLoadedOnce) setHasLoadedOnce(true);
+    }
+  };
+  React.useEffect(() => {
     loadUserData();
   }, [isHovered, shouldFetchOnHover, messageReactions, hasLoadedOnce, channel.id, message.id]);
   const formattedReactions = React.useMemo(
@@ -132,14 +147,14 @@ var ReactionRenderer = ({ message, channel }) => {
                 channelId: message.channel_id,
                 messageId: message.id,
                 emoji: reaction.emoji,
-                location: "deez nutz"
+                location: "Message"
               });
             } else {
               addReaction(
                 channel.id,
                 message.id,
                 reaction.emoji,
-                "deez nutz",
+                "Message",
                 {
                   burst: isBurst
                 }

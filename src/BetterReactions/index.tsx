@@ -4,8 +4,9 @@
  * @author Kaan
  * @version 2.4.0
  */
-const {Webpack, Patcher, DOM, React, Hooks, Components} = new BdApi('BetterReactions')
+const {Webpack, Patcher, DOM, React, Hooks, Components, Utils} = new BdApi('BetterReactions')
 const {useStateFromStores} = Hooks;
+const {Store} = Utils;
 const Reactions = Webpack.getByPrototypeKeys('renderReactions', {searchExports: true})
 const MessageStore = Webpack.getStore("MessageStore")
 const MessageReactionsStore = Webpack.getStore("MessageReactionsStore")
@@ -15,18 +16,34 @@ const addReaction = BdApi.Webpack.getByStrings('uaUU/g', {searchExports: true})
 const removeReaction = BdApi.Webpack.getByStrings('3l9f6u', {searchExports: true})
 
 function RenderReaction({reaction, withText, size = 24, offset = 24}) {
+    const img = EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size})
+
     return reaction.emoji.id == null ? <span className={'emoji'}>
         {reaction.emoji.name}
     </span> : <Components.Tooltip text={!withText ?
-        <img src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size + offset})}
+        <img src={img}
              alt={reaction.emoji.name}/> : <div>
-            <img src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size + offset})}
+            <img src={img}
                  alt={reaction.emoji.name}/>
             <span style={{fontSize: '16px', color: 'var(--text-default)'}}>:{reaction.emoji.name}:</span>
         </div>} position={"top"}>
-        {(props) => <img {...props} src={EmojiHelpers.getEmojiURL({id: reaction.emoji.id, animated: true, size: size})}
+        {(props) => <img {...props} src={img}
                          alt={reaction.emoji.name}/>}
     </Components.Tooltip>
+}
+
+const ReactionStore = new class ReactionStore extends Store {
+    override displayName = 'ReactionStore'
+    readonly cachedMessages = new Map<string, boolean>()
+
+    isLoaded(id: string) {
+        return this.cachedMessages.has(id)
+    }
+
+    setIsLoaded(id: string): void {
+        this.cachedMessages.set(id, true)
+        this.emitChange()
+    }
 }
 
 const ReactionRenderer = ({message, channel}) => {
@@ -42,6 +59,8 @@ const ReactionRenderer = ({message, channel}) => {
         }
     )
 
+    const isLoaded = useStateFromStores([ReactionStore], () => ReactionStore.isLoaded(message.id))
+
     const totalReactionCount = React.useMemo(() =>
             Object.values(messageReactions).reduce((sum, reaction) => sum + reaction.count, 0),
         [messageReactions]
@@ -49,26 +68,28 @@ const ReactionRenderer = ({message, channel}) => {
 
     const shouldFetchOnHover = totalReactionCount >= 5
 
-    React.useEffect(() => {
-        const loadUserData = () => {
-            if (!shouldFetchOnHover || isHovered || hasLoadedOnce) {
-                const reactionUsersMap = {}
-                for (const reaction of Object.values(messageReactions)) {
-                    const emoji = reaction.emoji
-                    const users1 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 0)
-                    const users2 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 1)
+    const loadUserData = () => {
+        if (!shouldFetchOnHover || isHovered || hasLoadedOnce || isLoaded) {
+            const reactionUsersMap = {}
+            for (const reaction of Object.values(messageReactions)) {
+                const emoji = reaction.emoji
+                const users1 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 0)
+                const users2 = MessageReactionsStore.getReactions(channel.id, message.id, emoji, 4, 1)
 
-                    const mergedUsers = new Map([
-                        ...(users1 || new Map()),
-                        ...(users2 || new Map())
-                    ])
+                const mergedUsers = new Map([
+                    ...(users1 || new Map()),
+                    ...(users2 || new Map())
+                ])
 
-                    reactionUsersMap[emoji.name] = Array.from(mergedUsers.values())
-                }
-                setFullReactions(reactionUsersMap)
-                if (!hasLoadedOnce) setHasLoadedOnce(true)
+                reactionUsersMap[emoji.name] = Array.from(mergedUsers.values())
             }
+            setFullReactions(reactionUsersMap)
+            ReactionStore.setIsLoaded(message.id)
+            if (!hasLoadedOnce) setHasLoadedOnce(true)
         }
+    }
+
+    React.useEffect(() => {
         loadUserData()
     }, [isHovered, shouldFetchOnHover, messageReactions, hasLoadedOnce, channel.id, message.id])
 
@@ -111,14 +132,14 @@ const ReactionRenderer = ({message, channel}) => {
                                     channelId: message.channel_id,
                                     messageId: message.id,
                                     emoji: reaction.emoji,
-                                    location: 'deez nutz'
+                                    location: 'Message'
                                 })
                             } else {
                                 addReaction(
                                     channel.id,
                                     message.id,
                                     reaction.emoji,
-                                    'deez nutz',
+                                    'Message',
                                     {
                                         burst: isBurst
                                     }
