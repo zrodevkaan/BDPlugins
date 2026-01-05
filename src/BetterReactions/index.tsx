@@ -164,7 +164,7 @@ const ReactionRenderer = ({message, channel}) => {
                                             className="reaction-avatar"
                                             style={{
                                                 backgroundImage: avatarUrl ? `url(${avatarUrl})` : 'none',
-                                                backgroundColor: !avatarUrl ? 'var(--background-secondary)' : 'transparent'
+                                                backgroundColor: !avatarUrl ? 'var(--background-base-lower)' : 'transparent'
                                             }}
                                         />
                                     )
