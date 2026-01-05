@@ -168,7 +168,7 @@ export default class HoldYourTongue {
                             onChange={setNewKeyword}
                             placeholder="Enter keyword..."
                             autoFocus
-                            onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                         />
                         <Components.Button onClick={handleAdd}>Save</Components.Button>
                         <Components.Button onClick={() => {

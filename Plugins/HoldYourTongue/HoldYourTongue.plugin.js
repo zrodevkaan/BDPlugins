@@ -169,7 +169,7 @@ var HoldYourTongue = class {
           onChange: setNewKeyword,
           placeholder: "Enter keyword...",
           autoFocus: true,
-          onKeyPress: (e) => e.key === "Enter" && handleAdd()
+          onKeyDown: (e) => e.key === "Enter" && handleAdd()
         }
       ), /* @__PURE__ */ BdApi.React.createElement(Components.Button, { onClick: handleAdd }, "Save"), /* @__PURE__ */ BdApi.React.createElement(Components.Button, { onClick: () => {
         setIsAdding(false);
