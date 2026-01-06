@@ -2,6 +2,7 @@
  * @name HoldYourTongue
  * @description Stop yourself from saying things in chat!
  * @version 1.0.0
+ * @author Kaan
  */
 const {Webpack, Hooks, Utils, Data, Components, React} = new BdApi("HoldYourTongue")
 const {useStateFromStores} = Hooks
