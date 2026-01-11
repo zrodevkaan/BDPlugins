@@ -3,7 +3,6 @@
  * @description Stop yourself from saying things in chat!
  * @version 1.0.0
  * @author Kaan
- * @Everyone Warning")
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -32,7 +31,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var { Webpack, Hooks, Utils, Data, Components, React } = new BdApi("HoldYourTongue");
 var { useStateFromStores } = Hooks;
-var CheckFilters = Webpack.getBySource("@Everyone Warning");
+var CheckFilters = Webpack.getBySource("Everyone Warning");
 var InteractiveButton = Webpack.getByKeys("Icon").Icon;
 var TextArea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
 var DataStore = new Proxy(
@@ -91,7 +90,7 @@ var KeywordStore = new class KeywordStoreClass extends Utils.Store {
   getBodyMessage() {
     return this.body;
   }
-  doCheckShit = (e) => {
+  startChecking = (e) => {
     const lowerMessage = e.toLowerCase();
     let foundWords = [];
     this.getKeywords().forEach((item) => {
@@ -139,7 +138,7 @@ function KeywordDisplayer({ data }) {
 }
 var HoldYourTongue = class {
   start() {
-    const boundCheck = KeywordStore.doCheckShit.bind(KeywordStore);
+    const boundCheck = KeywordStore.startChecking.bind(KeywordStore);
     const existingFilter = Object.values(CheckFilters.$).find((x) => x.analyticsType?.includes("nacho"));
     if (existingFilter) {
       existingFilter.check = boundCheck;

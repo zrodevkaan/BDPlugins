@@ -4,10 +4,11 @@
  * @version 1.0.0
  * @author Kaan
  */
+
 const {Webpack, Hooks, Utils, Data, Components, React} = new BdApi("HoldYourTongue")
 const {useStateFromStores} = Hooks
 
-const CheckFilters = Webpack.getBySource("@Everyone Warning")
+const CheckFilters = Webpack.getBySource("Everyone Warning")
 const InteractiveButton = Webpack.getByKeys("Icon").Icon
 const TextArea= Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
 
@@ -77,7 +78,7 @@ const KeywordStore = new class KeywordStoreClass extends Utils.Store {
         return this.body
     }
 
-    doCheckShit = (e: string) => {
+    startChecking = (e: string) => {
         const lowerMessage = e.toLowerCase();
         let foundWords: string[] = [];
 
@@ -127,7 +128,7 @@ function KeywordDisplayer({data}) {
 
 export default class HoldYourTongue {
     start() {
-        const boundCheck = KeywordStore.doCheckShit.bind(KeywordStore);
+        const boundCheck = KeywordStore.startChecking.bind(KeywordStore);
         const existingFilter = Object.values(CheckFilters.$).find(x => x.analyticsType?.includes('nacho'));
 
         if (existingFilter) {
