@@ -59,7 +59,7 @@ export default class DynamicChatButtons {
                 return DataStore[key] !== true;
             });
 
-            return <div className={'dynanmic-chat-buttons'} style={{display: 'flex'}}>
+            return <div className={'dynanmic-chat-buttons'} style={{display: 'flex', alignItems: 'center'}}>
                 {filteredButtons}
             </div>
         });
