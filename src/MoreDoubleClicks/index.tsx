@@ -78,7 +78,7 @@ function StartDoubleClickAction(_, args, ret, event) {
     const textOverride = MoreDoubleClickStore.getSetting("textOverride")
 
     const selection = window.getSelection();
-    if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && textOverride) {
+    if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && !textOverride) {
         return;
     }
 
@@ -293,6 +293,7 @@ export class MoreDoubleClicks {
                 "animated": false
             },
             shouldEmojiBurst: false,
+            textOverride: true,
             ...(DataStore.settings || {}),
         }
     }
