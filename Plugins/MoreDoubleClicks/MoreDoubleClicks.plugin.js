@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.2
+ * @version 2.0.3
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -55,6 +55,10 @@ var DataStore = new Proxy(
   }
 );
 var MoreDoubleClickStore = new class MDCS extends Utils.Store {
+  constructor() {
+    super();
+    this.deleteKeyPressed = false;
+  }
   setSetting(key, value) {
     DataStore.settings = { ...DataStore.settings, [key]: value };
     this.emitChange();
@@ -64,6 +68,12 @@ var MoreDoubleClickStore = new class MDCS extends Utils.Store {
   }
   settings() {
     return DataStore.settings;
+  }
+  setDeleteKeyPressed(pressed) {
+    this.deleteKeyPressed = pressed;
+  }
+  isDeleteKeyPressed() {
+    return this.deleteKeyPressed;
   }
 }();
 function hasPermission(userId, permission, channelId) {
@@ -78,7 +88,7 @@ function StartDoubleClickAction(_, args, ret, event) {
   const doubleClickEmoji = MoreDoubleClickStore.getSetting("doubleClickEmoji");
   const textOverride = MoreDoubleClickStore.getSetting("textOverride");
   const selection = window.getSelection();
-  if (selection && selection.toString().length > 0 && message.content.includes(selection.toString())) {
+  if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && textOverride) {
     return;
   }
   const shiftAction = MoreDoubleClickStore.getSetting("shiftDoubleClickAction");
@@ -90,7 +100,7 @@ function StartDoubleClickAction(_, args, ret, event) {
     actionToTake = shiftAction;
   } else if (event.ctrlKey || event.metaKey) {
     actionToTake = ctrlAction;
-  } else if (event.key === "Delete" || event.keyCode === 46) {
+  } else if (MoreDoubleClickStore.isDeleteKeyPressed()) {
     actionToTake = delAction;
   }
   if ("DELETE" === actionToTake && (hasPermission(message.author.id, Permissions.MANAGE_MESSAGES, message.channel_id) || canEdit)) {
@@ -260,6 +270,18 @@ var MoreDoubleClicks = class {
     };
   }
   start() {
+    this.handleKeyDown = (e) => {
+      if (e.key === "Delete") {
+        MoreDoubleClickStore.setDeleteKeyPressed(true);
+      }
+    };
+    this.handleKeyUp = (e) => {
+      if (e.key === "Delete") {
+        MoreDoubleClickStore.setDeleteKeyPressed(false);
+      }
+    };
+    document.addEventListener("keydown", this.handleKeyDown);
+    document.addEventListener("keyup", this.handleKeyUp);
     Patcher.after(MessageContent.ZP, "type", (_, args, ret) => {
       const originalOnDoubleClick = ret.props.onDoubleClick;
       Object.defineProperty(ret.props, "onDoubleClick", {
@@ -276,6 +298,12 @@ var MoreDoubleClicks = class {
     return /* @__PURE__ */ BdApi.React.createElement(SettingsPanel, null);
   }
   stop() {
+    if (this.handleKeyDown) {
+      document.removeEventListener("keydown", this.handleKeyDown);
+    }
+    if (this.handleKeyUp) {
+      document.removeEventListener("keyup", this.handleKeyUp);
+    }
     Patcher.unpatchAll();
   }
 };
