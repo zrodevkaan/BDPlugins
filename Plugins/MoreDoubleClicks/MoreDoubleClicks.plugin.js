@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -203,8 +203,8 @@ function SettingsPanel() {
     SwitchItem,
     {
       onChange: (v) => MoreDoubleClickStore.setSetting("textOverride", v),
-      title: "Override text selects.",
-      note: "Toggles if you want to select text or should actions still execute if text is selected.",
+      title: "Allow double click on text",
+      note: "Allows double clicks to trigger when double clicking/selecting text.",
       value: textOverride
     }
   ), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontWeight: "bold" } }, "Currently Selected Emoji:"), emoji?.icon ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Select Guild for Emojis"), /* @__PURE__ */ BdApi.React.createElement(

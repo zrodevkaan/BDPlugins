@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
@@ -214,8 +214,8 @@ function SettingsPanel() {
 
         <SwitchItem
             onChange={(v) => MoreDoubleClickStore.setSetting('textOverride', v)}
-            title="Override text selects."
-            note="Toggles if you want to select text or should actions still execute if text is selected."
+            title="Allow double click on text"
+            note="Allows double clicks to trigger when double clicking/selecting text."
             value={textOverride}
         />
 
