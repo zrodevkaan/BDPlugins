@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.1
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
@@ -264,14 +264,14 @@ export class MoreDoubleClicks {
             shiftDoubleClickAction: "EDIT",
             ctrlDoubleClickAction: "REACT",
             delDoubleClickAction: "DELETE",
-            selectedGuildForReaction: "0",
+            selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0],
             doubleClickEmoji: {
                 "id": null,
                 "name": "😭",
                 "animated": false
             },
             shouldEmojiBurst: false,
-            ...DataStore.settings,
+            ...(DataStore.settings || {}),
         }
     }
 

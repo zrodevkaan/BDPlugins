@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.1
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -238,14 +238,14 @@ var MoreDoubleClicks = class {
       shiftDoubleClickAction: "EDIT",
       ctrlDoubleClickAction: "REACT",
       delDoubleClickAction: "DELETE",
-      selectedGuildForReaction: "0",
+      selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0],
       doubleClickEmoji: {
         "id": null,
         "name": "\u{1F62D}",
         "animated": false
       },
       shouldEmojiBurst: false,
-      ...DataStore.settings
+      ...DataStore.settings || {}
     };
   }
   start() {
