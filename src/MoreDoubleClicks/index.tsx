@@ -264,7 +264,7 @@ export class MoreDoubleClicks {
             shiftDoubleClickAction: "EDIT",
             ctrlDoubleClickAction: "REACT",
             delDoubleClickAction: "DELETE",
-            selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0],
+            selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0].id,
             doubleClickEmoji: {
                 "id": null,
                 "name": "😭",
