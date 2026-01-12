@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.1
+ * @version 2.0.2
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
@@ -62,6 +62,7 @@ function StartDoubleClickAction(_, args, ret, event) {
     const message = args[0].message
     const canEdit = message.author.id == UserStore.getCurrentUser().id
     const doubleClickEmoji = MoreDoubleClickStore.getSetting("doubleClickEmoji")
+    const textOverride = MoreDoubleClickStore.getSetting("textOverride")
 
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0 && message.content.includes(selection.toString())) {
@@ -83,16 +84,16 @@ function StartDoubleClickAction(_, args, ret, event) {
         actionToTake = delAction;
     }
 
+    if ("DELETE" === actionToTake && (hasPermission(message.author.id, Permissions.MANAGE_MESSAGES, message.channel_id) || canEdit)) {
+        return EditUtils.deleteMessage(message.channel_id, message.id)
+    }
+
     if ("EDIT" === actionToTake && canEdit) {
         return EditUtils.startEditMessageRecord(message.channel_id, message, {shiftKey: false});
     }
 
     if ("REPLY" === actionToTake) {
         return ReplyAction(ChannelStore.getChannel(message.channel_id), message, {shiftKey: false});
-    }
-
-    if ("DELETE" === actionToTake && (hasPermission(message.author.id, Permissions.MANAGE_MESSAGES, message.channel_id) || canEdit)) {
-        return EditUtils.deleteMessage(message.channel_id, message.id)
     }
 
     if ('REACT' === actionToTake) {
@@ -120,7 +121,8 @@ function SettingsPanel() {
         shiftAction,
         ctrlAction,
         delAction,
-        shouldBurst
+        shouldBurst,
+        textOverride
     } = useStateFromStores(MoreDoubleClickStore, () => ({
         emoji: MoreDoubleClickStore.getSetting("doubleClickEmoji"),
         guild: MoreDoubleClickStore.getSetting("selectedGuildForReaction"),
@@ -128,7 +130,8 @@ function SettingsPanel() {
         shiftAction: MoreDoubleClickStore.getSetting("shiftDoubleClickAction"),
         ctrlAction: MoreDoubleClickStore.getSetting("ctrlDoubleClickAction"),
         delAction: MoreDoubleClickStore.getSetting("delDoubleClickAction"),
-        shouldBurst: MoreDoubleClickStore.getSetting("shouldEmojiBurst")
+        shouldBurst: MoreDoubleClickStore.getSetting("shouldEmojiBurst"),
+        textOverride: MoreDoubleClickStore.getSetting("textOverride")
     }));
 
     const actionOptions = [
@@ -191,11 +194,17 @@ function SettingsPanel() {
 
         <SwitchItem
             onChange={(v) => MoreDoubleClickStore.setSetting('shouldEmojiBurst', v)}
-            note="Enable burst/super reactions"
+            title="Enable burst/super reactions"
+            note="Use Burst Reaction"
             value={shouldBurst}
-        >
-            Use Burst Reaction
-        </SwitchItem>
+        />
+
+        <SwitchItem
+            onChange={(v) => MoreDoubleClickStore.setSetting('textOverride', v)}
+            title="Override text selects."
+            note="Toggles if you want to select text or should actions still execute if text is selected."
+            value={textOverride}
+        />
 
         <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', marginBottom: '10px'}}>
             <span style={{fontWeight: 'bold'}}>Currently Selected Emoji:</span>
