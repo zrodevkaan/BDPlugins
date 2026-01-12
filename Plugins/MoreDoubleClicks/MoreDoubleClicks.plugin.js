@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.5
+ * @version 2.0.6
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -88,7 +88,7 @@ function StartDoubleClickAction(_, args, ret, event) {
   const doubleClickEmoji = MoreDoubleClickStore.getSetting("doubleClickEmoji");
   const textOverride = MoreDoubleClickStore.getSetting("textOverride");
   const selection = window.getSelection();
-  if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && textOverride) {
+  if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && !textOverride) {
     return;
   }
   const shiftAction = MoreDoubleClickStore.getSetting("shiftDoubleClickAction");

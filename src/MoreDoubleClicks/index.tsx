@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.5
+ * @version 2.0.6
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
@@ -78,7 +78,7 @@ function StartDoubleClickAction(_, args, ret, event) {
     const textOverride = MoreDoubleClickStore.getSetting("textOverride")
 
     const selection = window.getSelection();
-    if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && textOverride) {
+    if (selection && selection.toString().length > 0 && message.content.includes(selection.toString()) && !textOverride) {
         return;
     }
 
