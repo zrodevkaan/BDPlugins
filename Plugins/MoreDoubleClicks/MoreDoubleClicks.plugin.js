@@ -258,7 +258,6 @@ function SettingsPanel() {
       x.name
     );
   }) : Object.values(EmojiPack()).map((x) => {
-    console.log(x);
     return /* @__PURE__ */ BdApi.React.createElement(
       "div",
       {

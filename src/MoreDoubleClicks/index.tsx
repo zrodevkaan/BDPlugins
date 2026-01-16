@@ -283,7 +283,6 @@ function SettingsPanel() {
                             {x.name}
                         </span>
                 }) : Object.values(EmojiPack()).map(x => {
-                    console.log(x)
                     return <div
                         key={String(x.names).split(' ').join(', ')}
                         onClick={() => setNewEmoji(x)}
