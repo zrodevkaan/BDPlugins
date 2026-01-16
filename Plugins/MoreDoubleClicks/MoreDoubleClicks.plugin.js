@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.6
+ * @version 2.1.6
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -33,6 +33,10 @@ var { Webpack, Utils, Patcher, Data, React, Hooks, Components } = new BdApi("Mor
 var MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""');
 var EditUtils = Webpack.getModule((x) => x.startEditMessageRecord);
 var ReplyAction = Webpack.getByStrings("showMentionToggle", "FOCUS_CHANNEL_TEXT_AREA", { searchExports: true });
+var EmojiPack = () => {
+  let a = Webpack.getModule((m) => m.EMOJI_NAME_RE && m.getCategories);
+  return a.getCategories().map((m) => a.getByCategory(m)).flat();
+};
 var addReaction = Webpack.getByStrings("uaUU/g", { searchExports: true });
 var Permissions = Webpack.getByKeys("BAN_MEMBERS", { searchExports: true });
 var SwitchItem = Webpack.getByStrings('"tooltipText"in');
@@ -156,13 +160,31 @@ function SettingsPanel() {
   ];
   const setNewEmoji = (emoji2) => {
     const newEmoji = {
-      id: emoji2.id,
-      name: emoji2.name,
+      id: emoji2.id || null,
+      isGuildEmoji: emoji2.id != null,
+      name: emoji2.surrogates ?? emoji2.name,
       animated: emoji2.animated,
       icon: emoji2.id ? `https://cdn.discordapp.com/emojis/${emoji2.id}.${emoji2.animated ? "gif" : "webp"}?size=32` : null
     };
     MoreDoubleClickStore.setSetting("doubleClickEmoji", newEmoji);
   };
+  const guildMapping = GuildStore.getGuildsArray().map((x) => {
+    return {
+      label: /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+        display: "flex",
+        gap: "10px",
+        alignItems: "center"
+      } }, /* @__PURE__ */ BdApi.React.createElement(
+        "img",
+        {
+          src: `https://cdn.discordapp.com/icons/${x.id}/${x.icon}.png?size=32`,
+          style: { width: "20px", height: "20px", borderRadius: "50%" }
+        }
+      ), x.name),
+      value: x.id
+    };
+  });
+  guildMapping.unshift({ label: "Default", value: "0" });
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: { minHeight: "500px", padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Normal Double-Click"), /* @__PURE__ */ BdApi.React.createElement(
     Selectable,
     {
@@ -207,31 +229,16 @@ function SettingsPanel() {
       note: "Allows double clicks to trigger when double clicking/selecting text.",
       value: textOverride
     }
-  ), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontWeight: "bold" } }, "Currently Selected Emoji:"), emoji?.icon ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Select Guild for Emojis"), /* @__PURE__ */ BdApi.React.createElement(
+  ), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontWeight: "bold" } }, "Currently Selected Emoji:"), emoji?.isGuildEmoji ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Select Guild for Emojis"), /* @__PURE__ */ BdApi.React.createElement(
     Selectable,
     {
       onSelectionChange: (e) => {
         MoreDoubleClickStore.setSetting("selectedGuildForReaction", e);
       },
       value: GuildStore.getGuild(guild)?.id,
-      options: GuildStore.getGuildsArray().map((x) => {
-        return {
-          label: /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-            display: "flex",
-            gap: "10px",
-            alignItems: "center"
-          } }, /* @__PURE__ */ BdApi.React.createElement(
-            "img",
-            {
-              src: `https://cdn.discordapp.com/icons/${x.id}/${x.icon}.png?size=32`,
-              style: { width: "20px", height: "20px", borderRadius: "50%" }
-            }
-          ), x.name),
-          value: x.id
-        };
-      })
+      options: guildMapping
     }
-  )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginTop: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "10px", fontWeight: "bold" } }, "Select Emoji"), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))", gap: "5px" } }, Object.values(RawGuildEmojiStore.getGuildEmojis(guild)).map((x) => {
+  )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginTop: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "10px", fontWeight: "bold" } }, "Select Emoji"), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))", gap: "5px" } }, guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild)).map((x) => {
     return x?.id ? /* @__PURE__ */ BdApi.React.createElement(
       "img",
       {
@@ -250,6 +257,17 @@ function SettingsPanel() {
       },
       x.name
     );
+  }) : Object.values(EmojiPack()).map((x) => {
+    console.log(x);
+    return /* @__PURE__ */ BdApi.React.createElement(
+      "div",
+      {
+        key: String(x.names).split(" ").join(", "),
+        onClick: () => setNewEmoji(x),
+        style: { width: "40px", height: "40px", fontSize: "40px", cursor: "pointer", textAlign: "center" }
+      },
+      x.surrogates
+    );
   }))));
 }
 var MoreDoubleClicks = class {
@@ -260,6 +278,7 @@ var MoreDoubleClicks = class {
       ctrlDoubleClickAction: "REACT",
       delDoubleClickAction: "DELETE",
       selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0].id,
+      // id or 0
       doubleClickEmoji: {
         "id": null,
         "name": "\u{1F62D}",

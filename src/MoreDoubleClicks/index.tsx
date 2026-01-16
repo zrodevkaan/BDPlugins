@@ -2,12 +2,16 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.0.6
+ * @version 2.1.6
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
 const EditUtils = Webpack.getModule(x => x.startEditMessageRecord)
 const ReplyAction = Webpack.getByStrings('showMentionToggle', 'FOCUS_CHANNEL_TEXT_AREA', {searchExports: true})
+const EmojiPack = () => {
+    let a = Webpack.getModule(m => m.EMOJI_NAME_RE && m.getCategories);
+    return a.getCategories().map(m => a.getByCategory(m)).flat()
+}
 
 const addReaction = Webpack.getByStrings('uaUU/g', {searchExports: true})
 // const removeReaction = Webpack.getByStrings('3l9f6u', {searchExports: true})
@@ -157,14 +161,34 @@ function SettingsPanel() {
 
     const setNewEmoji = (emoji) => {
         const newEmoji = {
-            id: emoji.id,
-            name: emoji.name,
+            id: emoji.id || null,
+            isGuildEmoji: emoji.id != null,
+            name: emoji.surrogates ?? emoji.name,
             animated: emoji.animated,
             icon: emoji.id ? `https://cdn.discordapp.com/emojis/${emoji.id}.${emoji.animated ? 'gif' : 'webp'}?size=32` : null
         }
 
         MoreDoubleClickStore.setSetting("doubleClickEmoji", newEmoji);
     }
+
+    const guildMapping = GuildStore.getGuildsArray().map(x => {
+        return {
+            label: <div style={{
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'center'
+            }}>
+                <img
+                    src={`https://cdn.discordapp.com/icons/${x.id}/${x.icon}.png?size=32`}
+                    style={{width: '20px', height: '20px', borderRadius: '50%'}}
+                />
+                {x.name}
+            </div>,
+            value: x.id
+        }
+    })
+
+    guildMapping.unshift({label: "Default", value: "0"})
 
     return <div style={{minHeight: '500px', padding: '10px'}}>
         <div style={{marginBottom: '15px'}}>
@@ -221,7 +245,7 @@ function SettingsPanel() {
 
         <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', marginBottom: '10px'}}>
             <span style={{fontWeight: 'bold'}}>Currently Selected Emoji:</span>
-            {emoji?.icon ? (
+            {emoji?.isGuildEmoji ? (
                 <img src={emoji.icon} style={{width: '32px', height: '32px'}}/>
             ) : (
                 <span style={{fontSize: '32px'}}>{emoji?.name}</span>
@@ -235,29 +259,14 @@ function SettingsPanel() {
                     MoreDoubleClickStore.setSetting("selectedGuildForReaction", e)
                 }}
                 value={GuildStore.getGuild(guild)?.id}
-                options={GuildStore.getGuildsArray().map(x => {
-                    return {
-                        label: <div style={{
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'center'
-                        }}>
-                            <img
-                                src={`https://cdn.discordapp.com/icons/${x.id}/${x.icon}.png?size=32`}
-                                style={{width: '20px', height: '20px', borderRadius: '50%'}}
-                            />
-                            {x.name}
-                        </div>,
-                        value: x.id
-                    }
-                })}
+                options={guildMapping}
             />
         </div>
 
         <div style={{marginTop: '15px'}}>
             <label style={{display: 'block', marginBottom: '10px', fontWeight: 'bold'}}>Select Emoji</label>
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '5px'}}>
-                {Object.values(RawGuildEmojiStore.getGuildEmojis(guild)).map(x => {
+                {guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild)).map(x => {
                     return x?.id ?
                         <img
                             key={x.id}
@@ -273,6 +282,13 @@ function SettingsPanel() {
                         >
                             {x.name}
                         </span>
+                }) : Object.values(EmojiPack()).map(x => {
+                    console.log(x)
+                    return <div
+                        key={String(x.names).split(' ').join(', ')}
+                        onClick={() => setNewEmoji(x)}
+                        style={{width: '40px', height: '40px', fontSize: '40px', cursor: 'pointer', textAlign: 'center'}}
+                    >{x.surrogates}</div>
                 })}
             </div>
         </div>
@@ -286,7 +302,7 @@ export class MoreDoubleClicks {
             shiftDoubleClickAction: "EDIT",
             ctrlDoubleClickAction: "REACT",
             delDoubleClickAction: "DELETE",
-            selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0].id,
+            selectedGuildForReaction: Object.values(GuildStore.getGuilds())[0].id, // id or 0
             doubleClickEmoji: {
                 "id": null,
                 "name": "😭",
