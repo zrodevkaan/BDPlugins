@@ -1,11 +1,12 @@
 /**
  * @name DynamicChatButtons
  * @author Kaan
- * @version 0.0.2
+ * @version 0.1.0
  * @description Customize which chat buttons are visible in Discord by right clicking the chat area and forget that breakable css filter that only supports aria-label :)
  */
 
-const { Patcher, React, Webpack, DOM, ContextMenu, Data } = new BdApi('DynamicChatButtons')
+const {Patcher, React, Webpack, DOM, ContextMenu, Data, Utils, Hooks} = new BdApi('DynamicChatButtons')
+const {useStateFromStores} = Hooks
 
 const DataStore = new Proxy(
     {},
@@ -25,61 +26,80 @@ const DataStore = new Proxy(
 
 const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.Z.getActiveOption(')
 
-export default class DynamicChatButtons {
-    protected allKnownButtons: any[];
+const ButtonStore = new class ButtonStoreClass extends Utils.Store {
+    protected allKnownButtons = DataStore.allKnownButtons || [];
+    protected hiddenStates = {};
 
-    constructor() {
-        this.allKnownButtons = DataStore.allKnownButtons || [];
+    setButtons(buttons) {
+        this.allKnownButtons = buttons;
+        this.emitChange();
     }
 
+    getButtons() {
+        return this.allKnownButtons;
+    }
+
+    toggleButton(key) {
+        DataStore[key] = !DataStore[key];
+        this.hiddenStates = {...this.hiddenStates};
+        this.emitChange();
+    }
+
+    isHidden(key) {
+        return DataStore[key] === true;
+    }
+
+    getHiddenStates() {
+        return this.hiddenStates;
+    }
+}
+
+function ChatButtonsWrapper({originalResult}) {
+    useStateFromStores([ButtonStore], () => ButtonStore.getHiddenStates());
+
+    const buttons = [...originalResult.props.children];
+    const currentKeys = buttons.map(button => {
+        const isAppButton = String(button.type?.type)?.includes?.('entryPointCommandButtonRef');
+        const key = isAppButton ? "app_launcher" : button.key;
+
+        if (isAppButton && button.key === null) {
+            button.key = "app_launcher";
+        }
+
+        return key;
+    });
+
+    React.useEffect(() => {
+        ButtonStore.setButtons(currentKeys);
+    }, [currentKeys.join(',')]);
+
+    const filteredButtons = buttons.filter(button => {
+        const key = String(button.type?.type)?.includes?.('entryPointCommandButtonRef') ?
+            "app_launcher" : button.key;
+
+        return !ButtonStore.isHidden(key);
+    });
+
+    return <div className={'dynamic-chat-buttons'} style={{display: 'flex', alignItems: 'center'}}>
+        {filteredButtons}
+    </div>
+}
+
+export default class DynamicChatButtons {
     start() {
         Patcher.after(Buttons.Z, 'type', (_, [props], originalResult) => {
             if (!originalResult?.props?.children) {
                 return originalResult;
             }
 
-            const buttons = [...originalResult.props.children];
-            const currentKeys = buttons.map(button => {
-                const isAppButton = String(button.type?.type)?.includes?.('entryPointCommandButtonRef');
-                const key = isAppButton ? "app_launcher" : button.key;
-
-                if (isAppButton && button.key === null) {
-                    button.key = "app_launcher";
-                }
-
-                return key;
-            });
-
-            this.updateKnownButtons(currentKeys);
-
-            const filteredButtons = buttons.filter(button => {
-                const key = String(button.type?.type)?.includes?.('entryPointCommandButtonRef') ?
-                    "app_launcher" : button.key;
-
-                return DataStore[key] !== true;
-            });
-
-            return <div className={'dynamic-chat-buttons'} style={{display: 'flex', alignItems: 'center'}}>
-                {filteredButtons}
-            </div>
+            return <ChatButtonsWrapper originalResult={originalResult}/>
         });
 
         ContextMenu.patch('textarea-context', this.patchSlate);
     }
 
-    updateKnownButtons(currentKeys) {
-        currentKeys.forEach(key => {
-            if (key && !this.allKnownButtons.includes(key)) {
-                this.allKnownButtons.push(key);
-            }
-        });
-
-        const existingButtons = DataStore.allKnownButtons || [];
-        DataStore.allKnownButtons = [...new Set([...existingButtons, ...this.allKnownButtons])];
-    }
-
     patchSlate = (contextMenu, props) => {
-        const buttonKeys = this.allKnownButtons;
+        const buttonKeys = ButtonStore.getButtons();
 
         if (!buttonKeys || buttonKeys.length === 0) {
             return;
@@ -91,9 +111,9 @@ export default class DynamicChatButtons {
                     type: 'toggle',
                     id: key,
                     label: key,
-                    checked: DataStore[key] === true,
+                    checked: ButtonStore.isHidden(key),
                     action: () => {
-                        DataStore[key] = !DataStore[key];
+                        ButtonStore.toggleButton(key);
                     }
                 }
             }
