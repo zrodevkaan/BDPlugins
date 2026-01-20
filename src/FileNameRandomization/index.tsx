@@ -1,33 +1,32 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.2.2
+ * @version 1.2.3
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
+import {styled} from "../Helpers";
 
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-const { React, Webpack, Patcher, Data } = new BdApi('FileNameRandomization');
-const FormItem = Webpack.getByStrings("case\"legend\"", { searchExports: true })
-const {
-    FormSwitch, label, TextInput, FormText, SearchableSelect
-} = Webpack.getMangled(/ConfirmModal:\(\)=>.{1,3}.ConfirmModal/, {
-    FormSwitch: x => x.toString?.().includes('disabledText'),
-    SearchableSelect: x => x.render?.toString?.().includes(",renderCustomPill:"),
-    TextInput: Webpack.Filters.byStrings("showCharacterCountFullPadding"),
-    FormText: Webpack.Filters.byStrings(".SELECTABLE),", ".DISABLED:"),
-    "label": Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
-    FormItem: Webpack.Filters.byStrings('.fieldWrapper:void 0'),
-    openModal: Webpack.Filters.byStrings('onCloseRequest', 'onCloseCallback', 'onCloseCallback', 'instant', 'backdropStyle')
+const {React, Webpack, Patcher, Data} = new BdApi('FileNameRandomization');
+const FormItem = styled.div({
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px"
 })
-const { useState } = React;
+
+const FormSwitch = Webpack.getModule(Webpack.Filters.byStrings(`return"tooltipText"`))
+const TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountFullPadding"), {searchExports: true})
+const SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings('SearchableSelect','fieldProps'), {searchExports: true})
+
+const {useState} = React;
 
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
 const Margins = Webpack.getByKeys('marginBottom40', 'marginTop4');
 
 const ToolbarButton = Webpack.getByStrings('actionBarIcon')
 
-const FoodIcon = ({ size = 24, color = "var(--interactive-icon-default)", ...props }) => {
+const FoodIcon = ({size = 24, color = "var(--interactive-icon-default)", ...props}) => {
     return React.createElement("svg", {
         xmlns: "http://www.w3.org/2000/svg", width: size, height: size, viewBox: "0 0 24 24", ...props
     }, React.createElement("path", {
@@ -214,9 +213,9 @@ class FileNameRandomization {
                         <label>Case Option</label>
                         <SearchableSelect
                             options={[
-                                { label: 'Mixed Case', value: 'mixed' },
-                                { label: 'Lowercase', value: 'lowercase' },
-                                { label: 'Uppercase', value: 'uppercase' }
+                                {label: 'Mixed Case', value: 'mixed'},
+                                {label: 'Lowercase', value: 'lowercase'},
+                                {label: 'Uppercase', value: 'uppercase'}
                             ]}
                             value={caseOption}
                             onChange={(value) => onCaseOptionChange(value)}
@@ -250,23 +249,30 @@ class FileNameRandomization {
 
                     <FormItem className={Margins.marginBottom40}>
                         <label>Custom Format</label>
-                        <div style={{ color: "var(--text-normal)", fontSize: "14px", fontWeight: "var(--font-weight-normal)", lineHeight: "20px" }}>
-                            Use {"{prefix}"}, {"{suffix}"}, {"{timestamp}"}, {"{random}"}, and {"{original}"} as placeholders.
+                        <div style={{
+                            color: "var(--text-normal)",
+                            fontSize: "14px",
+                            fontWeight: "var(--font-weight-normal)",
+                            lineHeight: "20px"
+                        }}>
+                            Use {"{prefix}"}, {"{suffix}"}, {"{timestamp}"}, {"{random}"}, and {"{original}"} as
+                            placeholders.
                         </div>
                         <TextInput
                             value={customFormat}
                             onChange={(e) => onChange('customFormat', e)}
                         />
-                    </FormItem >
-                    ;
+                    </FormItem>
+
                     <FormSwitch
+                        title="Preserve Original Filename"
                         note="Include the original filename in the new name."
                         value={preserveOriginalName}
                         onChange={(e) => onSwitch('preserveOriginalName', e)}
                     >
                         Preserve Original Filename
                     </FormSwitch>
-                </div >
+                </div>
             );
         };
     }

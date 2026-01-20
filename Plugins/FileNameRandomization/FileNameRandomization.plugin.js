@@ -1,42 +1,49 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.2.2
+ * @version 1.2.3
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 "use strict";
 
+// src/Helpers/index.tsx
+var { React, ContextMenu } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p, receiver) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+
 // src/FileNameRandomization/index.tsx
 var characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-var { React, Webpack, Patcher, Data } = new BdApi("FileNameRandomization");
-var FormItem = Webpack.getByStrings('case"legend"', { searchExports: true });
-var {
-  FormSwitch,
-  label,
-  TextInput,
-  FormText,
-  SearchableSelect
-} = Webpack.getMangled(/ConfirmModal:\(\)=>.{1,3}.ConfirmModal/, {
-  FormSwitch: (x) => x.toString?.().includes("disabledText"),
-  SearchableSelect: (x) => x.render?.toString?.().includes(",renderCustomPill:"),
-  TextInput: Webpack.Filters.byStrings("showCharacterCountFullPadding"),
-  FormText: Webpack.Filters.byStrings(".SELECTABLE),", ".DISABLED:"),
-  "label": Webpack.Filters.byStrings('["defaultMargin".concat', '="h5"'),
-  FormItem: Webpack.Filters.byStrings(".fieldWrapper:void 0"),
-  openModal: Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "onCloseCallback", "instant", "backdropStyle")
+var { React: React2, Webpack, Patcher, Data } = new BdApi("FileNameRandomization");
+var FormItem = styled.div({
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px"
 });
-var { useState } = React;
+var FormSwitch = Webpack.getModule(Webpack.Filters.byStrings(`return"tooltipText"`));
+var TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountFullPadding"), { searchExports: true });
+var SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings("SearchableSelect", "fieldProps"), { searchExports: true });
+var { useState } = React2;
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
 var Margins = Webpack.getByKeys("marginBottom40", "marginTop4");
 var ToolbarButton = Webpack.getByStrings("actionBarIcon");
 var FoodIcon = ({ size = 24, color = "var(--interactive-icon-default)", ...props }) => {
-  return React.createElement("svg", {
+  return React2.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg",
     width: size,
     height: size,
     viewBox: "0 0 24 24",
     ...props
-  }, React.createElement("path", {
+  }, React2.createElement("path", {
     fill: color,
     fillRule: "evenodd",
     d: "m4.614 8.545l-.426 1.705H2a.75.75 0 0 0 0 1.5h20a.75.75 0 0 0 0-1.5h-2.187l-.427-1.705c-.546-2.183-.818-3.274-1.632-3.91C16.94 4 15.815 4 13.565 4h-3.13c-2.25 0-3.375 0-4.189.635c-.814.636-1.087 1.727-1.632 3.91M6.5 21a3.5 3.5 0 0 0 3.384-2.604l1.11-.555a2.25 2.25 0 0 1 2.012 0l1.11.555A3.501 3.501 0 0 0 21 17.5a3.5 3.5 0 0 0-6.91-.794l-.413-.206a3.75 3.75 0 0 0-3.354 0l-.413.206A3.501 3.501 0 0 0 3 17.5A3.5 3.5 0 0 0 6.5 21",
@@ -62,14 +69,14 @@ var DataStore = new Proxy(
 var IncognitoButton = () => {
   const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
   const color = enabled ? "var(--interactive-icon-default)" : "var(--status-danger)";
-  return React.createElement(ToolbarButton, {
+  return React2.createElement(ToolbarButton, {
     tooltip: enabled ? "Randomization (Enabled)" : "Randomization (Disabled)",
     color: enabled,
     onClick: () => {
       setEnabled(!enabled);
       DataStore.shouldIncognito = !enabled;
     }
-  }, React.createElement(FoodIcon, {
+  }, React2.createElement(FoodIcon, {
     color
   }));
 };
@@ -89,7 +96,7 @@ var FileNameRandomization = class {
     this.Main = Patcher.before(Webpack.getByKeys("_sendMessage"), "_sendMessage", this.handleFileUpload.bind(this));
     Patcher.after(Toolbar, "Z", (_, __, returnValue) => {
       if (returnValue?.props?.actions?.props?.children) {
-        const incognitoButtonElement = React.createElement(IncognitoButton);
+        const incognitoButtonElement = React2.createElement(IncognitoButton);
         returnValue.props.actions.props.children.unshift(incognitoButtonElement);
       }
     });
@@ -212,15 +219,21 @@ var FileNameRandomization = class {
           value: randomLength,
           onChange: (e) => onLengthChange(e)
         }
-      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Custom Format"), /* @__PURE__ */ BdApi.React.createElement("div", { style: { color: "var(--text-normal)", fontSize: "14px", fontWeight: "var(--font-weight-normal)", lineHeight: "20px" } }, "Use ", "{prefix}", ", ", "{suffix}", ", ", "{timestamp}", ", ", "{random}", ", and ", "{original}", " as placeholders."), /* @__PURE__ */ BdApi.React.createElement(
+      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Custom Format"), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+        color: "var(--text-normal)",
+        fontSize: "14px",
+        fontWeight: "var(--font-weight-normal)",
+        lineHeight: "20px"
+      } }, "Use ", "{prefix}", ", ", "{suffix}", ", ", "{timestamp}", ", ", "{random}", ", and ", "{original}", " as placeholders."), /* @__PURE__ */ BdApi.React.createElement(
         TextInput,
         {
           value: customFormat,
           onChange: (e) => onChange("customFormat", e)
         }
-      )), ";", /* @__PURE__ */ BdApi.React.createElement(
+      )), /* @__PURE__ */ BdApi.React.createElement(
         FormSwitch,
         {
+          title: "Preserve Original Filename",
           note: "Include the original filename in the new name.",
           value: preserveOriginalName,
           onChange: (e) => onSwitch("preserveOriginalName", e)
