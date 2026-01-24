@@ -1,7 +1,7 @@
 /**
  * @name DynamicChatButtons
  * @author Kaan
- * @version 0.1.0
+ * @version 0.2.0
  * @description Customize which chat buttons are visible in Discord by right clicking the chat area and forget that breakable css filter that only supports aria-label :)
  */
 
@@ -24,7 +24,7 @@ const DataStore = new Proxy(
     }
 );
 
-const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.Z.getActiveOption(')
+const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.A.getActiveOption(')
 
 const ButtonStore = new class ButtonStoreClass extends Utils.Store {
     protected allKnownButtons = DataStore.allKnownButtons || [];
@@ -87,7 +87,7 @@ function ChatButtonsWrapper({originalResult}) {
 
 export default class DynamicChatButtons {
     start() {
-        Patcher.after(Buttons.Z, 'type', (_, [props], originalResult) => {
+        Patcher.after(Buttons.A, 'type', (_, [props], originalResult) => {
             if (!originalResult?.props?.children) {
                 return originalResult;
             }

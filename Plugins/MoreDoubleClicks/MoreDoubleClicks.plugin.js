@@ -301,7 +301,7 @@ var MoreDoubleClicks = class {
     };
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
-    Patcher.after(MessageContent.ZP, "type", (_, args, ret) => {
+    Patcher.after(MessageContent.Ay, "type", (_, args, ret) => {
       const originalOnDoubleClick = ret.props.onDoubleClick;
       Object.defineProperty(ret.props, "onDoubleClick", {
         value: (event) => {

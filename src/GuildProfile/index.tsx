@@ -1,7 +1,7 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 1.0.8
+ * @version 1.1.0
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
 
@@ -16,7 +16,6 @@ const [
     VideoIcon,
     LiveStream,
     ServerOwnerIcon,
-    ServerOwnerIconClasses,
     InviteData
 ] = BdApi.Webpack.getBulk(
     {
@@ -41,15 +40,17 @@ const [
         filter: BdApi.Webpack.Filters.byStrings('"M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04'),
         searchExports: true
     },
-    {filter: BdApi.Webpack.Filters.byKeys('ownerIcon', 'icon')},
     {filter: BdApi.Webpack.Filters.byKeys('GuildTemplateName', 'Info', 'Data')}
 );
 
+const ServerOwnerIconClasses = Webpack.getMangled(Webpack.Filters.combine(Webpack.Filters.bySource('ownerIcon__'), Webpack.Filters.bySource('placeholder__')), {
+    ownerIcon: x=>String(x).startsWith('ownerIcon'),
+})
 
 const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve")})
 const getGuildIconURL = BdApi.Webpack.getByKeys('getGuildIconURL').getGuildIconURL
 const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
-const Section = Webpack.getByStrings('headingColor:','heading:','section',{searchExports:true})
+const Section = Webpack.getByStrings('headingColor:', 'heading:', 'section', {searchExports: true})
 const snowflakeUtils = Webpack.getByKeys('extractTimestamp')
 const quantize = Webpack.getMangled('[[0,0,0]]', {
     quantize: Webpack.Filters.byStrings(".getImageData(0,0,")

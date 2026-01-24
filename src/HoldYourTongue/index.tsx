@@ -1,7 +1,7 @@
 /**
  * @name HoldYourTongue
  * @description Stop yourself from saying things in chat!
- * @version 1.0.0
+ * @version 1.1.0
  * @author Kaan
  */
 
@@ -129,12 +129,12 @@ function KeywordDisplayer({data}) {
 export default class HoldYourTongue {
     start() {
         const boundCheck = KeywordStore.startChecking.bind(KeywordStore);
-        const existingFilter = Object.values(CheckFilters.$).find(x => x.analyticsType?.includes('nacho'));
+        const existingFilter = Object.values(CheckFilters.m).find(x => x.analyticsType?.includes('nacho'));
 
         if (existingFilter) {
             existingFilter.check = boundCheck;
         } else {
-            CheckFilters.$.push({
+            CheckFilters.m.push({
                 analyticsType: "nacho-businezz",
                 check: boundCheck,
             });
@@ -192,9 +192,9 @@ export default class HoldYourTongue {
     }
 
     stop() {
-        const index = CheckFilters.$.findIndex(x => x.analyticsType === "nacho-businezz");
+        const index = CheckFilters.m.findIndex(x => x.analyticsType === "nacho-businezz");
         if (index !== -1) {
-            CheckFilters.$.splice(index, 1);
+            CheckFilters.m.splice(index, 1);
         }
     }
 }

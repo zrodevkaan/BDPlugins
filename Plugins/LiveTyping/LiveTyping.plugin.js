@@ -66,12 +66,12 @@ var {
   "ChannelStore",
   "UserGuildSettingsStore"
 ]);
-var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.Z?.render).includes(".charCode===") && String(x.Z?.render).includes("onKeyPress") }, {
+var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.A?.render).includes(".charCode===") && String(x.A?.render).includes("onKeyPress") }, {
   filter: Filters.byStrings("Unsupported animation config:"),
   searchExports: true
 }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
 var Spinner = Components.Spinner;
-var scrollersModule = getBySource(".customTheme)", { raw: true });
+var scrollersModule = Webpack.getById(599319, { raw: true });
 var RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers");
 var GuildObject = getByStrings(".guildbar.AVATAR_SIZE", "backgroundStyle", {
   searchExports: true,
@@ -365,7 +365,6 @@ var GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
 var LiveTyping = class {
   start() {
     this.patchChannelElement();
-    this.patchGuildObject();
     this.patchDMTyping();
     this.injectStyles();
     this.patchContextMenus();
@@ -453,15 +452,14 @@ var LiveTyping = class {
     ContextMenu.patch("gdm-context", this.patchChannelContextMenu);
   }
   patchDMTyping() {
-    const module2 = scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]];
-    Patcher.after(module2, "render", (that, [props], res) => {
+    Patcher.after(scrollersModule.zC, "render", (that, [props], res) => {
       if (shouldIgnoreItem("ignoreDMs")) return res;
       const isGuildObject = Utils.findInTree(res, (x) => x?.lurkingGuildIds, { walkable: ["props", "children"] });
       isGuildObject && res.props.children.props.children.unshift(React.createElement("div", {}, React.createElement(TypingIndicatorDMBar)));
     });
   }
   patchChannelElement() {
-    Patcher.after(ChannelElement.Z, "render", (_, [props], ret) => {
+    Patcher.after(ChannelElement.A, "render", (_, [props], ret) => {
       if (shouldIgnoreItem("ignoreChannels")) return ret;
       const channelId = ExtractItemID(props["data-list-item-id"]);
       if (!channelId) return;
@@ -477,19 +475,6 @@ var LiveTyping = class {
     });
   }
   patchGuildObject() {
-    Patcher.after(GuildObject, "L", (_, [props], ret) => {
-      if (shouldIgnoreItem("ignoreServers")) return ret;
-      const guildId = ExtractItemID(props["data-list-item-id"]);
-      if (!guildId) return;
-      if (shouldIgnoreItem("ignoreServers", guildId)) return ret;
-      const unpatch = Patcher.after(ret.type.prototype, "render", (thisObj, _2, renderRet) => {
-        unpatch();
-        const guild = Utils.findInTree(renderRet, (x) => x?.["data-list-item-id"], { walkable: ["props", "children"] });
-        if (guild && guild.children) {
-          guild.children?.push?.(React.createElement("div", {}, React.createElement(GuildTypingIndicatorV2, { guildId })));
-        }
-      });
-    });
   }
   stop() {
     Patcher.unpatchAll();

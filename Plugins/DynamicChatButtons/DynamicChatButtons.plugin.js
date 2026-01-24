@@ -46,7 +46,7 @@ var DataStore = new Proxy(
     }
   }
 );
-var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".Z.getActiveOption(");
+var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".A.getActiveOption(");
 var ButtonStore = new class ButtonStoreClass extends Utils.Store {
   allKnownButtons = DataStore.allKnownButtons || [];
   hiddenStates = {};
@@ -91,7 +91,7 @@ function ChatButtonsWrapper({ originalResult }) {
 }
 var DynamicChatButtons = class {
   start() {
-    Patcher.after(Buttons.Z, "type", (_, [props], originalResult) => {
+    Patcher.after(Buttons.A, "type", (_, [props], originalResult) => {
       if (!originalResult?.props?.children) {
         return originalResult;
       }

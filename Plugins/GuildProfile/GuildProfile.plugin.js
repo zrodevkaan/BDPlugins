@@ -39,7 +39,6 @@ var [
   VideoIcon,
   LiveStream,
   ServerOwnerIcon,
-  ServerOwnerIconClasses,
   InviteData
 ] = BdApi.Webpack.getBulk(
   {
@@ -64,9 +63,11 @@ var [
     filter: BdApi.Webpack.Filters.byStrings('"M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04'),
     searchExports: true
   },
-  { filter: BdApi.Webpack.Filters.byKeys("ownerIcon", "icon") },
   { filter: BdApi.Webpack.Filters.byKeys("GuildTemplateName", "Info", "Data") }
 );
+var ServerOwnerIconClasses = Webpack.getMangled(Webpack.Filters.combine(Webpack.Filters.bySource("ownerIcon__"), Webpack.Filters.bySource("placeholder__")), {
+  ownerIcon: (x) => String(x).startsWith("ownerIcon")
+});
 var FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve") });
 var getGuildIconURL = BdApi.Webpack.getByKeys("getGuildIconURL").getGuildIconURL;
 var ModalClass = Webpack.getModule((m) => m.modal && Object.keys(m).length === 1);

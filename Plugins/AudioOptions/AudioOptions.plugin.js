@@ -9,7 +9,7 @@
 // src/AudioOptions/index.tsx
 var { Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils } = new BdApi("AudioOptions");
 var IconBase = Webpack.getModule((x) => x.Icon);
-var VoiceMessagePlayer = Webpack.getBySource(".ZP.getPlaybackRate(", { searchDefault: false });
+var VoiceMessagePlayer = Webpack.getBySource(".Ay.getPlaybackRate(", { searchDefault: false });
 var PathIcon = () => {
   return React.createElement(
     "svg",
@@ -58,7 +58,7 @@ var AudioOptions = class {
     this.patchAudioPlayer();
   }
   patchAudioPlayer() {
-    Patcher.after(VoiceMessagePlayer.Z, "type", (_, [props], res) => {
+    Patcher.after(VoiceMessagePlayer.A, "type", (_, [props], res) => {
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(AudioButton, { showOptionsMenu: this.showOptionsMenu.bind(this, props) }));
     });
   }

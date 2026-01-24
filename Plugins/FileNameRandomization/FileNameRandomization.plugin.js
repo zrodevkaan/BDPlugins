@@ -34,8 +34,11 @@ var TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountF
 var SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings("SearchableSelect", "fieldProps"), { searchExports: true });
 var { useState } = React2;
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
-var Margins = Webpack.getByKeys("marginBottom40", "marginTop4");
-var ToolbarButton = Webpack.getByStrings("actionBarIcon");
+var Margins = Webpack.getMangled("marginBottom40_", {
+  marginBottom40: (x) => String(x).startsWith("marginBottom40"),
+  marginTop4: (x) => String(x).startsWith("marginTop4")
+});
+var ToolbarButton = Webpack.getByStrings("stopPropagation(),", "onClick:", "dangerous");
 var FoodIcon = ({ size = 24, color = "var(--interactive-icon-default)", ...props }) => {
   return React2.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg",
@@ -94,7 +97,8 @@ var FileNameRandomization = class {
   }
   start() {
     this.Main = Patcher.before(Webpack.getByKeys("_sendMessage"), "_sendMessage", this.handleFileUpload.bind(this));
-    Patcher.after(Toolbar, "Z", (_, __, returnValue) => {
+    Patcher.after(Toolbar, "A", (_, __, returnValue) => {
+      console.log(returnValue);
       if (returnValue?.props?.actions?.props?.children) {
         const incognitoButtonElement = React2.createElement(IncognitoButton);
         returnValue.props.actions.props.children.unshift(incognitoButtonElement);

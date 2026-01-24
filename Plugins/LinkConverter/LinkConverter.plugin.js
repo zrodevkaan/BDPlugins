@@ -32,9 +32,9 @@ module.exports = __toCommonJS(index_exports);
 var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter");
 var { useState } = React;
 var { Button, ColorInput, SwitchInput } = Components;
-var SelectableSearch = Webpack.getByStrings("customMatchSorter", { searchExports: true });
+var SelectableSearch = Webpack.getByStrings(`"hideTags","wrapTags","maxOptionsVisible"`, { searchExports: true });
 var Textarea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
-var AboutMe = Webpack.getModule((x) => x.Z.toString().includes("disableInteractions"));
+var AboutMe = Webpack.getModule((x) => x.A.toString().includes("disableInteractions"));
 var MessageActions = Webpack.getByKeys("_sendMessage");
 var Modal = Webpack.getModule((x) => x.Modal).Modal;
 var ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -367,7 +367,7 @@ var LinkConverter = class {
         return fullMatch;
       });
     });
-    Patcher.before(AboutMe, "Z", (_, [args], res) => {
+    Patcher.before(AboutMe, "A", (_, [args], res) => {
       args.userBio = args.userBio.replace(/https?:\/\/((?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)((?:[\/?#][^\s]*)?)/gm, (fullMatch, fullDomain, path) => {
         const s = matchDomain(fullDomain, DataStore.settings);
         if (s && s.enabled !== false) {

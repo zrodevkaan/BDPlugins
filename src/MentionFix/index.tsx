@@ -1,6 +1,6 @@
 /**
  * @name MentionFix
- * @version 1.1.1
+ * @version 1.2.0
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
@@ -9,7 +9,9 @@ const [Module, Key] = Webpack.getWithKey(Webpack.Filters.byStrings('viewingChann
 const UserStore = Webpack.getStore('UserStore')
 const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve") })
 
-const Message = Webpack.getByKeys('interactionSending', 'quotedChatMessage').message
+const Message = Webpack.getMangled('quotedChatMessage', {
+    message: x=>String(x).startsWith('message')
+})
 
 function reRender(selector) {
     const target = document.querySelector(selector)?.parentElement;

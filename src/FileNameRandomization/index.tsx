@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.2.3
+ * @version 1.3.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 import {styled} from "../Helpers";
@@ -22,9 +22,12 @@ const SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings('Searchable
 const {useState} = React;
 
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
-const Margins = Webpack.getByKeys('marginBottom40', 'marginTop4');
+const Margins = Webpack.getMangled('marginBottom40_', {
+    marginBottom40: x=>String(x).startsWith('marginBottom40'),
+    marginTop4: x=>String(x).startsWith('marginTop4')
+}) //Webpack.getByKeys('marginBottom40', 'marginTop4');
 
-const ToolbarButton = Webpack.getByStrings('actionBarIcon')
+const ToolbarButton = Webpack.getByStrings('stopPropagation(),','onClick:','dangerous')
 
 const FoodIcon = ({size = 24, color = "var(--interactive-icon-default)", ...props}) => {
     return React.createElement("svg", {
@@ -86,7 +89,8 @@ class FileNameRandomization {
     start() {
         this.Main = Patcher.before(Webpack.getByKeys('_sendMessage'), "_sendMessage", this.handleFileUpload.bind(this));
 
-        Patcher.after(Toolbar, 'Z', (_, __, returnValue) => {
+        Patcher.after(Toolbar, 'A', (_, __, returnValue) => {
+            console.log(returnValue);
             if (returnValue?.props?.actions?.props?.children) {
                 const incognitoButtonElement = React.createElement(IncognitoButton);
                 returnValue.props.actions.props.children.unshift(incognitoButtonElement);

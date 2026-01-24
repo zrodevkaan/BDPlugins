@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.1.6
+ * @version 1.2.0
  * @description Typing status per user on servers, channels or threads.
  */
 
@@ -77,13 +77,13 @@ const {
 
 /* when will Webpack.Stores be merged.... :( */
 
-const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.Z?.render).includes('.charCode===') && String(x.Z?.render).includes("onKeyPress")}, {
+const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.A?.render).includes('.charCode===') && String(x.A?.render).includes("onKeyPress")}, {
     filter: Filters.byStrings("Unsupported animation config:"),
     searchExports: true
 }, {filter: Filters.byStrings("useStateFromStores"), searchExports: true})
 
 const Spinner = Components.Spinner
-const scrollersModule = getBySource(".customTheme)", {raw: true});
+const scrollersModule = Webpack.getById(599319,{raw:true})
 const RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers")
 
 // const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip'), {raw: true}).exports
@@ -424,7 +424,7 @@ const GuildTypingIndicatorV2 = React.memo(({guildId}) => {
 class LiveTyping {
     start() {
         this.patchChannelElement();
-        this.patchGuildObject();
+        // this.patchGuildObject();
         this.patchDMTyping();
         this.injectStyles();
         this.patchContextMenus();
@@ -529,8 +529,7 @@ class LiveTyping {
     }
 
     patchDMTyping() {
-        const module = scrollersModule.exports[Webpack.modules[scrollersModule.id].toString().match(/,(.{1,3}):\(\)=>(.{1,3}),.+?\2=\(0,.{1,3}\..{1,3}\)\((.{1,3})\.none,\3\.fade,\3\.customTheme\)/)[1]]
-        Patcher.after(module, "render", (that, [props], res) => {
+        Patcher.after(scrollersModule.zC, "render", (that, [props], res) => {
             if (shouldIgnoreItem('ignoreDMs')) return res;
 
             const isGuildObject = Utils.findInTree(res, x => x?.lurkingGuildIds, {walkable: ['props', 'children']})
@@ -539,7 +538,7 @@ class LiveTyping {
     }
 
     patchChannelElement() {
-        Patcher.after(ChannelElement.Z, "render", (_, [props], ret) => {
+        Patcher.after(ChannelElement.A, "render", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreChannels')) return ret;
 
             const channelId = ExtractItemID(props['data-list-item-id']);
@@ -588,7 +587,7 @@ class LiveTyping {
         });
          */
 
-        Patcher.after(GuildObject, "L", (_, [props], ret) => {
+        /*Patcher.after(GuildObject, "L", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreServers')) return ret;
 
             const guildId = ExtractItemID(props['data-list-item-id']);
@@ -603,7 +602,7 @@ class LiveTyping {
                     guild.children?.push?.(React.createElement('div', {}, React.createElement(GuildTypingIndicatorV2, {guildId})));
                 }
             });
-        });
+        });*/
     }
 
     stop() {

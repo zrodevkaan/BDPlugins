@@ -30,14 +30,14 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 var { Patcher, Webpack, React, DOM, Data } = new BdApi("VoiceHub");
-var Module = Webpack.getBySource(".Z.CONTACTS_LIST");
+var Module = Webpack.getBySource(".A.CONTACTS_LIST");
 var [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdApi.Webpack.getBulk(
   { filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "instant", "backdropStyle"), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'), searchExports: true },
   { filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'), searchExports: true },
-  { filter: BdApi.Webpack.Filters.byStrings("dI3q4h"), searchExports: true }
+  { filter: BdApi.Webpack.Filters.byStrings("dI3q4h", "disableColor"), searchExports: true }
 );
 var Eye = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
   "svg",
@@ -88,15 +88,15 @@ var DataStore = new Proxy(
     }
   }
 );
-var InteractiveModule = Webpack.getByKeys("interactive", "muted", "selected");
-var InteractiveAbove = Webpack.getByKeys("channel", "interactiveSystemDM", "interactiveSelected");
-var InputModule = Webpack.getByKeys("autocompleteQuerySymbol");
+var InputModule = Webpack.getMangled("autocompleteQuerySymbol_", {
+  input: (x) => String(x).startsWith("input")
+});
 var VoiceStateStore = Webpack.getStore("VoiceStateStore");
 var GuildStore = Webpack.getStore("GuildStore");
 var ChannelStore = Webpack.getStore("ChannelStore");
-var GuildMemberStore = Webpack.getStore("GuildMemberStore");
+var GuildMemberStore = Webpack.Stores.GuildMemberStore;
 var UserStore = Webpack.getStore("UserStore");
-var VoiceModule = Webpack.getModule((x) => x.Z?.handleVoiceConnect?.toString?.().includes?.("async"));
+var VoiceModule = Webpack.getModule((x) => x.A?.handleVoiceConnect?.toString?.().includes?.("async"));
 var UserModal = Webpack.getByKeys("openUserProfileModal");
 var UserContextMenu = Webpack.getByStrings(".isGroupDM()", { searchExports: true });
 var getAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
@@ -117,7 +117,7 @@ var SearchBar = ({ value, onChange }) => {
 var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
   const users = Object.entries(voiceStates).filter(([_, state]) => state.channelId === channel.id).map(([userId]) => UserStore.getUser(userId));
   const handleChannelClick = () => {
-    VoiceModule.Z.handleVoiceConnect({
+    VoiceModule.A.handleVoiceConnect({
       channel,
       connected: false,
       needSubscriptionToAccess: false,
@@ -163,7 +163,7 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
         color: "var(--interactive-icon-default)"
       }
     ), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
-      color: "var(--header-secondary)",
+      color: "var(--text-default)",
       fontSize: "13px",
       fontWeight: "500"
     } }, channel.name)),
@@ -173,8 +173,9 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
       gap: "4px",
       paddingLeft: "20px"
     } }, users.map((user) => {
-      const member = guild?.id ? GuildMemberStore.getMember(guild.id, user.id) : null;
+      const member = guild?.id ? Webpack.Stores.GuildMemberStore.getMember(guild.id, user.id) : null;
       const directUser = member?.avatar ? member : user;
+      console.log(voiceStates, voiceStates?.[user?.id]);
       const userState = voiceStates?.[user?.id] || { selfVideo: false, selfStream: false };
       return /* @__PURE__ */ BdApi.React.createElement(
         "div",
@@ -226,7 +227,6 @@ var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
     }))
   );
 };
-var useStateFromStore = Webpack.getModule((m) => m.toString?.().includes("useStateFromStores"), { searchExports: true });
 var VoiceChannelList = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterType, setFilterType] = React.useState("all");
@@ -309,7 +309,7 @@ var VoiceChannelList = () => {
           ),
           /* @__PURE__ */ BdApi.React.createElement("h2", { style: {
             marginBottom: "12px",
-            color: "var(--header-primary)",
+            color: "var(--text-default)",
             fontSize: "16px",
             fontWeight: "600",
             letterSpacing: "0.5px",
@@ -333,7 +333,7 @@ var VoiceChannelList = () => {
     })
   ));
 };
-var VoiceHubButton = Webpack.getByStrings("refresh_sm", "linkButtonIcon", { searchExports: true });
+var VoiceHubButton = Webpack.getByStrings("refresh_sm", "interactiveClassName", "innerClassName", { searchExports: true });
 var VoiceHub = class {
   start() {
     DOM.addStyle(
@@ -342,7 +342,7 @@ var VoiceHub = class {
                 display: none;
             }`
     );
-    Patcher.after(Module, "Z", (_, __, res) => {
+    Patcher.after(Module, "A", (_, __, res) => {
       const isExisting = res.props.children.props.children.props.children.find((x) => x?.key === "voice-connect");
       if (isExisting) return;
       res.props.children.props.children.props.children.unshift(

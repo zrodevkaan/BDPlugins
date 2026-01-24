@@ -2,14 +2,14 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 1.0.1
+ * @version 1.1.0
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components
-const SelectableSearch = Webpack.getByStrings('customMatchSorter', { searchExports: true })
+const SelectableSearch = Webpack.getByStrings(`"hideTags","wrapTags","maxOptionsVisible"`,{searchExports:true})
 const Textarea = Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
-const AboutMe = Webpack.getModule(x => x.Z.toString().includes('disableInteractions'))
+const AboutMe = Webpack.getModule(x => x.A.toString().includes('disableInteractions'))
 const MessageActions = Webpack.getByKeys('_sendMessage')
 const Modal = Webpack.getModule(x => x.Modal).Modal
 const ModalSystem = Webpack.getMangled(".modalKey?", {
@@ -403,7 +403,7 @@ export default class LinkConverter {
             });
         });
 
-        Patcher.before(AboutMe, 'Z', (_: any, [args]: [any], res: any) => {
+        Patcher.before(AboutMe, 'A', (_: any, [args]: [any], res: any) => {
             args.userBio = args.userBio.replace(/https?:\/\/((?:[a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})?)((?:[\/?#][^\s]*)?)/gm, (fullMatch: string, fullDomain: string, path: string) => {
                 const s = matchDomain(fullDomain, DataStore.settings);
                 if (s && s.enabled !== false) {

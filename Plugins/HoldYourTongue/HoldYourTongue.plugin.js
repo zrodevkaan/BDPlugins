@@ -139,11 +139,11 @@ function KeywordDisplayer({ data }) {
 var HoldYourTongue = class {
   start() {
     const boundCheck = KeywordStore.startChecking.bind(KeywordStore);
-    const existingFilter = Object.values(CheckFilters.$).find((x) => x.analyticsType?.includes("nacho"));
+    const existingFilter = Object.values(CheckFilters.m).find((x) => x.analyticsType?.includes("nacho"));
     if (existingFilter) {
       existingFilter.check = boundCheck;
     } else {
-      CheckFilters.$.push({
+      CheckFilters.m.push({
         analyticsType: "nacho-businezz",
         check: boundCheck
       });
@@ -178,9 +178,9 @@ var HoldYourTongue = class {
     };
   }
   stop() {
-    const index = CheckFilters.$.findIndex((x) => x.analyticsType === "nacho-businezz");
+    const index = CheckFilters.m.findIndex((x) => x.analyticsType === "nacho-businezz");
     if (index !== -1) {
-      CheckFilters.$.splice(index, 1);
+      CheckFilters.m.splice(index, 1);
     }
   }
 };
