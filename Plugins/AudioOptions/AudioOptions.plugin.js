@@ -1,7 +1,7 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 1.0.0
+ * @version 1.2.0
  * @description Adds an option button next to voice messages.
  */
 "use strict";

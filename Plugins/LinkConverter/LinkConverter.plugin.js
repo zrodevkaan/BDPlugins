@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 1.0.1
+ * @version 1.1.0
  */
 "use strict";
 var __defProp = Object.defineProperty;

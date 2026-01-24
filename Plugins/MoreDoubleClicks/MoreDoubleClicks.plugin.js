@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 2.1.6
+ * @version 2.2.6
  */
 "use strict";
 var __defProp = Object.defineProperty;

@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.2.3
+ * @version 1.3.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 "use strict";
@@ -98,7 +98,6 @@ var FileNameRandomization = class {
   start() {
     this.Main = Patcher.before(Webpack.getByKeys("_sendMessage"), "_sendMessage", this.handleFileUpload.bind(this));
     Patcher.after(Toolbar, "A", (_, __, returnValue) => {
-      console.log(returnValue);
       if (returnValue?.props?.actions?.props?.children) {
         const incognitoButtonElement = React2.createElement(IncognitoButton);
         returnValue.props.actions.props.children.unshift(incognitoButtonElement);
@@ -110,7 +109,8 @@ var FileNameRandomization = class {
   }
   handleFileUpload(_, args) {
     if (!DataStore.shouldIncognito) return;
-    for (const file of args[2].attachmentsToUpload) {
+    if (args[2]?.attachmentsToUpload?.length == 0) return;
+    for (const file of args[2]?.attachmentsToUpload) {
       file.filename = this.generateFilename(file.filename);
     }
   }
