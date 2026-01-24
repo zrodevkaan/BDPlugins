@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 1.2.0
+ * @version 2.0.0
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  */

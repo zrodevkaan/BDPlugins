@@ -1,7 +1,7 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 1.1.0
+ * @version 2.0.0
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
 "use strict";

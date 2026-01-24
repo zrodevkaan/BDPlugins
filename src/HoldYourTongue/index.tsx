@@ -1,7 +1,7 @@
 /**
  * @name HoldYourTongue
  * @description Stop yourself from saying things in chat!
- * @version 1.1.0
+ * @version 2.0.0
  * @author Kaan
  */
 

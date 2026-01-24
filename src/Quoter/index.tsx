@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.2
+ * @version 1.0.3
  */
 
 const { Webpack, Patcher, ContextMenu } = new BdApi("Quoter")

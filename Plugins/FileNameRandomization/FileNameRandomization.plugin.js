@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 1.3.0
+ * @version 2.0.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 "use strict";
