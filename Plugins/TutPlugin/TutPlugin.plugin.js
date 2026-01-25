@@ -88,8 +88,7 @@ var openModal = Webpack.getByKeys("openModal");
 var Modal = Webpack.getByKeys("Modal").Modal;
 function Gargle() {
   const tutData = Hooks.useStateFromStores(TutorialStoreNew, () => TutorialStoreNew.getTutorial("tut-test"));
-  console.log(tutData);
-  return tutData.enabled ? /* @__PURE__ */ BdApi.React.createElement(TutorialComponent, { tutorialId: "tut-test", inlineSpecs: config, position: "right" }, /* @__PURE__ */ BdApi.React.createElement(BdApi.Components.Button, { onClick: () => TutorialStoreNew.disableTutorial("tut-test") }, "Tutorial Component")) : "shit was disabled. I hate that I have to make a separate state for this.";
+  return tutData.enabled ? /* @__PURE__ */ BdApi.React.createElement(TutorialComponent, { tutorialId: "tut-test", inlineSpecs: config, position: "right" }, /* @__PURE__ */ BdApi.React.createElement(BdApi.Components.Button, { onClick: () => TutorialStoreNew.disableTutorial("tut-test") }, "Tutorial Component")) : "HAHAHA NO MORE TUTORIAL.. HOPE YOU LEARNED WHAT TO DO.!!>!>>!>!>!>";
 }
 var stuff = class {
   start() {

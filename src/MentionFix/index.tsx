@@ -1,6 +1,6 @@
 /**
  * @name MentionFix
- * @version 2.0.0
+ * @version 2.0.1
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
@@ -44,7 +44,7 @@ class MentionFix {
                                         this.fetchedUsers.delete(userId)
                                     })
                                 }
-                                setTimeout(() => reRender(`.${Message}`), 10)
+                                setTimeout(() => reRender(`.${Message.message}`), 10)
 
                                 if (originalOnMouseEnter) {
                                     originalOnMouseEnter(e)
