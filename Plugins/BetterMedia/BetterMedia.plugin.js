@@ -34,7 +34,7 @@ var { Webpack, Patcher, DOM, Components, React, ContextMenu, UI, Net, Data, Plug
   "BetterMedia"
 );
 var ImageComp = Webpack.getModule((x) => x?.displayName == "Image", { searchExports: true });
-var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.y;
+var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.Y;
 var ImageRenderComponent = Webpack.getModule((x) => x?.isAnimated && x?.getFormatQuality, {
   raw: true
 }).exports;
@@ -59,7 +59,7 @@ var ModalSystem = Webpack.getMangled(".modalKey?", {
   closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
 var Modal = Webpack.getModule((x) => x.Modal).Modal;
-var FormSwitch = Webpack.getByStrings(".Z.colors.INTERACTIVE_MUTED).spring()", {
+var FormSwitch = Webpack.getByStrings(".A.colors.INTERACTIVE_MUTED).spring()", {
   searchExports: true
 });
 var searchEngines = {
