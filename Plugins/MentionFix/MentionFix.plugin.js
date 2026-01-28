@@ -11,9 +11,7 @@ var { Webpack, Patcher, ReactUtils } = new BdApi("MentionFix");
 var [Module, Key] = Webpack.getWithKey(Webpack.Filters.byStrings("viewingChannelId", "parsedUserId"));
 var UserStore = Webpack.getStore("UserStore");
 var FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve") });
-var Message = Webpack.getMangled("quotedChatMessage", {
-  message: (x) => String(x).startsWith("message")
-});
+var Message = Webpack.getByKeys("quotedChatMessage");
 function reRender(selector) {
   const target = document.querySelector(selector)?.parentElement;
   if (!target) return;

@@ -6,3 +6,4 @@ Plugins/Translator/bun.lock
 /src/Arven
 /Plugins/Silly
 src/Silly/index.tsx
+src/index.css

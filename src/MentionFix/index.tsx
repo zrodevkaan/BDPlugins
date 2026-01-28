@@ -9,9 +9,7 @@ const [Module, Key] = Webpack.getWithKey(Webpack.Filters.byStrings('viewingChann
 const UserStore = Webpack.getStore('UserStore')
 const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve") })
 
-const Message = Webpack.getMangled('quotedChatMessage', {
-    message: x=>String(x).startsWith('message')
-})
+const Message = Webpack.getByKeys('quotedChatMessage')
 
 function reRender(selector) {
     const target = document.querySelector(selector)?.parentElement;

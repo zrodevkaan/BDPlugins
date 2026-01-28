@@ -88,9 +88,7 @@ var DataStore = new Proxy(
     }
   }
 );
-var InputModule = Webpack.getMangled("autocompleteQuerySymbol_", {
-  input: (x) => String(x).startsWith("input")
-});
+var InputModule = Webpack.getByKeys("autocompleteQuerySymbol");
 var VoiceStateStore = Webpack.getStore("VoiceStateStore");
 var GuildStore = Webpack.getStore("GuildStore");
 var ChannelStore = Webpack.getStore("ChannelStore");
