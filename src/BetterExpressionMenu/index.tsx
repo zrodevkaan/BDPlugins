@@ -6,11 +6,11 @@
  */
 const { React, Webpack, Patcher, Utils, DOM, Components, Net, Data, ContextMenu } = new BdApi('BetterExpressionMenu');
 const { SearchInput, DropdownInput, Tooltip, TextInput, Button: BetterDiscordButton } = Components;
-const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.Z.getActiveOption(')
+const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.A.getActiveOption(')
 const SwitchInput = Webpack.getByStrings('data-toggleable-component":"switch', { searchExports: true })
 const Button = Webpack.getByStrings('TRIAL_NUX_EMOJI_BUTTON')
 const Classes = Webpack.getByKeys('announcementScrollableContainer')
-const Popout = Webpack.getModule(m => m?.Animation, { searchExports: true, raw: true }).exports.y
+const Popout = Webpack.getModule(m => m?.Animation, { searchExports: true, raw: true }).exports.Y
 const DataProtobuf = Webpack.getModule(m => m?.updateAsync, { searchExports: true })
 const EmojiStore = Webpack.getStore('EmojiStore')
 const GuildStore = Webpack.getStore('GuildStore')
@@ -1236,7 +1236,7 @@ function EmojiPopout() {
             position="top"
             children={() => (
                 <Button
-                    text={":owo:"}
+                    tooltipText={"Expression Menu"}
                     renderButtonContents={() => (
                         <div onClick={() => setShouldShow(s => !s)}>
                             <div className={`bem-emoji-button-inner ${Classes.emojiButton}`}>
@@ -1253,7 +1253,7 @@ function EmojiPopout() {
 export default class BetterExpressionMenu {
     start() {
         DOM.addStyle('bem-styles', CSS)
-        Patcher.after(Buttons.Z, 'type', (_, __, res) => {
+        Patcher.after(Buttons.A, 'type', (_, __, res) => {
             res.props.children.unshift(<EmojiPopout />)
             return res
         })

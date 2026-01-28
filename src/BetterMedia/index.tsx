@@ -1397,7 +1397,7 @@ export default class BetterMedia {
         searchExports: true,
         raw: true,
       }).exports,
-      'K',
+      'R',
       (_, args) => {
         if (
           args[0].BetterMediaModal !== undefined ||
@@ -1495,7 +1495,7 @@ export default class BetterMedia {
       }
     );
 
-    Patcher.instead(ImageRenderComponent.uo, 'test', (a, b, c) => {
+    Patcher.instead(ImageRenderComponent.bp, 'test', (a, b, c) => {
       if (DataStore.settings.allImagesAreGifs) {
         return true;
       }

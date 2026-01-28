@@ -1086,7 +1086,7 @@ var BetterMedia = class {
         searchExports: true,
         raw: true
       }).exports,
-      "K",
+      "R",
       (_, args) => {
         if (args[0].BetterMediaModal !== void 0 || args[0].location === "ChannelAttachmentUpload" || DataStore.settings.enabledGallery == false) {
           return;
@@ -1169,7 +1169,7 @@ var BetterMedia = class {
         args[0].items = yeah;
       }
     );
-    Patcher.instead(ImageRenderComponent.uo, "test", (a, b, c) => {
+    Patcher.instead(ImageRenderComponent.bp, "test", (a, b, c) => {
       if (DataStore.settings.allImagesAreGifs) {
         return true;
       }

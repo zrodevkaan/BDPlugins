@@ -32,11 +32,11 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var { React, Webpack, Patcher, Utils, DOM, Components, Net, Data, ContextMenu } = new BdApi("BetterExpressionMenu");
 var { SearchInput, DropdownInput, Tooltip, TextInput, Button: BetterDiscordButton } = Components;
-var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".Z.getActiveOption(");
+var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".A.getActiveOption(");
 var SwitchInput = Webpack.getByStrings('data-toggleable-component":"switch', { searchExports: true });
 var Button = Webpack.getByStrings("TRIAL_NUX_EMOJI_BUTTON");
 var Classes = Webpack.getByKeys("announcementScrollableContainer");
-var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.y;
+var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.Y;
 var DataProtobuf = Webpack.getModule((m) => m?.updateAsync, { searchExports: true });
 var EmojiStore = Webpack.getStore("EmojiStore");
 var GuildStore = Webpack.getStore("GuildStore");
@@ -1044,7 +1044,7 @@ function EmojiPopout() {
       children: () => /* @__PURE__ */ BdApi.React.createElement(
         Button,
         {
-          text: ":owo:",
+          tooltipText: "Expression Menu",
           renderButtonContents: () => /* @__PURE__ */ BdApi.React.createElement("div", { onClick: () => setShouldShow((s) => !s) }, /* @__PURE__ */ BdApi.React.createElement("div", { className: `bem-emoji-button-inner ${Classes.emojiButton}` }, /* @__PURE__ */ BdApi.React.createElement(SVGButton, null)))
         }
       )
@@ -1054,7 +1054,7 @@ function EmojiPopout() {
 var BetterExpressionMenu = class {
   start() {
     DOM.addStyle("bem-styles", CSS);
-    Patcher.after(Buttons.Z, "type", (_, __, res) => {
+    Patcher.after(Buttons.A, "type", (_, __, res) => {
       res.props.children.unshift(/* @__PURE__ */ BdApi.React.createElement(EmojiPopout, null));
       return res;
     });

@@ -105,7 +105,7 @@ function getUTC(timezone: string) {
     });
 }
 
-function Timezone({user, displayProfile}: { user: User, displayProfile: Object }) {
+function Timezone({user}: { user: User }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const time = getCurrentTime(timezone);
     
@@ -187,7 +187,7 @@ export default class Timezones {
 
     start() {
         Patcher.after(Banner_3, "A", (a, b, res) => {
-            return [<Timezone user={b[0].user} displayProfile={b[0].displayProfile}/>, res]
+            return [<Timezone user={b[0].user}/>, res]
         })
 
         Patcher.before(MessageHeader, "A", (a, b) => {

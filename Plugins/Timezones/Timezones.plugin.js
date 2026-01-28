@@ -142,7 +142,7 @@ function getUTC(timezone) {
     timeZoneName: "shortOffset"
   });
 }
-function Timezone({ user, displayProfile }) {
+function Timezone({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
   const time = getCurrentTime(timezone);
   const formattedTime = time ? time.replace(/^0/, "") : "";
@@ -207,7 +207,7 @@ var Timezones = class {
   unpatchAll;
   start() {
     Patcher.after(Banner_3, "A", (a, b, res) => {
-      return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user, displayProfile: b[0].displayProfile }), res];
+      return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
     Patcher.before(MessageHeader, "A", (a, b) => {
       !b[0].isRepliedMessage && b[0].decorations[1].push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: b[0].author }));

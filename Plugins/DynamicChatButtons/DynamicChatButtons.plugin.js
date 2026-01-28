@@ -69,9 +69,9 @@ var ButtonStore = new class ButtonStoreClass extends Utils.Store {
     return this.hiddenStates;
   }
 }();
-function ChatButtonsWrapper({ originalResult }) {
+function ChatButtonsWrapper({ children }) {
   useStateFromStores([ButtonStore], () => ButtonStore.getHiddenStates());
-  const buttons = [...originalResult.props.children];
+  const buttons = Array.isArray(children) ? children : [];
   const currentKeys = buttons.map((button) => {
     const isAppButton = String(button.type?.type)?.includes?.("entryPointCommandButtonRef");
     const key = isAppButton ? "app_launcher" : button.key;
@@ -95,7 +95,7 @@ var DynamicChatButtons = class {
       if (!originalResult?.props?.children) {
         return originalResult;
       }
-      return /* @__PURE__ */ BdApi.React.createElement(ChatButtonsWrapper, { originalResult });
+      return /* @__PURE__ */ BdApi.React.createElement(ChatButtonsWrapper, { children: originalResult.props.children });
     });
     ContextMenu.patch("textarea-context", this.patchSlate);
   }
