@@ -62,6 +62,8 @@ var ModalUtils = Webpack.getByKeys("openModal");
 var Modal = Webpack.getByKeys("Modal").Modal;
 var SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings("SearchableSelect", "fieldProps"), { searchExports: true });
 var MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
+var TimestampHeader = Webpack.getBySource(".SENT_BY_SOCIAL_LAYER_INTEGRATION)?").Ay;
+var Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true });
 function getTimezones() {
   const now = /* @__PURE__ */ new Date();
   return Intl.supportedValuesOf("timeZone").map((tz) => ({
@@ -84,6 +86,14 @@ function getTimezones() {
 }
 var UserTimezoneStore = new class UTS extends Utils.Store {
   timezones = Data.load("timezones") || {};
+  settings = {
+    chatTimezoneDisplay: "CLOCK",
+    bannerTimezoneDisplay: "ENABLED",
+    timezoneFormat: "12H",
+    showSeconds: false,
+    showTimezoneAbbreviation: false,
+    ...Data.load("settings") || {}
+  };
   addTimezone(id, timezoneName) {
     this.timezones[id] = timezoneName;
     Data.save("timezones", this.timezones);
@@ -96,6 +106,14 @@ var UserTimezoneStore = new class UTS extends Utils.Store {
     delete this.timezones[id];
     Data.save("timezones", this.timezones);
     this.emitChange();
+  }
+  setTimezoneSettings(settings) {
+    this.settings = { ...this.settings, ...settings };
+    Data.save("settings", this.settings);
+    this.emitChange();
+  }
+  getTimezoneSettings() {
+    return this.settings;
   }
 }();
 var TimezoneOption = styled.div(() => ({
@@ -114,6 +132,12 @@ var TimezoneInfo = styled.span(() => ({
   fontSize: "0.875em",
   whiteSpace: "nowrap"
 }));
+var TimezoneChat = styled.span(() => ({
+  color: "var(--chat-text-muted)",
+  fontSize: ".75rem",
+  lineHeight: "1.375rem",
+  verticalAlign: "baseline"
+}));
 var TimezoneText = styled.div(() => {
   return {
     color: "white",
@@ -127,6 +151,37 @@ var TimezoneText = styled.div(() => {
     textAlign: "center",
     fontWeight: "lighter"
   };
+});
+var SettingsPanelContainer = styled.div(() => ({
+  minHeight: "500px"
+}));
+var SettingsHeaderGroup = styled.div(() => ({
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+  marginBottom: "8px"
+}));
+var SettingsSection = styled.div(({ displayType }) => {
+  return {
+    marginTop: "20px",
+    alignItems: "center",
+    justifyContent: "space-between",
+    display: displayType
+  };
+});
+var Header = styled.span(() => ({
+  color: "var(--text-strong)",
+  fontFamily: "var(--font-primary)",
+  fontSize: "18px",
+  fontWeight: "700",
+  lineHeight: "1.25"
+}));
+var HeaderDescription = styled.span({
+  color: "var(--text-muted)",
+  fontFamily: "var(--font-primary)",
+  fontSize: "14px",
+  fontWeight: "400",
+  lineHeight: "1.4"
 });
 function getUTCOffset(timezone) {
   const date = /* @__PURE__ */ new Date();
@@ -148,18 +203,35 @@ function getTimezoneDifference(timezone) {
   }
 }
 function getCurrentTime(timezone) {
-  return (/* @__PURE__ */ new Date()).toLocaleString("en-US", {
+  const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
+  const use24h = settings.timezoneFormat === "24H";
+  const includeSeconds = settings.showSeconds;
+  const timeString = (/* @__PURE__ */ new Date()).toLocaleString("en-US", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true
+    ...includeSeconds && { second: "2-digit" },
+    hour12: !use24h
   });
+  let formattedTime = timeString;
+  if (!use24h) {
+    formattedTime = formattedTime.replace(/^0/, "");
+  }
+  if (settings.showTimezoneAbbreviation) {
+    const abbr = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "short"
+    }).formatToParts(/* @__PURE__ */ new Date()).find((p) => p.type === "timeZoneName")?.value || "";
+    return `${formattedTime} ${abbr}`;
+  }
+  return formattedTime;
 }
 function Timezone({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
+  const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
+  if (!timezone || settings.bannerTimezoneDisplay === "DISABLED") return null;
   const time = getCurrentTime(timezone);
-  const formattedTime = time ? time.replace(/^0/, "") : "";
-  return timezone ? /* @__PURE__ */ BdApi.React.createElement(TimezoneText, { color: "var(--text-default)" }, formattedTime) : null;
+  return /* @__PURE__ */ BdApi.React.createElement(TimezoneText, { color: "var(--text-default)" }, time);
 }
 function returnSpoof(timezone, offset, time) {
   return {
@@ -176,7 +248,6 @@ function returnSpoof(timezone, offset, time) {
 }
 function TimezoneModal({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
-  const [currentTime] = React2.useState(() => /* @__PURE__ */ new Date());
   const timezones = React2.useMemo(() => getTimezones(), []);
   const node = (timezone2, offset, time) => {
     const timeDiff = getTimezoneDifference(timezone2);
@@ -207,10 +278,14 @@ var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "htt
   }
 ));
 function ChatClock({ user }) {
-  const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.authorId));
-  return timezone && /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: getCurrentTime(timezone) }, (props) => {
+  const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
+  const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
+  const displayMode = settings?.chatTimezoneDisplay ?? "CLOCK";
+  if (!timezone || displayMode === "NONE") return null;
+  const time = getCurrentTime(timezone);
+  return displayMode === "CLOCK" ? /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: time }, (props) => {
     return /* @__PURE__ */ BdApi.React.createElement("div", { ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
-  });
+  }) : /* @__PURE__ */ BdApi.React.createElement(TimezoneChat, null, " \u2022 ", time);
 }
 function TimezoneContextMenu({ user }) {
   const isDisabled = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
@@ -222,13 +297,40 @@ function TimezoneContextMenu({ user }) {
 }
 var Timezones = class {
   unpatchAll;
+  modifiedTypes = /* @__PURE__ */ new WeakMap();
   start() {
     Patcher.after(Banner_3, "A", (a, b, res) => {
       return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
-    Patcher.before(MessageHeader, "A", (a, b) => {
-      !b[0].isRepliedMessage && b[0].decorations[1].push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: b[0].author }));
-    });
+    if (!this.modifiedTypes.has(TimestampHeader)) {
+      const originalType = TimestampHeader.type;
+      const self = this;
+      TimestampHeader.type = function(props) {
+        const res = originalType.call(this, props);
+        if (res && res.type && self.modifiedTypes) {
+          if (!self.modifiedTypes.has(res.type)) {
+            const originalInnerType = res.type;
+            const newType = function(innerProps) {
+              const innerRes = originalInnerType.call(this, innerProps);
+              if (innerRes?.props?.children?.[1]?.props?.children) {
+                const children = innerRes.props.children[1].props.children;
+                const hasClock = children.some((child) => child?.type === ChatClock);
+                if (!hasClock) {
+                  children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: innerProps.message.author }));
+                }
+              }
+              return innerRes;
+            };
+            self.modifiedTypes.set(originalInnerType, newType);
+            res.type = newType;
+          } else {
+            res.type = self.modifiedTypes.get(res.type);
+          }
+        }
+        return res;
+      };
+      this.modifiedTypes.set(TimestampHeader, originalType);
+    }
     this.unpatchAll = ContextMenuHelper([
       {
         navId: "user-context",
@@ -238,7 +340,60 @@ var Timezones = class {
       }
     ]);
   }
+  getSettingsPanel() {
+    return () => {
+      const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
+      return /* @__PURE__ */ BdApi.React.createElement(SettingsPanelContainer, null, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Chat timezone display"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Choose how timezones are shown next to message timestamps.")), /* @__PURE__ */ BdApi.React.createElement(
+        Selectable,
+        {
+          value: settings.chatTimezoneDisplay,
+          onSelectionChange: (value) => UserTimezoneStore.setTimezoneSettings({ chatTimezoneDisplay: value }),
+          options: ["CLOCK", "TEXT", "NONE"].map((x) => ({
+            label: x.toLowerCase(),
+            value: x
+          }))
+        }
+      ), /* @__PURE__ */ BdApi.React.createElement(SettingsSection, null, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Banner timezone display"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Show or hide timezone on user profile banners.")), /* @__PURE__ */ BdApi.React.createElement(
+        Selectable,
+        {
+          value: settings.bannerTimezoneDisplay,
+          onSelectionChange: (value) => UserTimezoneStore.setTimezoneSettings({ bannerTimezoneDisplay: value }),
+          options: ["ENABLED", "DISABLED"].map((x) => ({
+            label: x.toLowerCase(),
+            value: x
+          }))
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(SettingsSection, null, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Time format"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Choose between 12-hour (AM/PM) or 24-hour format.")), /* @__PURE__ */ BdApi.React.createElement(
+        Selectable,
+        {
+          value: settings.timezoneFormat,
+          onSelectionChange: (value) => UserTimezoneStore.setTimezoneSettings({ timezoneFormat: value }),
+          options: [
+            { label: "12-hour (2:30 PM)", value: "12H" },
+            { label: "24-hour (14:30)", value: "24H" }
+          ]
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(SettingsSection, { displayType: "flex" }, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Show seconds"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Include seconds in time display (e.g., 2:30:45 PM).")), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SwitchInput,
+        {
+          checked: settings.showSeconds,
+          onChange: (value) => UserTimezoneStore.setTimezoneSettings({ showSeconds: value })
+        }
+      )), /* @__PURE__ */ BdApi.React.createElement(SettingsSection, { displayType: "flex" }, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Show timezone abbreviation"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Show timezone abbreviation after time (e.g., 2:30 PM EST).")), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SwitchInput,
+        {
+          checked: settings.showTimezoneAbbreviation,
+          onChange: (value) => UserTimezoneStore.setTimezoneSettings({ showTimezoneAbbreviation: value })
+        }
+      )));
+    };
+  }
   stop() {
+    const originalType = this.modifiedTypes.get(TimestampHeader);
+    if (originalType) {
+      TimestampHeader.type = originalType;
+    }
+    this.modifiedTypes = /* @__PURE__ */ new WeakMap();
     Patcher.unpatchAll();
     this.unpatchAll();
   }
