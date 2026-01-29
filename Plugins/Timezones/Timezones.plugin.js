@@ -273,7 +273,7 @@ function TimezoneModal({ user }) {
     }
   ));
 }
-var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { className: "tz-svg", xmlns: "http://www.w3.org/2000/svg", width: 16, height: 16, viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
+var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: 16, height: 16, viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
     fill: "var(--interactive-icon-default)",
@@ -287,7 +287,7 @@ function ChatClock({ user }) {
   const time = getCurrentTime(timezone);
   if (displayMode === "CLOCK") {
     return /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: time }, (props) => {
-      return /* @__PURE__ */ BdApi.React.createElement("div", { ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
+      return /* @__PURE__ */ BdApi.React.createElement("div", { className: "tz-svg", ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
     });
   }
   if (displayMode === "TEXT") {
@@ -311,7 +311,7 @@ var Timezones = class {
       return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
     Patcher.after(MessageHeader, "A", (a, args, res) => {
-      res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author }));
+      !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author }));
     });
     this.unpatchAll = ContextMenuHelper([
       {

@@ -327,7 +327,7 @@ export default class Timezones {
         })
 
         Patcher.after(MessageHeader, "A", (a,args,res) => {
-            res.props.children.push(<ChatClock user={args[0].message.author}/>)
+            !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(<ChatClock user={args[0].message.author}/>)
         })
 
         this.unpatchAll = ContextMenuHelper([
