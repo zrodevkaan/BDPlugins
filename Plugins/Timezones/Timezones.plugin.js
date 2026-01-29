@@ -135,8 +135,10 @@ var TimezoneInfo = styled.span(() => ({
 var TimezoneChat = styled.span(() => ({
   color: "var(--chat-text-muted)",
   fontSize: ".75rem",
+  display: "inline-flex",
   lineHeight: "1.375rem",
-  verticalAlign: "baseline"
+  verticalAlign: "baseline",
+  marginLeft: "3px"
 }));
 var TimezoneText = styled.div(() => {
   return {
@@ -244,6 +246,7 @@ function returnSpoof(timezone, offset, time) {
     toString() {
       return this.getTime() + " " + offset;
     }
+    // this is what discord is searching for, so to allow timezone and utc offset we need to add both.
   };
 }
 function TimezoneModal({ user }) {
@@ -270,7 +273,7 @@ function TimezoneModal({ user }) {
     }
   ));
 }
-var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: 16, height: 16, viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
+var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { className: "tz-svg", xmlns: "http://www.w3.org/2000/svg", width: 16, height: 16, viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
   "path",
   {
     fill: "var(--interactive-icon-default)",
@@ -281,11 +284,16 @@ function ChatClock({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
   const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
   const displayMode = settings?.chatTimezoneDisplay ?? "CLOCK";
-  if (!timezone || displayMode === "NONE") return null;
   const time = getCurrentTime(timezone);
-  return displayMode === "CLOCK" ? /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: time }, (props) => {
-    return /* @__PURE__ */ BdApi.React.createElement("div", { ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
-  }) : /* @__PURE__ */ BdApi.React.createElement(TimezoneChat, null, " \u2022 ", time);
+  if (displayMode === "CLOCK") {
+    return /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: time }, (props) => {
+      return /* @__PURE__ */ BdApi.React.createElement("div", { ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
+    });
+  }
+  if (displayMode === "TEXT") {
+    return /* @__PURE__ */ BdApi.React.createElement("span", { className: "tz-text" }, /* @__PURE__ */ BdApi.React.createElement(TimezoneChat, null, time, " \u2022"));
+  }
+  return null;
 }
 function TimezoneContextMenu({ user }) {
   const isDisabled = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
@@ -302,35 +310,9 @@ var Timezones = class {
     Patcher.after(Banner_3, "A", (a, b, res) => {
       return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
-    if (!this.modifiedTypes.has(TimestampHeader)) {
-      const originalType = TimestampHeader.type;
-      const self = this;
-      TimestampHeader.type = function(props) {
-        const res = originalType.call(this, props);
-        if (res && res.type && self.modifiedTypes) {
-          if (!self.modifiedTypes.has(res.type)) {
-            const originalInnerType = res.type;
-            const newType = function(innerProps) {
-              const innerRes = originalInnerType.call(this, innerProps);
-              if (innerRes?.props?.children?.[1]?.props?.children) {
-                const children = innerRes.props.children[1].props.children;
-                const hasClock = children.some((child) => child?.type === ChatClock);
-                if (!hasClock) {
-                  children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: innerProps.message.author }));
-                }
-              }
-              return innerRes;
-            };
-            self.modifiedTypes.set(originalInnerType, newType);
-            res.type = newType;
-          } else {
-            res.type = self.modifiedTypes.get(res.type);
-          }
-        }
-        return res;
-      };
-      this.modifiedTypes.set(TimestampHeader, originalType);
-    }
+    Patcher.after(MessageHeader, "A", (a, args, res) => {
+      res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author }));
+    });
     this.unpatchAll = ContextMenuHelper([
       {
         navId: "user-context",

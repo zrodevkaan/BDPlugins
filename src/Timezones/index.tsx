@@ -109,8 +109,10 @@ const TimezoneInfo = styled.span(() => ({
 const TimezoneChat = styled.span(() => ({
     color: "var(--chat-text-muted)",
     fontSize: ".75rem",
+    display: 'inline-flex',
     lineHeight: "1.375rem",
-    verticalAlign: "baseline"
+    verticalAlign: "baseline",
+    marginLeft: '3px'
 }))
 
 const TimezoneText = styled.div(() => {
@@ -271,29 +273,33 @@ function TimezoneModal({ user }: { user: User }) {
     );
 }
 
-const Clock = () => <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24">
+const Clock = () => <svg className="tz-svg" xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24">
     <path fill="var(--interactive-icon-default)"
         d="M13 12.175V9q0-.425-.288-.712T12 8t-.712.288T11 9v3.575q0 .2.075.388t.225.337l2.525 2.525q.3.3.713.3t.712-.3q.275-.3.275-.712t-.275-.688zM12 6q.425 0 .713-.288T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6m6 6q0 .425.288.713T19 13t.713-.288T20 12t-.288-.712T19 11t-.712.288T18 12m-6 6q-.425 0-.712.288T11 19t.288.713T12 20t.713-.288T13 19t-.288-.712T12 18m-6-6q0-.425-.288-.712T5 11t-.712.288T4 12t.288.713T5 13t.713-.288T6 12m6 10q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"></path>
 </svg>
+
 
 function ChatClock({ user }: { user: User }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
     const displayMode: ChatTimezoneDisplay = settings?.chatTimezoneDisplay ?? "CLOCK";
-
-    if (!timezone || displayMode === "NONE") return null;
-
     const time = getCurrentTime(timezone);
-
-    return displayMode === "CLOCK"
-        ? <Components.Tooltip text={time}>
+    
+    if (displayMode === "CLOCK") {
+        return <Components.Tooltip text={time}>
             {(props) => {
                 return <div {...props} style={{ display: 'inline-flex', marginLeft: '5px', marginTop: '4px', verticalAlign: 'top' }}>
                     <Clock />
                 </div>
             }}
         </Components.Tooltip>
-        : <TimezoneChat> • {time}</TimezoneChat>
+    }
+    
+    if (displayMode === "TEXT") {
+        return <span className="tz-text"><TimezoneChat>{time} •</TimezoneChat></span>
+    }
+    
+    return null;
 }
 
 function TimezoneContextMenu({ user }: { user: User }) {
@@ -320,42 +326,9 @@ export default class Timezones {
             return [<Timezone user={b[0].user} />, res]
         })
 
-        if (!this.modifiedTypes.has(TimestampHeader)) {
-            const originalType = TimestampHeader.type;
-            const self = this;
-            
-            TimestampHeader.type = function (props) {
-                const res = originalType.call(this, props);
-                
-                if (res && res.type && self.modifiedTypes) {
-                    if (!self.modifiedTypes.has(res.type)) {
-                        const originalInnerType = res.type;
-                        
-                        const newType = function (innerProps) {
-                            const innerRes = originalInnerType.call(this, innerProps);
-                            if (innerRes?.props?.children?.[1]?.props?.children) {
-                                const children = innerRes.props.children[1].props.children;
-                                const hasClock = children.some(child => child?.type === ChatClock);
-                                
-                                if (!hasClock) {
-                                    children.push(<ChatClock user={innerProps.message.author} />);
-                                }
-                            }
-                            return innerRes;
-                        };
-                        
-                        self.modifiedTypes.set(originalInnerType, newType);
-                        res.type = newType;
-                    } else {
-                        res.type = self.modifiedTypes.get(res.type);
-                    }
-                }
-                
-                return res;
-            };
-            
-            this.modifiedTypes.set(TimestampHeader, originalType);
-        }
+        Patcher.after(MessageHeader, "A", (a,args,res) => {
+            res.props.children.push(<ChatClock user={args[0].message.author}/>)
+        })
 
         this.unpatchAll = ContextMenuHelper([
             {
