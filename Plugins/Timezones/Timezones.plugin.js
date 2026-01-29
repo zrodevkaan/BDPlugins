@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 1.0.0
+ * @version 2.0.0
  * @description Allows you to display a local timezone you set for a user.
  */
 "use strict";
@@ -128,18 +128,31 @@ var TimezoneText = styled.div(() => {
     fontWeight: "lighter"
   };
 });
+function getUTCOffset(timezone) {
+  const date = /* @__PURE__ */ new Date();
+  const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
+  const tzDate = new Date(date.toLocaleString("en-US", { timeZone: timezone }));
+  return (tzDate - utcDate) / (1e3 * 60 * 60);
+}
+function getTimezoneDifference(timezone) {
+  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const localOffset = getUTCOffset(localTimezone);
+  const targetOffset = getUTCOffset(timezone);
+  const diffHours = targetOffset - localOffset;
+  if (diffHours === 0) {
+    return "Same timezone";
+  } else if (diffHours > 0) {
+    return `${diffHours} hour(s) ahead`;
+  } else {
+    return `${Math.abs(diffHours)} hour(s) behind`;
+  }
+}
 function getCurrentTime(timezone) {
   return (/* @__PURE__ */ new Date()).toLocaleString("en-US", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: true
-  });
-}
-function getUTC(timezone) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    timeZoneName: "shortOffset"
   });
 }
 function Timezone({ user }) {
@@ -157,7 +170,7 @@ function returnSpoof(timezone, offset, time) {
       return timezone;
     },
     toString() {
-      return this.getTime();
+      return this.getTime() + " " + offset;
     }
   };
 }
@@ -165,22 +178,26 @@ function TimezoneModal({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
   const [currentTime] = React2.useState(() => /* @__PURE__ */ new Date());
   const timezones = React2.useMemo(() => getTimezones(), []);
-  return /* @__PURE__ */ BdApi.React.createElement(
+  const node = (timezone2, offset, time) => {
+    const timeDiff = getTimezoneDifference(timezone2);
+    return /* @__PURE__ */ BdApi.React.createElement(TimezoneOption, null, /* @__PURE__ */ BdApi.React.createElement(TimezoneName, null, timezone2), /* @__PURE__ */ BdApi.React.createElement(TimezoneInfo, null, offset, " \u2022 ", timeDiff));
+  };
+  const renderTimezone = (tz, offset, time) => {
+    return Object.assign(node(tz, offset, time), returnSpoof(tz, offset, time));
+  };
+  return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
     SearchableSelect,
     {
       value: timezone || "Unknown",
       onChange: (e) => UserTimezoneStore.addTimezone(user.id, e),
       options: timezones.map((x) => {
-        const utcFormatter = getUTC(x.timezone);
-        const offset = utcFormatter.format(currentTime);
-        const time = getCurrentTime(x.timezone);
         return {
-          label: Object.assign(/* @__PURE__ */ BdApi.React.createElement(TimezoneOption, null, /* @__PURE__ */ BdApi.React.createElement(TimezoneName, null, x.timezone), /* @__PURE__ */ BdApi.React.createElement(TimezoneInfo, null, offset, " \u2022 ", time)), returnSpoof(x.timezone, offset, time)),
-          value: x.timezone
+          label: renderTimezone(x.timezone, x.offset, x.currentTime),
+          value: `${x.timezone}`
         };
       })
     }
-  );
+  ));
 }
 var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: 16, height: 16, viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
   "path",

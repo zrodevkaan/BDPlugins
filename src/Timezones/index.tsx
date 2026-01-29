@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 1.0.0
+ * @version 2.0.0
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
@@ -89,6 +89,30 @@ const TimezoneText = styled.div(() => {
     };
 })
 
+function getUTCOffset(timezone) {
+    const date = new Date();
+    const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+    return (tzDate - utcDate) / (1000 * 60 * 60);
+  }
+
+  function getTimezoneDifference(timezone) {
+    const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    const localOffset = getUTCOffset(localTimezone);
+    const targetOffset = getUTCOffset(timezone);
+    
+    const diffHours = targetOffset - localOffset;
+    
+    if (diffHours === 0) {
+      return "Same timezone";
+    } else if (diffHours > 0) {
+      return `${diffHours} hour(s) ahead`;
+    } else {
+      return `${Math.abs(diffHours)} hour(s) behind`;
+    }
+  }
+  
 function getCurrentTime(timezone: string) {
     return new Date().toLocaleString('en-US', {
         timeZone: timezone,
@@ -119,35 +143,41 @@ function returnSpoof(timezone: string, offset: string, time: string)
     return {
         trim() { return `${timezone} ${offset} ${time}` }, 
         getTime() {return timezone }, 
-        toString() { return this.getTime() }
+        toString() { return this.getTime() + " " + offset } // this is what discord is searching for, so to allow timezone and utc offset we need to add both.
     }
 }
 
 function TimezoneModal({user}: { user: User }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
-    const [currentTime] = React.useState(() => new Date());
     const timezones = React.useMemo(() => getTimezones(), []);
+
+    const node = (timezone: string, offset: string, time: string) => {
+        const timeDiff = getTimezoneDifference(timezone);
+        return (
+            <TimezoneOption>
+                <TimezoneName>{timezone}</TimezoneName>
+                <TimezoneInfo>{offset} • {timeDiff}</TimezoneInfo>
+            </TimezoneOption>
+        );
+    };
+    
+    const renderTimezone = (tz: string, offset: string, time: string) => {
+        return Object.assign(node(tz, offset, time), returnSpoof(tz, offset, time));
+    };
     
     return (
-        <SearchableSelect 
-            value={timezone || "Unknown"} 
-            onChange={(e) => UserTimezoneStore.addTimezone(user.id, e)}
-            options={timezones.map(x => {
-                const utcFormatter = getUTC(x.timezone);
-                const offset = utcFormatter.format(currentTime);
-                const time = getCurrentTime(x.timezone);
-                
-                return {
-                    label: (
-                        Object.assign(<TimezoneOption>
-                            <TimezoneName>{x.timezone}</TimezoneName>
-                            <TimezoneInfo>{offset} • {time}</TimezoneInfo>
-                        </TimezoneOption>, returnSpoof(x.timezone, offset, time))
-                    ),
-                    value: x.timezone
-                };
-            })}
-        />
+        <div>
+            <SearchableSelect 
+                value={timezone || "Unknown"} 
+                onChange={(e) => UserTimezoneStore.addTimezone(user.id, e)}
+                options={timezones.map((x) => {
+                    return {
+                        label: renderTimezone(x.timezone, x.offset, x.currentTime),
+                        value: `${x.timezone}`
+                    };
+                })}
+            />
+        </div>
     );
 }
 
