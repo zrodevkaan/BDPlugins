@@ -273,7 +273,7 @@ function TimezoneModal({ user }: { user: User }) {
     );
 }
 
-const Clock = () => <svg className="tz-svg" xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24">
+const Clock = () => <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24">
     <path fill="var(--interactive-icon-default)"
         d="M13 12.175V9q0-.425-.288-.712T12 8t-.712.288T11 9v3.575q0 .2.075.388t.225.337l2.525 2.525q.3.3.713.3t.712-.3q.275-.3.275-.712t-.275-.688zM12 6q.425 0 .713-.288T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6m6 6q0 .425.288.713T19 13t.713-.288T20 12t-.288-.712T19 11t-.712.288T18 12m-6 6q-.425 0-.712.288T11 19t.288.713T12 20t.713-.288T13 19t-.288-.712T12 18m-6-6q0-.425-.288-.712T5 11t-.712.288T4 12t.288.713T5 13t.713-.288T6 12m6 10q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"></path>
 </svg>
@@ -288,7 +288,7 @@ function ChatClock({ user }: { user: User }) {
     if (displayMode === "CLOCK") {
         return <Components.Tooltip text={time}>
             {(props) => {
-                return <div {...props} style={{ display: 'inline-flex', marginLeft: '5px', marginTop: '4px', verticalAlign: 'top' }}>
+                return <div className="tz-svg" {...props} style={{ display: 'inline-flex', marginLeft: '5px', marginTop: '4px', verticalAlign: 'top' }}>
                     <Clock />
                 </div>
             }}
