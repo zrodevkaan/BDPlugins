@@ -142,7 +142,6 @@ var TimezoneChat = styled.span(() => ({
 }));
 var TimezoneText = styled.div(() => {
   return {
-    color: "white",
     position: "absolute",
     padding: "5px",
     borderRadius: "5px",
@@ -231,9 +230,8 @@ function getCurrentTime(timezone) {
 function Timezone({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
   const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
-  if (!timezone || settings.bannerTimezoneDisplay === "DISABLED") return null;
   const time = getCurrentTime(timezone);
-  return /* @__PURE__ */ BdApi.React.createElement(TimezoneText, { color: "var(--text-default)" }, time);
+  return timezone && settings.bannerTimezoneDisplay === "ENABLED" ? /* @__PURE__ */ BdApi.React.createElement(TimezoneText, { color: "var(--text-default)" }, time) : null;
 }
 function returnSpoof(timezone, offset, time) {
   return {

@@ -117,7 +117,6 @@ const TimezoneChat = styled.span(() => ({
 
 const TimezoneText = styled.div(() => {
     return {
-        color: 'white',
         position: 'absolute',
         padding: '5px',
         borderRadius: '5px',
@@ -141,7 +140,7 @@ const SettingsHeaderGroup = styled.div(() => ({
     marginBottom: '8px'
 }))
 
-const SettingsSection = styled.div(({displayType}) => {
+const SettingsSection = styled.div(({ displayType }) => {
     return {
         marginTop: '20px',
         alignItems: 'center',
@@ -194,7 +193,7 @@ function getCurrentTime(timezone: string) {
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
     const use24h = settings.timezoneFormat === "24H";
     const includeSeconds = settings.showSeconds;
-    
+
     const timeString = new Date().toLocaleString('en-US', {
         timeZone: timezone,
         hour: '2-digit',
@@ -204,7 +203,7 @@ function getCurrentTime(timezone: string) {
     });
 
     let formattedTime = timeString;
-    
+
     if (!use24h) {
         formattedTime = formattedTime.replace(/^0/, '');
     }
@@ -223,12 +222,10 @@ function getCurrentTime(timezone: string) {
 function Timezone({ user }: { user: User }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
-    
-    if (!timezone || settings.bannerTimezoneDisplay === "DISABLED") return null;
-    
+
     const time = getCurrentTime(timezone);
 
-    return <TimezoneText color={'var(--text-default)'}>{time}</TimezoneText>;
+    return (timezone && settings.bannerTimezoneDisplay === "ENABLED") ? <TimezoneText color={'var(--text-default)'}>{time}</TimezoneText> : null
 }
 
 function returnSpoof(timezone: string, offset: string, time: string) {
@@ -284,7 +281,7 @@ function ChatClock({ user }: { user: User }) {
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
     const displayMode: ChatTimezoneDisplay = settings?.chatTimezoneDisplay ?? "CLOCK";
     const time = getCurrentTime(timezone);
-    
+
     if (displayMode === "CLOCK") {
         return <Components.Tooltip text={time}>
             {(props) => {
@@ -294,11 +291,11 @@ function ChatClock({ user }: { user: User }) {
             }}
         </Components.Tooltip>
     }
-    
+
     if (displayMode === "TEXT") {
         return <span className="tz-text"><TimezoneChat>{time} •</TimezoneChat></span>
     }
-    
+
     return null;
 }
 
@@ -326,8 +323,8 @@ export default class Timezones {
             return [<Timezone user={b[0].user} />, res]
         })
 
-        Patcher.after(MessageHeader, "A", (a,args,res) => {
-            !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(<ChatClock user={args[0].message.author}/>)
+        Patcher.after(MessageHeader, "A", (a, args, res) => {
+            !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(<ChatClock user={args[0].message.author} />)
         })
 
         this.unpatchAll = ContextMenuHelper([
@@ -425,9 +422,9 @@ export default class Timezones {
         if (originalType) {
             TimestampHeader.type = originalType;
         }
-        
+
         this.modifiedTypes = new WeakMap();
-        
+
         Patcher.unpatchAll();
         this.unpatchAll();
     }
