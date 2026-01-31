@@ -48,7 +48,7 @@ var styled = new Proxy(styledBase, {
 // src/BetterMediaPlayer/index.tsx
 var { Webpack, Patcher, Utils, Hooks, DOM, React: React2 } = new BdApi("BetterMediaPlayer");
 var { useState, useRef, useEffect } = React2;
-var VideoComponent = n(524444);
+var VideoComponent = Webpack.getBySource(`["onVolumeChange","onMute",`);
 var MediaClasses = Webpack.getByKeys("isInAppComponentsV2");
 var Clickable = Webpack.getModule((x) => String(x.render).includes("secondaryColorClass:"), { searchExports: true });
 var ProgressBar = Webpack.getByStrings("percent:", "foregroundColor:", { searchExports: true });
@@ -142,7 +142,6 @@ function VideoWrapper({ args, children }) {
   const containerRef = useRef(null);
   const ref = useRef(null);
   const author = useStateFromStores([UserStore], () => UserStore.getUser(props.message.author.id));
-  console.log(props);
   const actualWidth = props.width || props.item?.width || 1280;
   const actualHeight = props.height || props.item?.height || 720;
   const maxWidth = props.maxWidth || 550;
@@ -271,9 +270,22 @@ var css = `
     max-height: none;
 }
 `;
+function getKey(module2, fn) {
+  for (var key in module2) {
+    if (fn(module2[key])) {
+      return { key, module: module2 };
+      break;
+    }
+  }
+  return {
+    key: null,
+    module: null
+  };
+}
 var BetterMediaPlayer = class {
   start() {
-    Patcher.after(VideoComponent, "lV", (a, args, res) => {
+    const module2 = getKey(VideoComponent, Webpack.Filters.byRegex(/return\(0,.{1}.jsx\)\(.{1},.{1}\({},.{1}\)\)/));
+    Patcher.after(module2.module, module2.key, (a, args, res) => {
       return /* @__PURE__ */ BdApi.React.createElement(VideoWrapper, { args }, res);
     });
     DOM.addStyle(css);

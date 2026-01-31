@@ -11,6 +11,7 @@ import { styled } from '../Helpers';
 const Slider = Webpack.getModule(Webpack.Filters.byStrings("stickToMarkers", 'fillStyles'), { searchExports: true })
 const Clickable = Webpack.getModule(x => String(x.render).includes('secondaryColorClass:'), { searchExports: true })
 const Mediabar = Webpack.getByStrings('sliderWrapperClassName')
+const AudioModule = Webpack.getBySource('clip_participants', 'playbackCacheKey')
 
 const PlayerBackground = styled.div({
     background: 'var(--background-base-low)',
@@ -19,6 +20,7 @@ const PlayerBackground = styled.div({
     gap: '16px',
     borderRadius: '8px',
     display: 'flex',
+    minWidth: '500px',
     flexDirection: 'column'
 })
 
@@ -35,7 +37,7 @@ const AlbumArt = styled.img({
     objectFit: 'cover',
     borderRadius: '4px',
     flexShrink: 0,
-    background: 'var(--background-secondary)'
+    background: 'var(--background-base-lower)'
 })
 
 const MetadataContainer = styled.div({
@@ -128,7 +130,7 @@ function AudioComponent({ props, fallback }) {
     const data = props[0];
     const [metadata, setMetadata] = React.useState(null);
     const [isLoading, setIsLoading] = React.useState(false);
-    const [imageUrl, setImageUrl] = React.useState(null);
+    const [imageUrl, setImageUrl] = React.useState<string>("");
     const [didError, setDidError] = React.useState(false);
     const [isHolding, setIsHolding] = React.useState(false)
     const [isPlaying, setIsPlaying] = React.useState(false)
@@ -259,9 +261,23 @@ function AudioComponent({ props, fallback }) {
     );
 }
 
+function getKey(module, fn) {
+    for (var key in module) {
+        if (fn(module[key])) {
+            return { key: key, module: module };
+            break;
+        }
+    }
+    return {
+        key: null,
+        module: null
+    }
+}
+
 export default class DisplayAlbums {
     start() {
-        Patcher.after(n(266620), 'Nj', (_, props, res) => {
+        const module = getKey(AudioModule, Webpack.Filters.combine(Webpack.Filters.byStrings('item.originalItem;return(0,'), Webpack.Filters.byStrings('fileSize:')))
+        Patcher.after(module?.module, module.key, (_, props, res) => {
             return <AudioComponent props={props} fallback={res} />
         })
     }
