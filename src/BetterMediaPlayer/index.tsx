@@ -13,6 +13,10 @@ const MediaClasses = Webpack.getByKeys('isInAppComponentsV2')
 const Clickable = Webpack.getModule(x => String(x.render).includes('secondaryColorClass:'), { searchExports: true })
 const ProgressBar = Webpack.getByStrings('percent:', 'foregroundColor:', { searchExports: true })
 const Slider = Webpack.getModule(Webpack.Filters.byStrings("stickToMarkers", 'fillStyles'), { searchExports: true })
+const Mediabar = Webpack.getByStrings('sliderWrapperClassName')
+const FileUtils = Webpack.getMangled('.showDecimalForGB?', {
+    FileSizeIntl: Webpack.Filters.byStrings('kEk9pr')
+})
 
 const { useStateFromStores } = Hooks;
 
@@ -93,6 +97,21 @@ const FullscreenUtils = Webpack.getMangled('requestFullscreen():"function"', {
     AddFullscreenListener: BdApi.Webpack.Filters.byStrings('.addEventListener(', '"webkitfullscreenchange"', '.removeEventListener(', 'return') as Function
 })
 
+function VolumeSlider({ defaultVolume, onValueChange, muted }) {
+    const [volume, setVolume] = React.useState(defaultVolume)
+
+    return <Mediabar
+        minValue={0}
+        maxValue={0.1}
+        muted={muted}
+        value={volume}
+        onValueChange={(newVolume) => {
+            setVolume(newVolume)
+            onValueChange(newVolume)
+        }}
+    />
+}
+
 function VideoWrapper({ args, children }) {
     const props = children.props;
     if (!props.message?.author) return children;
@@ -110,8 +129,8 @@ function VideoWrapper({ args, children }) {
 
     const actualWidth = props.width || props.item?.width || 1280;
     const actualHeight = props.height || props.item?.height || 720;
-    const maxWidth = props.maxWidth || 550;
-    const maxHeight = props.maxHeight || 350;
+    const maxWidth = props.maxWidth || 1280;
+    const maxHeight = props.maxHeight || 720;
 
     const aspectRatio = actualWidth / actualHeight;
     let displayWidth = maxWidth;
@@ -214,7 +233,7 @@ function VideoWrapper({ args, children }) {
                     {!isFullscreen && <FooterContainer>
                         <FooterText>@{author.username || "owo ?"}</FooterText>
                         <FooterText>•</FooterText>
-                        <FooterText>{(props.fileSize * 0.001024)} MB</FooterText>
+                        <FooterText>{FileUtils?.FileSizeIntl(props.fileSize)}</FooterText>
                     </FooterContainer>}
                 </InfoContainer>}
                 {duration > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
@@ -252,6 +271,11 @@ function VideoWrapper({ args, children }) {
                     <FormattedTime>
                         {formatTime(currentTime)} / {formatTime(duration)}
                     </FormattedTime>
+                    <VolumeSlider defaultVolume={0.1} onValueChange={(newVolume) => {
+                        if (ref.current) {
+                            ref.current.volume = newVolume
+                        }
+                    }} />
                     <Clickable onClick={toggleFullscreen}
                         icon={isFullscreen ? ExitFullscreenIcon : FullscreenIcon}></Clickable>
                 </div>}

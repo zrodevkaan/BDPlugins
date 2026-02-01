@@ -53,6 +53,10 @@ var MediaClasses = Webpack.getByKeys("isInAppComponentsV2");
 var Clickable = Webpack.getModule((x) => String(x.render).includes("secondaryColorClass:"), { searchExports: true });
 var ProgressBar = Webpack.getByStrings("percent:", "foregroundColor:", { searchExports: true });
 var Slider = Webpack.getModule(Webpack.Filters.byStrings("stickToMarkers", "fillStyles"), { searchExports: true });
+var Mediabar = Webpack.getByStrings("sliderWrapperClassName");
+var FileUtils = Webpack.getMangled(".showDecimalForGB?", {
+  FileSizeIntl: Webpack.Filters.byStrings("kEk9pr")
+});
 var { useStateFromStores } = Hooks;
 var Container = styled.div({
   display: "flex",
@@ -130,6 +134,22 @@ var FullscreenUtils = Webpack.getMangled('requestFullscreen():"function"', {
   IsInFullscreen: BdApi.Webpack.Filters.byStrings("fullscreenElement||", "mozFullScreenElement||", "webkitFullscreenElement||", "msFullscreenElement||", "webkitDisplayingFullscreen"),
   AddFullscreenListener: BdApi.Webpack.Filters.byStrings(".addEventListener(", '"webkitfullscreenchange"', ".removeEventListener(", "return")
 });
+function VolumeSlider({ defaultVolume, onValueChange, muted }) {
+  const [volume, setVolume] = React2.useState(defaultVolume);
+  return /* @__PURE__ */ BdApi.React.createElement(
+    Mediabar,
+    {
+      minValue: 0,
+      maxValue: 0.1,
+      muted,
+      value: volume,
+      onValueChange: (newVolume) => {
+        setVolume(newVolume);
+        onValueChange(newVolume);
+      }
+    }
+  );
+}
 function VideoWrapper({ args, children }) {
   const props = children.props;
   if (!props.message?.author) return children;
@@ -144,8 +164,8 @@ function VideoWrapper({ args, children }) {
   const author = useStateFromStores([UserStore], () => UserStore.getUser(props.message.author.id));
   const actualWidth = props.width || props.item?.width || 1280;
   const actualHeight = props.height || props.item?.height || 720;
-  const maxWidth = props.maxWidth || 550;
-  const maxHeight = props.maxHeight || 350;
+  const maxWidth = props.maxWidth || 1280;
+  const maxHeight = props.maxHeight || 720;
   const aspectRatio = actualWidth / actualHeight;
   let displayWidth = maxWidth;
   let displayHeight = maxWidth / aspectRatio;
@@ -225,7 +245,7 @@ function VideoWrapper({ args, children }) {
       },
       onLoadedMetadata: (e) => setDuration(e.target.duration)
     }
-  ), /* @__PURE__ */ BdApi.React.createElement(ControlBar, { style: { width: isFullscreen ? "100%" : barWidth, height: "auto" } }, /* @__PURE__ */ BdApi.React.createElement(InfoContainer, null, /* @__PURE__ */ BdApi.React.createElement(FileName, null, props.fileName), !isFullscreen && /* @__PURE__ */ BdApi.React.createElement(FooterContainer, null, /* @__PURE__ */ BdApi.React.createElement(FooterText, null, "@", author.username || "owo ?"), /* @__PURE__ */ BdApi.React.createElement(FooterText, null, "\u2022"), /* @__PURE__ */ BdApi.React.createElement(FooterText, null, props.fileSize * 1024e-6, " MB"))), duration > 0 && /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", flex: 1 } }, /* @__PURE__ */ BdApi.React.createElement(Clickable, { onClick: () => {
+  ), /* @__PURE__ */ BdApi.React.createElement(ControlBar, { style: { width: isFullscreen ? "100%" : barWidth, height: "auto" } }, /* @__PURE__ */ BdApi.React.createElement(InfoContainer, null, /* @__PURE__ */ BdApi.React.createElement(FileName, null, props.fileName), !isFullscreen && /* @__PURE__ */ BdApi.React.createElement(FooterContainer, null, /* @__PURE__ */ BdApi.React.createElement(FooterText, null, "@", author.username || "owo ?"), /* @__PURE__ */ BdApi.React.createElement(FooterText, null, "\u2022"), /* @__PURE__ */ BdApi.React.createElement(FooterText, null, FileUtils?.FileSizeIntl(props.fileSize)))), duration > 0 && /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", flex: 1 } }, /* @__PURE__ */ BdApi.React.createElement(Clickable, { onClick: () => {
     if (finished) {
       ref.current.currentTime = 0;
       setCurrentTime(0);
@@ -257,7 +277,11 @@ function VideoWrapper({ args, children }) {
         }
       }
     }
-  ), /* @__PURE__ */ BdApi.React.createElement(FormattedTime, null, formatTime(currentTime), " / ", formatTime(duration)), /* @__PURE__ */ BdApi.React.createElement(
+  ), /* @__PURE__ */ BdApi.React.createElement(FormattedTime, null, formatTime(currentTime), " / ", formatTime(duration)), /* @__PURE__ */ BdApi.React.createElement(VolumeSlider, { defaultVolume: 0.1, onValueChange: (newVolume) => {
+    if (ref.current) {
+      ref.current.volume = newVolume;
+    }
+  } }), /* @__PURE__ */ BdApi.React.createElement(
     Clickable,
     {
       onClick: toggleFullscreen,
