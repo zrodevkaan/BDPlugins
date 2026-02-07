@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.2
  * @description Allows you to display a local timezone you set for a user.
  */
 "use strict";
@@ -231,7 +231,7 @@ function Timezone({ user }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
   const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
   const time = getCurrentTime(timezone);
-  return timezone && settings.bannerTimezoneDisplay === "ENABLED" ? /* @__PURE__ */ BdApi.React.createElement(TimezoneText, { color: "var(--text-default)" }, time) : null;
+  return timezone && settings.bannerTimezoneDisplay === "ENABLED" ? /* @__PURE__ */ BdApi.React.createElement(TimezoneText, { className: "bz-banner", color: "var(--text-default)" }, time) : null;
 }
 function returnSpoof(timezone, offset, time) {
   return {
