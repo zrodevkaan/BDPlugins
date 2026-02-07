@@ -1,7 +1,7 @@
 /**
  * @name QuickResponses
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description Allows you to quickly send snippets or complete messages using a slash command like style
  */
 "use strict";
@@ -308,8 +308,8 @@ var QuickResponses = class {
       ]
     }];
     DataStore.snippetStatistics ??= {};
-    Autocompletes.R[11] = "SNIPPETS";
-    Autocompletes.W["SNIPPETS"] = Snippets;
+    Autocompletes.S[13] = "SNIPPETS";
+    Autocompletes.a["SNIPPETS"] = Snippets;
     Patcher.before(WordModule, "WordParser", (_, args, __) => {
       if (args[0].textValue?.startsWith(">>")) {
         args[0].currentWord = args[0].textValue?.replace(" ", "_");
@@ -390,8 +390,8 @@ var QuickResponses = class {
     res.props.children.props.children.push(Menu);
   }
   stop() {
-    delete Autocompletes.R[Autocompletes.R.length - 1];
-    delete Autocompletes.W["SNIPPETS"];
+    delete Autocompletes.S[Autocompletes.R.length - 1];
+    delete Autocompletes.a["SNIPPETS"];
     DOM.addStyle("snippetCss");
     ContextMenu.unpatch("message", this.addToQuickResponse);
   }
