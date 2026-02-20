@@ -2,12 +2,12 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.1
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components
-const SelectableSearch = Webpack.getByStrings(`"hideTags","wrapTags","maxOptionsVisible"`,{searchExports:true})
+const SelectableSearch = Webpack.getByStrings('hideTags','wrapTags','maxOptionsVisible',{searchExports:true})
 const Textarea = Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
 const AboutMe = Webpack.getModule(x => x.A.toString().includes('disableInteractions'))
 const MessageActions = Webpack.getByKeys('_sendMessage')
