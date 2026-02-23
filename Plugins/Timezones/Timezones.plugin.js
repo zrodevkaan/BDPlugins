@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  * @description Allows you to display a local timezone you set for a user.
  */
 "use strict";
@@ -62,7 +62,6 @@ var ModalUtils = Webpack.getByKeys("openModal");
 var Modal = Webpack.getByKeys("Modal").Modal;
 var SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings("SearchableSelect", "fieldProps"), { searchExports: true });
 var MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
-var TimestampHeader = Webpack.getBySource(".SENT_BY_SOCIAL_LAYER_INTEGRATION)?").Ay;
 var Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true });
 function getTimezones() {
   const now = /* @__PURE__ */ new Date();
@@ -304,7 +303,6 @@ function TimezoneContextMenu({ user }) {
 }
 var Timezones = class {
   unpatchAll;
-  modifiedTypes = /* @__PURE__ */ new WeakMap();
   start() {
     Patcher.after(Banner_3, "A", (a, b, res) => {
       return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
@@ -370,11 +368,6 @@ var Timezones = class {
     };
   }
   stop() {
-    const originalType = this.modifiedTypes.get(TimestampHeader);
-    if (originalType) {
-      TimestampHeader.type = originalType;
-    }
-    this.modifiedTypes = /* @__PURE__ */ new WeakMap();
     Patcher.unpatchAll();
     this.unpatchAll();
   }

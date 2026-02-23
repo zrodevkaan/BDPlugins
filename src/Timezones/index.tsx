@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
@@ -13,7 +13,6 @@ const ModalUtils = Webpack.getByKeys("openModal")
 const Modal = Webpack.getByKeys("Modal").Modal
 const SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings('SearchableSelect', 'fieldProps'), { searchExports: true })
 const MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
-const TimestampHeader = Webpack.getBySource('.SENT_BY_SOCIAL_LAYER_INTEGRATION)?').Ay
 const Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true })
 
 function getTimezones() {
@@ -317,7 +316,6 @@ function TimezoneContextMenu({ user }: { user: User }) {
 
 export default class Timezones {
     private unpatchAll;
-    private modifiedTypes = new WeakMap();
 
     start() {
         Patcher.after(Banner_3, "A", (a, b, res) => {
@@ -419,13 +417,6 @@ export default class Timezones {
     }
 
     stop() {
-        const originalType = this.modifiedTypes.get(TimestampHeader);
-        if (originalType) {
-            TimestampHeader.type = originalType;
-        }
-
-        this.modifiedTypes = new WeakMap();
-
         Patcher.unpatchAll();
         this.unpatchAll();
     }
