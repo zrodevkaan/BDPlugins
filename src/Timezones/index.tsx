@@ -1,19 +1,20 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.4
+ * @version 2.0.5
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
 import { ContextMenuHelper, styled } from "../Helpers";
 
 const { Patcher, Webpack, Data, Utils, Hooks, ContextMenu, Components, React } = new BdApi("Timezones")
+
 const Banner_3 = Webpack.getBySource(".unsafe_rawColors.PRIMARY_800).hex(),") // displayProfile, canAnimate: pendingBanner
 const ModalUtils = Webpack.getByKeys("openModal")
 const Modal = Webpack.getByKeys("Modal").Modal
 const SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings('SearchableSelect', 'fieldProps'), { searchExports: true })
 const MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
-const Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true })
+const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true })
 
 function getTimezones() {
     const now = new Date();
@@ -189,12 +190,12 @@ function getTimezoneDifference(timezone) {
     }
 }
 
-function getCurrentTime(timezone: string) {
+function getCurrentTime(timezone: string, date = new Date()) {
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
     const use24h = settings.timezoneFormat === "24H";
     const includeSeconds = settings.showSeconds;
 
-    const timeString = new Date().toLocaleString('en-US', {
+    const timeString = date.toLocaleString('en-US', {
         timeZone: timezone,
         hour: '2-digit',
         minute: '2-digit',
@@ -276,11 +277,11 @@ const Clock = () => <svg xmlns="http://www.w3.org/2000/svg" width={16} height={1
 </svg>
 
 
-function ChatClock({ user }: { user: User }) {
+function ChatClock({ user, timestamp }: { user: User, timestamp: Date }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
     const displayMode: ChatTimezoneDisplay = settings?.chatTimezoneDisplay ?? "CLOCK";
-    const time = getCurrentTime(timezone);
+    const time = getCurrentTime(timezone, timestamp);
 
     if (displayMode === "CLOCK") {
         return <Components.Tooltip text={time}>
@@ -322,8 +323,9 @@ export default class Timezones {
             return [<Timezone user={b[0].user} />, res]
         })
 
-        Patcher.after(MessageHeader, "A", (a, args, res) => {
-            !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(<ChatClock user={args[0].message.author} />)
+        Patcher.after(MessageHeader, "A", (a, args: any, res: any) => {
+            const timestamp = new Date(args[0].message.timestamp);
+            !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(<ChatClock user={args[0].message.author} timestamp={timestamp} />)
         })
 
         this.unpatchAll = ContextMenuHelper([

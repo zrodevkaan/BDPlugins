@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.9
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  */
@@ -190,7 +190,7 @@ var getTypingTooltip = (u) => {
   return !n.length ? "" : n.length > 7 ? "Oh my? Quite the party, huh." : n.length === 1 ? `${n[0]} is typing!` : n.length === 2 ? `${n[0]} and ${n[1]} are typing!` : n.length === 3 ? `${n[0]}, ${n[1]}, and ${n[2]} are typing!` : `${n.length} members are typing!`;
 };
 function getTypingUsers(users) {
-  const currentUser = UserStore.getCurrentUser();
+  const currentUser = UserStore.getCurrentUser?.() ?? { id: null };
   if (!users || !currentUser) return {};
   return Object.entries(users).filter(([id]) => id !== currentUser.id).reduce((acc, [id]) => (UserStore.getUser(id) && (acc[id] = UserStore.getUser(id)), acc), {});
 }
@@ -248,6 +248,7 @@ var TypingIndicatorDMBar = React.memo(() => {
     }
     return result;
   }, [privateChannelIds]);
+  if (!currentUserId) return;
   const typingUsers = {};
   Object.values(typingUsersByChannel).forEach((users) => {
     Object.keys(users).forEach((userId) => {

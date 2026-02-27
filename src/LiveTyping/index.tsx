@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.9
  * @description Typing status per user on servers, channels or threads.
  */
 
@@ -222,7 +222,7 @@ const getTypingTooltip = u => {
 };
 
 function getTypingUsers(users) {
-    const currentUser = UserStore.getCurrentUser();
+    const currentUser = UserStore.getCurrentUser?.() ?? {id:null};
     if (!users || !currentUser) return {};
     return Object.entries(users)
         .filter(([id]) => id !== currentUser.id)
@@ -291,6 +291,8 @@ const TypingIndicatorDMBar = React.memo(() => {
         }
         return result;
     }, [privateChannelIds]);
+
+    if (!currentUserId) return;
 
     const typingUsers = {};
     Object.values(typingUsersByChannel).forEach(users => {

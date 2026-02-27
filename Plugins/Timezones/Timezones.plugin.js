@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.4
+ * @version 2.0.5
  * @description Allows you to display a local timezone you set for a user.
  */
 "use strict";
@@ -203,11 +203,11 @@ function getTimezoneDifference(timezone) {
     return `${Math.abs(diffHours)} hour(s) behind`;
   }
 }
-function getCurrentTime(timezone) {
+function getCurrentTime(timezone, date = /* @__PURE__ */ new Date()) {
   const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
   const use24h = settings.timezoneFormat === "24H";
   const includeSeconds = settings.showSeconds;
-  const timeString = (/* @__PURE__ */ new Date()).toLocaleString("en-US", {
+  const timeString = date.toLocaleString("en-US", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
@@ -278,11 +278,11 @@ var Clock = () => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "htt
     d: "M13 12.175V9q0-.425-.288-.712T12 8t-.712.288T11 9v3.575q0 .2.075.388t.225.337l2.525 2.525q.3.3.713.3t.712-.3q.275-.3.275-.712t-.275-.688zM12 6q.425 0 .713-.288T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6m6 6q0 .425.288.713T19 13t.713-.288T20 12t-.288-.712T19 11t-.712.288T18 12m-6 6q-.425 0-.712.288T11 19t.288.713T12 20t.713-.288T13 19t-.288-.712T12 18m-6-6q0-.425-.288-.712T5 11t-.712.288T4 12t.288.713T5 13t.713-.288T6 12m6 10q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"
   }
 ));
-function ChatClock({ user }) {
+function ChatClock({ user, timestamp }) {
   const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
   const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
   const displayMode = settings?.chatTimezoneDisplay ?? "CLOCK";
-  const time = getCurrentTime(timezone);
+  const time = getCurrentTime(timezone, timestamp);
   if (displayMode === "CLOCK") {
     return /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: time }, (props) => {
       return /* @__PURE__ */ BdApi.React.createElement("div", { className: "tz-svg", ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
@@ -308,7 +308,8 @@ var Timezones = class {
       return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
     Patcher.after(MessageHeader, "A", (a, args, res) => {
-      !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author }));
+      const timestamp = new Date(args[0].message.timestamp);
+      !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author, timestamp }));
     });
     this.unpatchAll = ContextMenuHelper([
       {
