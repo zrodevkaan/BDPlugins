@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.0.9
+ * @version 2.1.0
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  */
@@ -238,7 +238,7 @@ var TypingIndicatorDMBar = React.memo(() => {
   const [showPopout, setShowPopout] = React.useState(false);
   const ref = React.useRef(null);
   const privateChannelIds = useStateFromStores([PrivateChannelSortStore], () => PrivateChannelSortStore.getPrivateChannelIds());
-  const currentUserId = useStateFromStores([UserStore], (x) => UserStore.getCurrentUser().id);
+  const currentUserId = useStateFromStores([UserStore], (x) => UserStore.getCurrentUser()?.id || null);
   const typingUsersByChannel = useStateFromStores([TypingStore], () => {
     const result = {};
     for (const channelId of privateChannelIds) {
