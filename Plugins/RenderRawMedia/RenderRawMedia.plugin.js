@@ -3,6 +3,7 @@
  * @author Kaan
  * @version 1.0.0
  * @description Renders the direct TikTok, Media or more links in chat
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/RenderRawMedia/RenderRawMedia.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

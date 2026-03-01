@@ -3,6 +3,7 @@
  * @author Kaan
  * @version 1.0.0
  * @description Copies Apples iMessage pins
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DMBubbles/DMBubbles.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

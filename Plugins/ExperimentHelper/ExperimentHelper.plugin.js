@@ -1,6 +1,7 @@
 /**
  * @name ExperimentHelper
  * @description A ton of experiment based helpers
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ExperimentHelper/ExperimentHelper.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

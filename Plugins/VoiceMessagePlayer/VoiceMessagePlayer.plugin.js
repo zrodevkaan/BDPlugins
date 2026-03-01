@@ -3,6 +3,7 @@
  * @author Kaan
  * @version 1.0.0
  * @description Recreation of the popout on mobile for voice messages.
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/VoiceMessagePlayer/VoiceMessagePlayer.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

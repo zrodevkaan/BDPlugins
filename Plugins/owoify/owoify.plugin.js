@@ -6,6 +6,7 @@
  * @Caktukk Translator | Free & AI-Powered",
  * @mTOn Translator | Free & AI-Powered",
  * @oik_wow Translator | Free & AI-Powered",
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/owoify/owoify.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

@@ -2,6 +2,7 @@
  * @name CMPT
  * @description * @author Kaan
  * @version 1.0.0
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CMPT/CMPT.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

@@ -3,6 +3,7 @@
  * @author Kaan
  * @version 1.0.0
  * @description Recreates sterns old ChannelDms plugin that a allows you to open DMs from a server channel on the memberlist
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ChannelDMs/ChannelDMs.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

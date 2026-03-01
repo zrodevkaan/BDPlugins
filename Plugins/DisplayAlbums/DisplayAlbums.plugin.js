@@ -3,6 +3,7 @@
  * @description Replaces the default MP3/mu3a etc files with a nicer display
  * @author Kaan
  * @version 1.0.0
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DisplayAlbums/DisplayAlbums.plugin.js 
  */
 "use strict";
 var __create = Object.create;

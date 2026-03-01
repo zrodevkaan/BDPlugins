@@ -12,7 +12,6 @@
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
-    "@types/betterdiscord": "github:zerthox/betterdiscord-types",
     "@types/react": "^19.1.5",
     "@types/react-canvas-draw": "^1.2.4",
     "@types/react-dom": "^19.1.5",
@@ -25,7 +24,8 @@
   "scripts": {
     "run": "node esbuild.config.js",
     "build": "node esbuild.config.js --bdist",
-    "prod": "node esbuild.config.js && node esbuild.config.js --bdist"
+    "prod": "node esbuild.config.js && node esbuild.config.js --bdist",
+    "proddni": "node esbuild.config.js && node esbuild.config.js --dni"
   },
   "resolve": {
     "alias": {

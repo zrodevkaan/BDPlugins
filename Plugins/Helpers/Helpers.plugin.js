@@ -2,6 +2,7 @@
  * @name Helpers
  * @author Kaan
  * @version 1.0.0
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Helpers/Helpers.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

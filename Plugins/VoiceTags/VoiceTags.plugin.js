@@ -3,6 +3,7 @@
  * @description Displays if someone is in your current voice channel.
  * @author Kaan
  * @version 1.0.0
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/VoiceTags/VoiceTags.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

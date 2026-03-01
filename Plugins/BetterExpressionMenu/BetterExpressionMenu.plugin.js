@@ -3,6 +3,7 @@
  * @description Adds more options to the expression popup
  * @version 1.0.0
  * @author Kaan
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterExpressionMenu/BetterExpressionMenu.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

@@ -3,6 +3,7 @@
  * @author Kaan
  * @version 1.0.0
  * @description Allows you to open a user in the context of a mutual guild you share with said person
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/GuildContexts/GuildContexts.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

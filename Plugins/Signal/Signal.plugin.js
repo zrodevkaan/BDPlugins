@@ -3,6 +3,7 @@
  * @author Kaan
  * @version 1.0.1
  * @description doggy sucks ;p
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Signal/Signal.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

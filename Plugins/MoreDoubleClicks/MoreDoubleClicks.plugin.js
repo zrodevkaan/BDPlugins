@@ -3,6 +3,7 @@
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
  * @version 3.0.0
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MoreDoubleClicks/MoreDoubleClicks.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

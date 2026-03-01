@@ -3,6 +3,7 @@
  * @description Tries to improve the video player with more information.
  * @version 1.0.0
  * @author Kaan
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterMediaPlayer/BetterMediaPlayer.plugin.js 
  */
 "use strict";
 var __defProp = Object.defineProperty;

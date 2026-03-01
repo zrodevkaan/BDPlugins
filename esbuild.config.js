@@ -15,6 +15,7 @@ const distDir = path.resolve(__dirname, "./Plugins");
 const args = process.argv.slice(2);
 const bdist = args.includes("--bdist");
 const watch = args.includes("--watch") || args.includes("-w");
+const doNotInject = args.includes("--doNotInject") || args.includes("-dni");
 const pluginArg = args.find(arg => arg.startsWith("--plugin="));
 const specificPlugin = pluginArg ? pluginArg.split("=")[1] : null;
 
@@ -77,8 +78,11 @@ async function createBuildConfig(pluginName) {
         ? path.join(distDir, pluginName, `${pluginName}.plugin.js`)
         : path.join(getBetterDiscordPath(), `${pluginName}.plugin.js`);
 
-    const pluginPath = path.join(distDir, pluginName);
-    fs.mkdirSync(pluginPath, { recursive: true });
+    if (!doNotInject)
+    {
+        const pluginPath = path.join(distDir, pluginName);
+        fs.mkdirSync(pluginPath, { recursive: true });
+    }
 
     return {
         entryPoints: [entryFile],
@@ -86,7 +90,7 @@ async function createBuildConfig(pluginName) {
         format: "cjs",
         outfile: outFile,
         banner: {
-            js: extractMeta(fileContents),
+            js: extractMeta(fileContents, pluginName),
         },
         loader: {
             ".js": "jsx",

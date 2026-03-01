@@ -1,346 +1,232 @@
 /**
  * BetterDiscord API Type Definitions
- * 
- * Comprehensive type definitions for BdApi - the public API for BetterDiscord plugins and themes
+ * Global ambient declarations — no imports required.
  */
 
-import type {ComponentType, Context, FunctionComponent, ReactElement, ReactNode, RefObject} from "react";
-import type {Fiber} from "react-reconciler";
-
-declare global {
-    const BdApi: BdApiConstructor;
+// ==================== React Stubs ====================
+// Minimal stubs so we don't need to import react/react-dom
+declare namespace React {
+    type ReactNode = string | number | boolean | null | undefined | ReactElement | ReactFragment | ReactPortal;
+    interface ReactElement<P = any> { type: any; props: P; key: string | null; }
+    interface ReactFragment {}
+    interface ReactPortal extends ReactElement { children: ReactNode; }
+    type FC<P = {}> = FunctionComponent<P>;
+    interface FunctionComponent<P = {}> { (props: P): ReactElement | null; displayName?: string; }
+    type ComponentType<P = {}> = FunctionComponent<P> | ComponentClass<P>;
+    interface ComponentClass<P = {}> { new(props: P): Component<P>; displayName?: string; }
+    interface Component<P = {}, S = {}> { props: P; state: S; render(): ReactNode; }
+    interface MemoExoticComponent<T extends ComponentType<any>> { type: T; }
+    interface ForwardRefExoticComponent<P> { $$typeof: symbol; }
+    interface LazyExoticComponent<T extends ComponentType<any>> { $$typeof: symbol; }
+    interface MouseEvent { preventDefault(): void; stopPropagation(): void; }
 }
 
-// ============================================================================
-// Main BdApi Interface
-// ============================================================================
-
-interface BdApiConstructor {
-    new(pluginName: string): BdApiInstance;
-    
-    // Static properties
-    Patcher: PatcherStatic;
-    Data: DataStatic;
-    DOM: DOMStatic;
-    Logger: LoggerStatic;
-    Commands: CommandAPIStatic;
-    React: typeof React;
-    ReactDOM: typeof ReactDOM;
-    version: string;
-    
-    // Static namespaces
-    Plugins: AddonAPI;
-    Themes: AddonAPI;
-    Webpack: WebpackAPI;
-    UI: UIAPI;
-    ReactUtils: ReactUtilsAPI;
-    Utils: UtilsAPI;
-    ContextMenu: ContextMenuAPI;
-    Components: ComponentsAPI;
-    Net: {fetch: typeof fetch;};
+declare namespace ReactDOM {
+    function render(element: React.ReactElement, container: Element | null): void;
+    function unmountComponentAtNode(container: Element): boolean;
 }
 
-interface BdApiInstance {
-    // Instance properties
-    Patcher: PatcherInstance;
-    Data: DataInstance;
-    DOM: DOMInstance;
-    Logger: LoggerInstance;
-    Commands: CommandAPIInstance;
-    React: typeof React;
-    ReactDOM: typeof ReactDOM;
-    version: string;
-    
-    // Instance getters (non-bound namespaces)
-    readonly Plugins: AddonAPI;
-    readonly Themes: AddonAPI;
-    readonly Webpack: WebpackAPI;
-    readonly Utils: UtilsAPI;
-    readonly UI: UIAPI;
-    readonly ReactUtils: ReactUtilsAPI;
-    readonly ContextMenu: ContextMenuAPI;
-    readonly Components: ComponentsAPI;
-    Net: {fetch: typeof fetch;};
+// ==================== Fiber Stub ====================
+interface Fiber {
+    type: any;
+    stateNode: any;
+    return: Fiber | null;
+    child: Fiber | null;
+    sibling: Fiber | null;
+    memoizedProps: any;
+    memoizedState: any;
+    pendingProps: any;
+    key: string | null;
+    ref: any;
+    flags: number;
+    tag: number;
+    [key: string]: any;
 }
 
-// ============================================================================
-// Patcher API
-// ============================================================================
+// ==================== Webpack Module Types ====================
+/** A loose Discord module — allows property access without casting. */
+type DiscordModule = Record<string, any>;
 
-interface PatcherStatic {
-    before<M extends object, K extends keyof M & string>(
-        caller: string,
-        moduleToPatch: M,
-        functionName: K,
-        callback: M[K] extends (...args: any[]) => any ? BeforeCallback<M[K]> : never
-    ): (() => void) | null;
-    
-    instead<M extends object, K extends keyof M & string>(
-        caller: string,
-        moduleToPatch: M,
-        functionName: K,
-        callback: M[K] extends (...args: any[]) => any ? InsteadCallback<M[K]> : never
-    ): (() => void) | null;
-    
-    after<M extends object, K extends keyof M & string>(
-        caller: string,
-        moduleToPatch: M,
-        functionName: K,
-        callback: M[K] extends (...args: any[]) => any ? AfterCallback<M[K]> : never
-    ): (() => void) | null;
-    
-    getPatchesByCaller(caller: string): ChildPatch[];
-    unpatchAll(caller: string): void;
+type WebpackFilter = (module: DiscordModule, id: string, require: object) => boolean;
+type ExportedOnlyFilter = (exports: DiscordModule) => boolean;
+
+interface WebpackOptions {
+    searchExports?: boolean;
+    searchDefault?: boolean;
+    defaultExport?: boolean;
 }
 
-interface PatcherInstance {
-    before<M extends object, K extends keyof M & string>(
-        moduleToPatch: M,
-        functionName: K,
-        callback: M[K] extends (...args: any[]) => any ? BeforeCallback<M[K]> : never
-    ): (() => void) | null;
-    
-    instead<M extends object, K extends keyof M & string>(
-        moduleToPatch: M,
-        functionName: K,
-        callback: M[K] extends (...args: any[]) => any ? InsteadCallback<M[K]> : never
-    ): (() => void) | null;
-    
-    after<M extends object, K extends keyof M & string>(
-        moduleToPatch: M,
-        functionName: K,
-        callback: M[K] extends (...args: any[]) => any ? AfterCallback<M[K]> : never
-    ): (() => void) | null;
-    
-    getPatchesByCaller(): ChildPatch[];
-    unpatchAll(): void;
+interface WebpackLazyOptions extends WebpackOptions {
+    signal?: AbortSignal;
 }
 
-type BeforeCallback<F extends (...args: any[]) => any> = (
-    thisObject: ThisParameterType<F>,
+interface WebpackFilters {
+    byKeys(...keys: string[]): ExportedOnlyFilter;
+    byPrototypeKeys(...props: string[]): ExportedOnlyFilter;
+    byRegex(regex: RegExp): ExportedOnlyFilter;
+    bySource(...searches: Array<RegExp | string>): WebpackFilter;
+    byStrings(...strings: string[]): ExportedOnlyFilter;
+    byDisplayName(name: string): ExportedOnlyFilter;
+    byStoreName(name: string): ExportedOnlyFilter;
+    combine(...filters: WebpackFilter[]): WebpackFilter;
+    not(filter: WebpackFilter): WebpackFilter;
+    byComponentType(filter: ExportedOnlyFilter): ExportedOnlyFilter;
+}
+
+interface WebpackAPI {
+    /** A Proxy that returns the module source by ID. */
+    modules: Record<PropertyKey, DiscordModule>;
+    /** Proxy access to Discord's Flux stores. */
+    Stores: Record<string, DiscordModule>;
+    /** Series of filters to be used for finding webpack modules. */
+    Filters: WebpackFilters;
+    /** Gets a module and a specific key from that module. */
+    getWithKey(filter: ExportedOnlyFilter, options?: WebpackOptions): [DiscordModule, string | undefined] | undefined;
+    /** Gets a single module by filter. */
+    getModule(filter: WebpackFilter, options?: WebpackOptions): DiscordModule | undefined;
+    /** Gets all modules matching filter. */
+    getModules(filter: WebpackFilter, options?: WebpackOptions): DiscordModule[];
+    /** Gets multiple modules in a single pass. */
+    getBulk(...queries: object[]): DiscordModule[];
+    /** Gets multiple modules in a single pass with keyed results. */
+    getBulkKeyed(queries: Record<string, object>): Record<string, DiscordModule>;
+    /** Waits for a module to be loaded and returns it. */
+    waitForModule(filter: WebpackFilter, options?: WebpackLazyOptions): Promise<DiscordModule | undefined>;
+    /** Gets a module by regex filter. */
+    getByRegex(regex: RegExp, options?: WebpackOptions): DiscordModule | undefined;
+    /** Gets all modules by regex filter. */
+    getAllByRegex(regex: RegExp, options?: WebpackOptions): DiscordModule[];
+    /** Gets a mangled module by filter and maps specific exports. */
+    getMangled(filter: WebpackFilter | string | RegExp, mangled: Record<string, ExportedOnlyFilter>, options?: WebpackOptions): Record<string, DiscordModule>;
+    /** Gets a module by prototype keys. */
+    getByPrototypeKeys(...args: (string | WebpackOptions)[]): DiscordModule | undefined;
+    /** Gets all modules by prototype keys. */
+    getAllByPrototypeKeys(...args: (string | WebpackOptions)[]): DiscordModule[];
+    /** Gets a module by property keys. */
+    getByKeys(...args: (string | WebpackOptions)[]): DiscordModule | undefined;
+    /** Gets all modules by property keys. */
+    getAllByKeys(...args: (string | WebpackOptions)[]): DiscordModule[];
+    /** Gets a module by strings in its body. */
+    getByStrings(...args: (string | WebpackOptions)[]): DiscordModule | undefined;
+    /** Gets all modules by strings in their body. */
+    getAllByStrings(...args: (string | WebpackOptions)[]): DiscordModule[];
+    /** Gets a module by source content. */
+    getBySource(...args: (string | RegExp | WebpackOptions)[]): DiscordModule | undefined;
+    /** Gets all modules by source content. */
+    getAllBySource(...args: (string | RegExp | WebpackOptions)[]): DiscordModule[];
+    /** Gets a Discord store by name. */
+    getStore(name: string): DiscordModule | undefined;
+    /** Gets a module by its ID. */
+    getById(id: PropertyKey): DiscordModule | undefined;
+}
+
+// ==================== Patcher Types ====================
+type BeforeCallback<F extends (...a: any[]) => any = (...a: any[]) => any> = (
+    thisObject: object,
     args: Parameters<F>
 ) => void;
 
-type InsteadCallback<F extends (...args: any[]) => any> = (
-    thisObject: ThisParameterType<F>,
+type InsteadCallback<F extends (...a: any[]) => any = (...a: any[]) => any> = (
+    thisObject: object,
     args: Parameters<F>,
     originalFunction: F
-) => ReturnType<F> | void;
+) => ReturnType<F>;
 
-type AfterCallback<F extends (...args: any[]) => any> = (
-    thisObject: ThisParameterType<F>,
+type AfterCallback<F extends (...a: any[]) => any = (...a: any[]) => any> = (
+    thisObject: object,
     args: Parameters<F>,
     returnValue: ReturnType<F>
 ) => ReturnType<F> | void;
 
-interface ChildPatch {
-    caller: string;
-    type: "before" | "instead" | "after";
-    id: number;
-    callback: (...args: any[]) => any;
-    unpatch: () => void;
+interface PatcherAPI {
+    before<M extends object, K extends Extract<keyof M, string>>(
+        moduleToPatch: M,
+        functionName: K,
+        callback: M[K] extends (...a: any[]) => any ? BeforeCallback<M[K]> : never
+    ): (() => void) | null;
+    instead<M extends object, K extends Extract<keyof M, string>>(
+        moduleToPatch: M,
+        functionName: K,
+        callback: M[K] extends (...a: any[]) => any ? InsteadCallback<M[K]> : never
+    ): (() => void) | null;
+    after<M extends object, K extends Extract<keyof M, string>>(
+        moduleToPatch: M,
+        functionName: K,
+        callback: M[K] extends (...a: any[]) => any ? AfterCallback<M[K]> : never
+    ): (() => void) | null;
+    getPatchesByCaller(caller: string): object[];
+    unpatchAll(caller: string): void;
 }
 
-// ============================================================================
-// Data API
-// ============================================================================
-
-interface DataStatic {
-    save<T>(pluginName: string, key: string, data: T): void;
-    load<T>(pluginName: string, key: string): T;
-    delete(pluginName: string, key: string): void;
-    recache(pluginName: string): Promise<boolean>;
+interface PatcherAPIUnbound extends PatcherAPI {
+    before<M extends object, K extends Extract<keyof M, string>>(
+        caller: string,
+        moduleToPatch: M,
+        functionName: K,
+        callback: M[K] extends (...a: any[]) => any ? BeforeCallback<M[K]> : never
+    ): (() => void) | null;
+    instead<M extends object, K extends Extract<keyof M, string>>(
+        caller: string,
+        moduleToPatch: M,
+        functionName: K,
+        callback: M[K] extends (...a: any[]) => any ? InsteadCallback<M[K]> : never
+    ): (() => void) | null;
+    after<M extends object, K extends Extract<keyof M, string>>(
+        caller: string,
+        moduleToPatch: M,
+        functionName: K,
+        callback: M[K] extends (...a: any[]) => any ? AfterCallback<M[K]> : never
+    ): (() => void) | null;
 }
 
-interface DataInstance {
+// ==================== Data Types ====================
+interface DataAPI {
     save<T>(key: string, data: T): void;
     load<T>(key: string): T;
-    delete(key: string): void;
     recache(): Promise<boolean>;
+    delete(key: string): void;
 }
 
-// ============================================================================
-// DOM API
-// ============================================================================
+interface DataAPIUnbound {
+    save<T>(pluginName: string, key: string, data: T): void;
+    load<T>(pluginName: string, key: string): T;
+    recache(pluginName: string): Promise<boolean>;
+    delete(pluginName: string, key: string): void;
+}
 
-interface DOMStatic {
+// ==================== DOM Types ====================
+interface DOMAPI {
     readonly screenWidth: number;
     readonly screenHeight: number;
-    
     addStyle(id: string, css: string): void;
-    removeStyle(id: string): void;
-    onRemoved(node: HTMLElement, callback: () => void): void;
-    onAdded(selector: string, callback: (node: HTMLElement) => void): void;
-    animate(update: (progress: number) => void, duration: number, options?: AnimateOptions): void;
-    createElement<K extends keyof HTMLElementTagNameMap>(
-        tag: K,
-        options?: CreateElementOptions,
-        ...children: Array<Node | string>
-    ): HTMLElementTagNameMap[K];
-    parseHTML(html: string, fragment?: false): HTMLElement | NodeListOf<ChildNode>;
-    parseHTML(html: string, fragment: true): DocumentFragment;
+    removeStyle(id?: string): void;
+    onRemoved(node: HTMLElement, callback: () => void): () => void;
+    onAdded(selector: string, callback: (element: Element) => void): () => void;
+    animate(update: (progress: number) => void, duration: number, options?: { timing?: (fraction: number) => number }): () => void;
+    createElement(tag: keyof HTMLElementTagNameMap, options?: { id?: string; className?: string }, ...children: Array<Node | string>): HTMLElement;
+    parseHTML(html: string, fragment?: boolean): DocumentFragment | NodeList | HTMLElement;
 }
 
-interface DOMInstance {
-    readonly screenWidth: number;
-    readonly screenHeight: number;
-    
-    addStyle(css: string): void;
-    addStyle(id: string, css: string): void;
-    removeStyle(): void;
-    removeStyle(id: string): void;
-    onRemoved(node: HTMLElement, callback: () => void): void;
-    onAdded(selector: string, callback: (node: HTMLElement) => void): void;
-    animate(update: (progress: number) => void, duration: number, options?: AnimateOptions): void;
-    createElement<K extends keyof HTMLElementTagNameMap>(
-        tag: K,
-        options?: CreateElementOptions,
-        ...children: Array<Node | string>
-    ): HTMLElementTagNameMap[K];
-    parseHTML(html: string, fragment?: false): HTMLElement | NodeListOf<ChildNode>;
-    parseHTML(html: string, fragment: true): DocumentFragment;
+// ==================== Logger Types ====================
+interface LoggerAPI {
+    stacktrace(message: string, error: Error): void;
+    error(...message: unknown[]): void;
+    warn(...message: unknown[]): void;
+    info(...message: unknown[]): void;
+    debug(...message: unknown[]): void;
+    log(...message: unknown[]): void;
 }
 
-interface AnimateOptions {
-    timing?: (timeFraction: number) => number;
+interface LoggerAPIUnbound {
+    stacktrace(pluginName: string, message: string, error: Error): void;
+    error(pluginName: string, ...message: unknown[]): void;
+    warn(pluginName: string, ...message: unknown[]): void;
+    info(pluginName: string, ...message: unknown[]): void;
+    debug(pluginName: string, ...message: unknown[]): void;
+    log(pluginName: string, ...message: unknown[]): void;
 }
 
-interface CreateElementOptions {
-    className?: string;
-    id?: string;
-    target?: HTMLElement;
-    [key: string]: any;
-}
-
-// ============================================================================
-// Webpack API
-// ============================================================================
-
-interface WebpackAPI {
-    modules: Record<PropertyKey, WebpackModule>;
-    Stores: Record<string, any>;
-    Filters: WebpackFilters;
-    
-    getModule<T = any>(filter: WebpackFilter, options?: WebpackOptions): T | undefined;
-    getModules<T extends any[] = any[]>(filter: WebpackFilter, options?: WebpackOptions): T;
-    getWithKey<T = any>(filter: ExportedOnlyFilter, options?: WithKeyOptions): [T, string] | undefined;
-    getBulk<T extends any[] = any[]>(...queries: BulkQuery[]): T;
-    waitForModule<T = any>(filter: WebpackFilter, options?: LazyOptions): Promise<T>;
-    
-    getByRegex<T = any>(regex: RegExp, options?: WebpackOptions): T | undefined;
-    getAllByRegex<T extends any[] = any[]>(regex: RegExp, options?: WebpackOptions): T;
-    
-    getByKeys<T = any>(...keys: [...string[], WebpackOptions?]): T | undefined;
-    getAllByKeys<T extends any[] = any[]>(...keys: [...string[], WebpackOptions?]): T;
-    
-    getByPrototypeKeys<T = any>(...keys: [...string[], WebpackOptions?]): T | undefined;
-    getAllByPrototypeKeys<T extends any[] = any[]>(...keys: [...string[], WebpackOptions?]): T;
-    
-    getByStrings<T = any>(...strings: [...string[], WebpackOptions?]): T | undefined;
-    getAllByStrings<T extends any[] = any[]>(...strings: [...string[], WebpackOptions?]): T;
-    
-    getBySource<T = any>(...searches: [...Array<string | RegExp>, WebpackOptions?]): T | undefined;
-    getAllBySource<T extends any[] = any[]>(...searches: [...Array<string | RegExp>, WebpackOptions?]): T;
-    
-    getMangled<T extends object>(filter: WebpackFilter | string | RegExp, mangled: Record<keyof T, WebpackFilter>, options?: WebpackOptions): T | undefined;
-    
-    getStore(name: string): any;
-}
-
-interface WebpackFilters {
-    byKeys(...keys: string[]): WebpackFilter;
-    byPrototypeKeys(...keys: string[]): WebpackFilter;
-    byRegex(regex: RegExp): WebpackFilter;
-    bySource(...searches: Array<string | RegExp>): WebpackFilter;
-    byStrings(...strings: string[]): WebpackFilter;
-    byDisplayName(name: string): WebpackFilter;
-    byStoreName(name: string): WebpackFilter;
-    combine(...filters: WebpackFilter[]): WebpackFilter;
-}
-
-type WebpackFilter = (exported: any, module: WebpackModule, id: PropertyKey) => boolean;
-type ExportedOnlyFilter = (exported: any) => boolean;
-
-interface WebpackOptions {
-    searchExports?: boolean;
-    defaultExport?: boolean;
-    searchDefault?: boolean;
-    raw?: boolean;
-    first?: boolean;
-}
-
-interface WithKeyOptions extends WebpackOptions {
-    target?: any;
-}
-
-interface LazyOptions extends WebpackOptions {
-    signal?: AbortSignal;
-}
-
-interface BulkQuery extends WebpackOptions {
-    filter: WebpackFilter;
-    all?: boolean;
-    map?: Record<string, ExportedOnlyFilter>;
-}
-
-interface WebpackModule<T = any> {
-    id: PropertyKey;
-    exports: T;
-    loaded: boolean;
-}
-
-// ============================================================================
-// UI API
-// ============================================================================
-
-interface UIAPI {
-    alert(title: string, content: string | ReactElement | Array<string | ReactElement>): void;
-    
-    showConfirmationModal(
-        title: string,
-        content: string | ReactElement | Array<string | ReactElement>,
-        options?: ConfirmationModalOptions
-    ): string;
-    
-    showChangelogModal(options: ChangelogOptions): string;
-    showInviteModal(inviteCode: string): void;
-    
-    showToast(content: string, options?: ToastOptions): void;
-    showNotice(content: string | Node, options?: NoticeOptions): () => void;
-    showNotification(notification: NotificationOptions): void;
-    
-    createTooltip(node: HTMLElement, content: string | HTMLElement, options?: TooltipOptions): Tooltip;
-    
-    openDialog(options: DialogOptions): Promise<DialogResult>;
-    
-    buildSettingItem(setting: SettingConfig): ReactElement;
-}
-
-interface ConfirmationModalOptions {
-    danger?: boolean;
-    confirmText?: string;
-    cancelText?: string;
-    onConfirm?: () => void;
-    onCancel?: () => void;
-    onClose?: () => void;
-}
-
-interface ChangelogOptions {
-    title: string;
-    subtitle: string;
-    blurb?: string;
-    banner?: string;
-    video?: string;
-    poster?: string;
-    footer?: string | ReactElement | Array<string | ReactElement>;
-    changes?: Array<{
-        title: string;
-        type: "fixed" | "added" | "progress" | "improved";
-        items: string[];
-        blurb?: string;
-    }>;
-}
-
+// ==================== UI Types ====================
 interface ToastOptions {
     type?: "" | "info" | "success" | "danger" | "error" | "warning" | "warn";
     icon?: boolean;
@@ -350,17 +236,8 @@ interface ToastOptions {
 
 interface NoticeOptions {
     type?: "info" | "error" | "warning" | "success";
-    buttons?: Array<{label: string; onClick: () => void;}>;
+    buttons?: Array<{ label: string; onClick: () => void }>;
     timeout?: number;
-}
-
-interface NotificationOptions {
-    title: string;
-    content: string;
-    type?: "info" | "success" | "warning" | "error";
-    duration?: number;
-    icon?: ReactElement | null;
-    actions?: Array<{text: string; onClick: () => void;}>;
 }
 
 interface TooltipOptions {
@@ -370,302 +247,417 @@ interface TooltipOptions {
     disabled?: boolean;
 }
 
-interface Tooltip {
-    show(): void;
-    hide(): void;
-    destroy(): void;
+interface Notification {
+    title: string;
+    content?: string | React.ReactNode;
+    type?: "info" | "success" | "warning" | "error";
+    duration?: number;
+    icon?: (() => React.ReactNode) | null;
+    actions?: Array<{ label: string; onClick: () => void }>;
 }
 
-interface DialogOptions {
-    mode?: "open" | "save";
-    defaultPath?: string;
-    filters?: Array<{name: string; extensions: string[];}>;
-    title?: string;
-    message?: string;
-    showOverwriteConfirmation?: boolean;
-    showHiddenFiles?: boolean;
-    promptToCreate?: boolean;
-    openDirectory?: boolean;
-    openFile?: boolean;
-    multiSelections?: boolean;
-    modal?: boolean;
+interface ChangelogChange {
+    title: string;
+    type: "fixed" | "added" | "progress" | "improved";
+    items: string[];
+    blurb?: string;
 }
 
-interface DialogResult {
-    cancelled: boolean;
-    filePath?: string;
-    filePaths?: string[];
+interface ChangelogProps {
+    title: string;
+    subtitle: string;
+    blurb?: string;
+    banner?: string;
+    video?: string;
+    poster?: string;
+    footer?: string | React.ReactNode;
+    changes?: ChangelogChange[];
 }
 
 interface SettingConfig {
-    type: SettingType;
+    type: "dropdown" | "number" | "switch" | "text" | "slider" | "radio" | "keybind" | "color" | "custom" | "category";
     id: string;
-    name?: string;
+    name: string;
     note?: string;
-    value: any;
-    onChange?: (value: any) => void;
+    value?: unknown;
+    children?: React.ReactNode;
+    onChange?: (value: unknown) => void;
     disabled?: boolean;
     inline?: boolean;
-    children?: ReactElement;
-    [key: string]: any;
+    shown?: boolean;
+    [key: string]: unknown;
 }
 
-type SettingType = "dropdown" | "number" | "switch" | "text" | "slider" | "radio" | "keybind" | "color" | "custom";
-
-// ============================================================================
-// ReactUtils API
-// ============================================================================
-
-interface ReactUtilsAPI {
-    rootInstance: any;
-    
-    getInternalInstance(node: HTMLElement): Fiber | null;
-    getOwnerInstance(node: HTMLElement | undefined, options?: GetOwnerInstanceOptions): any | null;
-    wrapElement(element: HTMLElement | HTMLElement[]): ComponentType;
-    wrapInHooks<P extends object>(
-        functionComponent: FunctionComponent<P>,
-        customPatches?: Partial<ReactHooks>
-    ): FunctionComponent<P>;
+interface UIAPI {
+    alert(title: string, content: string | React.ReactNode | Array<string | React.ReactNode>): void;
+    showNotification(notification: Notification): () => void;
+    createTooltip(node: HTMLElement, content: string | HTMLElement, options?: TooltipOptions): { element: HTMLElement; show(): void; hide(): void };
+    showConfirmationModal(
+        title: string,
+        content: string | React.ReactNode | Array<string | React.ReactNode>,
+        options?: {
+            danger?: boolean;
+            confirmText?: string;
+            cancelText?: string;
+            onConfirm?: () => void;
+            onCancel?: () => void;
+            onClose?: () => void;
+        }
+    ): string;
+    showChangelogModal(options: ChangelogProps): string;
+    showInviteModal(inviteCode: string): void;
+    showToast(content: string, options?: ToastOptions): void;
+    showNotice(content: string, options?: NoticeOptions): () => void;
+    openDialog(options: {
+        mode?: "open" | "save";
+        defaultPath?: string;
+        filters?: Array<{ name: string; extensions: string[] }>;
+        title?: string;
+        message?: string;
+        showOverwriteConfirmation?: boolean;
+        showHiddenFiles?: boolean;
+        promptToCreate?: boolean;
+        openDirectory?: boolean;
+        openFile?: boolean;
+        multiSelections?: boolean;
+        modal?: boolean;
+    }): Promise<{ cancelled: boolean; filePath?: string; filePaths?: string[] }>;
+    buildSettingItem(setting: SettingConfig): React.ReactNode;
+    buildSettingsPanel(props: {
+        settings: SettingConfig[];
+        onChange: (category: string | null, id: string, value: unknown) => void;
+        onDrawerToggle?: (id: string, state: boolean) => void;
+        getDrawerState?: (id: string, defaultState: boolean) => boolean;
+    }): React.ReactNode;
 }
 
-interface GetOwnerInstanceOptions {
-    include?: string[];
-    exclude?: string[];
-    filter?: (owner: any) => boolean;
-}
-
-interface ReactHooks {
-    use<T>(usable: PromiseLike<T> | Context<T>): T;
-    useMemo<T>(factory: () => T): T;
-    useState<T>(initial: T | (() => T)): [T, (value: T) => void];
-    useReducer<T>(reducer: (state: T, action: any) => T, initial: T): [T, (action: any) => void];
-    useRef<T>(value?: T): RefObject<T>;
-    useCallback<T extends (...args: any[]) => any>(callback: T): T;
-    useContext<T>(context: Context<T>): T;
-    readContext<T>(context: Context<T>): T;
-    useEffect(effect: () => void | (() => void), deps?: any[]): void;
-    useLayoutEffect(effect: () => void | (() => void), deps?: any[]): void;
-    useImperativeHandle<T>(ref: RefObject<T>, createHandle: () => T, deps?: any[]): void;
-    useTransition(): [boolean, (callback: () => void) => void];
-    useInsertionEffect(effect: () => void | (() => void), deps?: any[]): void;
-    useDebugValue<T>(value: T, formatter?: (value: T) => any): void;
-    useDeferredValue<T>(value: T): T;
-    useSyncExternalStore<T>(subscribe: (callback: () => void) => () => void, getSnapshot: () => T): T;
-    useId(): string;
-}
-
-// ============================================================================
-// Utils API
-// ============================================================================
-
+// ==================== Utils Types ====================
 interface UtilsAPI {
-    findInTree<T = any>(
-        tree: any,
-        searchFilter: (item: any) => boolean,
-        options?: FindInTreeOptions
-    ): T | undefined;
-    
-    forceLoad(id: string | number): Promise<any>;
-    
-    extend<T extends object>(extendee: T, ...extenders: Partial<T>[]): T;
-    
-    debounce<T extends (...args: any[]) => any>(executor: T, delay: number): T;
-    
+    findInTree(tree: object, searchFilter: (obj: object) => boolean, options?: { walkable?: string[] | null; ignore?: string[] }): object | undefined;
+    forceLoad(id: number | string): Promise<object[]>;
+    extend(extendee: object, ...extenders: object[]): object;
+    debounce<T extends (...args: unknown[]) => unknown>(executor: T, delay: number): T & { cancel(): void; flush(): void };
     escapeHTML(html: string): string;
-    
-    className(...args: any[]): string;
-    
-    getNestedValue<T = any>(object: any, path: string): T;
-    
-    semverCompare(currentVersion: string, newVersion: string): -1 | 0 | 1;
+    className(...args: unknown[]): string;
+    getNestedValue<R = unknown>(object: Record<string | number | symbol, unknown>, path: string): R;
+    semverCompare(currentVersion: string, newVersion: string): number;
 }
 
-interface FindInTreeOptions {
-    walkable?: string[] | null;
-    ignore?: string[];
+// ==================== ReactUtils Types ====================
+interface ReactUtilsAPI {
+    getInternalInstance(node: HTMLElement): Fiber | null;
+    getOwnerInstance(node: HTMLElement | undefined, options?: { include?: string[]; exclude?: string[]; filter?: (owner: object) => boolean }): object | undefined | null;
+    wrapElement(element: HTMLElement | HTMLElement[]): React.ComponentType;
+    wrapInHooks<T extends React.FC>(
+        functionComponent: T | React.MemoExoticComponent<T> | React.ForwardRefExoticComponent<T>,
+        customPatches?: Partial<Record<string, object>>
+    ): React.FunctionComponent<object>;
+    getType<T extends React.FC>(elementType: T | React.MemoExoticComponent<T> | React.ForwardRefExoticComponent<T> | React.LazyExoticComponent<T>): T;
 }
 
-// ============================================================================
-// AddonAPI
-// ============================================================================
-
-interface AddonAPI {
-    readonly folder: string;
-    
-    isEnabled(idOrFile: string): boolean;
-    enable(idOrFile: string): void;
-    disable(idOrFile: string): void;
-    toggle(idOrFile: string): void;
-    reload(idOrFile: string): void;
-    get(idOrFile: string): any;
-    getAll(): any[];
+// ==================== ContextMenu Types ====================
+interface MenuItemProps {
+    type?: "text" | "submenu" | "toggle" | "radio" | "custom" | "separator" | "control";
+    label?: string;
+    id?: string;
+    action?: (event?: React.MouseEvent) => void;
+    onClick?: (event?: React.MouseEvent) => void;
+    active?: boolean;
+    checked?: boolean;
+    danger?: boolean;
+    disabled?: boolean;
+    children?: React.ReactNode;
+    render?: () => React.ReactNode;
+    items?: MenuItemProps[];
+    [key: string]: unknown;
 }
-
-// ============================================================================
-// ContextMenu API
-// ============================================================================
 
 interface ContextMenuAPI {
-    open(event: MouseEvent, menuComponent: (onClose: () => void) => ReactElement): void;
+    patch(navId: string | RegExp, callback: (res: React.ReactElement, props: object, instance?: React.Component) => void): () => void;
+    unpatch(navId: string | RegExp, callback: (res: React.ReactElement, props: object, instance?: React.Component) => void): void;
+    buildItem(props: MenuItemProps): React.ReactNode;
+    buildMenuChildren(setup: MenuItemProps[]): React.ReactNode[];
+    buildMenu(setup: MenuItemProps[]): (props: object) => React.ReactNode;
+    open(event: MouseEvent, menuComponent: React.ComponentType, config?: { position?: "right" | "left"; align?: "top" | "bottom"; onClose?: () => void }): void;
     close(): void;
-    patch(navId: string, callback: (returnValue: any, props: any) => void): () => void;
-    unpatch(navId: string, callback: (returnValue: any, props: any) => void): void;
+    Separator: React.ComponentType;
+    CheckboxItem: React.ComponentType<object>;
+    RadioItem: React.ComponentType<object>;
+    ControlItem: React.ComponentType<object>;
+    Group: React.ComponentType<object>;
+    Item: React.ComponentType<object>;
+    Menu: React.ComponentType<object>;
 }
 
-// ============================================================================
-// Components API
-// ============================================================================
-
-interface ComponentsAPI {
-    readonly Tooltip: any;
-    readonly ColorInput: ComponentType<any>;
-    readonly DropdownInput: ComponentType<any>;
-    readonly SettingItem: ComponentType<any>;
-    readonly KeybindInput: ComponentType<any>;
-    readonly NumberInput: ComponentType<any>;
-    readonly RadioInput: ComponentType<any>;
-    readonly SearchInput: ComponentType<any>;
-    readonly SliderInput: ComponentType<any>;
-    readonly SwitchInput: ComponentType<any>;
-    readonly TextInput: ComponentType<any>;
-    readonly SettingGroup: ComponentType<any>;
-    readonly ErrorBoundary: ComponentType<any>;
-    readonly Text: ComponentType<any>;
-    readonly Flex: ComponentType<any>;
-    readonly Button: ComponentType<any>;
-    readonly Spinner: ComponentType<any>;
-}
-
-// ============================================================================
-// CommandAPI
-// ============================================================================
-
-interface CommandAPIStatic {
-    Types: {
-        OptionTypes: typeof OptionTypes;
-        CommandTypes: typeof CommandTypes;
-        InputTypes: typeof InputTypes;
-        MessageEmbedTypes: typeof MessageEmbedTypes;
-    };
-    
-    register(caller: string, command: Command): (() => void) | undefined;
-    unregister(caller: string, commandId: string): void;
-    unregisterAll(caller: string): void;
-    getCommandsByCaller(caller: string): Command[];
-}
-
-interface CommandAPIInstance {
-    Types: {
-        OptionTypes: typeof OptionTypes;
-        CommandTypes: typeof CommandTypes;
-        InputTypes: typeof InputTypes;
-        MessageEmbedTypes: typeof MessageEmbedTypes;
-    };
-    
-    register(command: Command): (() => void) | undefined;
-    unregister(commandId: string): void;
-    unregisterAll(): void;
-    getCommandsByCaller(caller: string): Command[];
+// ==================== Command Types ====================
+interface CommandOption {
+    name: string;
+    description?: string;
+    required?: boolean;
+    /** 3=STRING 4=INTEGER 5=BOOLEAN 6=USER 7=CHANNEL 8=ROLE 9=MENTIONABLE 10=NUMBER 11=ATTACHMENT */
+    type: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+    maxLength?: number;
+    minLength?: number;
+    maxValue?: number;
+    minValue?: number;
+    choices?: Array<{ name: string; value: string | number }>;
 }
 
 interface Command {
     id: string;
     name: string;
     description?: string;
-    execute: (...args: any[]) => void | Promise<void>;
     options?: CommandOption[];
+    execute(options: object[], context: { channel: object; guild?: object }): void;
+    predicate?(): boolean;
 }
 
-interface CommandOption {
-    name: string;
+interface CommandAPI {
+    register(command: Command): (() => void) | undefined;
+    unregister(id: string): void;
+    unregisterAll(): void;
+    getCommandsByCaller(): object[];
+}
+
+interface CommandAPIUnbound {
+    register(caller: string, command: Command): (() => void) | undefined;
+    unregister(caller: string, id: string): void;
+    unregisterAll(caller: string): void;
+    getCommandsByCaller(caller: string): object[];
+}
+
+// ==================== Addon Types ====================
+interface Addon {
+    added: number;
+    author: string;
+    authorId?: string;
+    authorLink?: string;
     description: string;
-    type: number;
-    required?: boolean;
-    choices?: Array<{name: string; value: string | number;}>;
+    donate?: string;
+    filename: string;
+    format: string;
+    id: string;
+    invite?: string;
+    modified: number;
+    name: string;
+    partial?: boolean;
+    patreon?: string;
+    size: number;
+    slug: string;
+    source?: string;
+    version: string;
+    website?: string;
 }
 
-declare enum OptionTypes {
-    SUB_COMMAND = 1,
-    SUB_COMMAND_GROUP = 2,
-    STRING = 3,
-    INTEGER = 4,
-    BOOLEAN = 5,
-    USER = 6,
-    CHANNEL = 7,
-    ROLE = 8,
-    MENTIONABLE = 9,
-    NUMBER = 10,
+interface AddonAPI {
+    readonly folder: string;
+    isEnabled(idOrFile: string): boolean;
+    enable(idOrAddon: string): void;
+    disable(idOrAddon: string): void;
+    toggle(idOrAddon: string): void;
+    reload(idOrFileOrAddon: string): void;
+    get(idOrFile: string): Addon | undefined;
+    getAll(): Addon[];
 }
 
-declare enum CommandTypes {
-    CHAT = 1,
-    USER = 2,
-    MESSAGE = 3,
+// ==================== Hooks Types ====================
+interface HooksAPI {
+    useForceUpdate(): () => void;
+    useStateFromStores<T>(stores: object[], mapper: () => T, deps?: unknown[]): T;
+    useData<T>(key: string): T;
 }
 
-declare enum InputTypes {
-    BUILT_IN = 0,
-    BUILT_IN_TEXT = 1,
-    BUILT_IN_INTEGRATION = 2,
-    BOT = 3,
-    PLACEHOLDER = 4,
+interface HooksAPIUnbound {
+    useForceUpdate(): () => void;
+    useStateFromStores<T>(stores: object[], mapper: () => T, deps?: unknown[]): T;
+    useData<T>(pluginName: string, key: string): T;
 }
 
-declare enum MessageEmbedTypes {
-    RICH = "rich",
-    IMAGE = "image",
-    VIDEO = "video",
-    GIFV = "gifv",
-    ARTICLE = "article",
-    LINK = "link",
+// ==================== Net Types ====================
+interface NetAPI {
+    fetch(input: string | URL | Request, init?: RequestInit & { timeout?: number; maxRedirects?: number; rejectUnauthorized?: boolean }): Promise<Response>;
 }
 
-// ============================================================================
-// Logger API
-// ============================================================================
-
-interface LoggerStatic {
-    log(module: string, ...message: any[]): void;
-    warn(module: string, ...message: any[]): void;
-    error(module: string, ...message: any[]): void;
-    err(module: string, ...message: any[]): void;
-    info(module: string, ...message: any[]): void;
-    debug(module: string, ...message: any[]): void;
-    stacktrace(module: string, message: string, error: Error): void;
+// ==================== Components Types ====================
+interface ComponentsAPI {
+    readonly Tooltip: React.ComponentType<object>;
+    readonly ColorInput: React.ComponentType<object>;
+    readonly DropdownInput: React.ComponentType<object>;
+    readonly SettingItem: React.ComponentType<object>;
+    readonly KeybindInput: React.ComponentType<object>;
+    readonly NumberInput: React.ComponentType<object>;
+    readonly RadioInput: React.ComponentType<object>;
+    readonly SearchInput: React.ComponentType<object>;
+    readonly SliderInput: React.ComponentType<object>;
+    readonly SwitchInput: React.ComponentType<object>;
+    readonly TextInput: React.ComponentType<object>;
+    readonly SettingGroup: React.ComponentType<object>;
+    readonly ErrorBoundary: React.ComponentType<object>;
+    readonly Text: React.ComponentType<object>;
+    readonly Flex: React.ComponentType<object>;
+    readonly Button: React.ComponentType<object>;
+    readonly Spinner: React.ComponentType<object>;
 }
 
-interface LoggerInstance {
-    log(...message: any[]): void;
-    warn(...message: any[]): void;
-    error(...message: any[]): void;
-    err(...message: any[]): void;
-    info(...message: any[]): void;
-    debug(...message: any[]): void;
-    stacktrace(message: string, error: Error): void;
+// ==================== Common Modules Types ====================
+interface CommonModulesAPI {
+    Helpers: {
+        FluxDispatch: object;
+        Parser: object;
+        MessageActions: object;
+        CloudUpload: object;
+        Moment: object;
+        Hljs: object;
+        Snowflake: object;
+        Lodash: object;
+        CssVars: object;
+        Intl: object;
+        Flux: object;
+        Permissions: object;
+        ComponentDispatch: object;
+        ImageUtils: object;
+        ReactSpring: object;
+        Fetching: {
+            fetchProfile: object;
+            getUser: object;
+        };
+        ModalActions: {
+            openModalLazy: object;
+            openModal: object;
+            closeModal: object;
+            closeAllModals: object;
+            updateModal: object;
+        };
+        Navigation: {
+            transitionTo: object;
+            replace: object;
+            goBack: object;
+            goForward: object;
+            transitionToGuild: object;
+        };
+        Color: object;
+        Electron: object;
+    };
+    Components: {
+        Popout: React.ComponentType<object>;
+        Clickable: React.ComponentType<object>;
+        Slider: React.ComponentType<object>;
+        Modal: React.ComponentType<object>;
+        FormNotice: React.ComponentType<object>;
+        LoadingPopout: React.ComponentType<object>;
+        Progress: React.ComponentType<object>;
+        Spinner: React.ComponentType<object>;
+        TextArea: React.ComponentType<object>;
+        CopyInput: React.ComponentType<object>;
+        SearchableSelect: React.ComponentType<object>;
+        Switch: React.ComponentType<object>;
+        FormSwitch: React.ComponentType<object>;
+        Text: React.ComponentType<object>;
+        Flex: React.ComponentType<object>;
+        Scroller: React.ComponentType<object>;
+        ProgressCircle: React.ComponentType<object>;
+        KeyCombo: React.ComponentType<object>;
+        Avatar: React.ComponentType<object>;
+        Slides: React.ComponentType<object>;
+        AnimatedAvatar: React.ComponentType<object>;
+        Button: React.ComponentType<object>;
+        CalendarPicker: React.ComponentType<object>;
+    };
 }
 
-// ============================================================================
-// Export
-// ============================================================================
+// ==================== BdApi ====================
+declare class BdApi {
+    constructor(pluginName: string);
 
-export {
-    BdApiConstructor,
-    BdApiInstance,
-    PatcherStatic,
-    PatcherInstance,
-    DataStatic,
-    DataInstance,
-    DOMStatic,
-    DOMInstance,
-    WebpackAPI,
-    UIAPI,
-    ReactUtilsAPI,
-    UtilsAPI,
-    AddonAPI,
-    ContextMenuAPI,
-    ComponentsAPI,
-    CommandAPIStatic,
-    CommandAPIInstance,
-    LoggerStatic,
-    LoggerInstance,
-};
+    Patcher: PatcherAPI;
+    Data: DataAPI;
+    DOM: DOMAPI;
+    Logger: LoggerAPI;
+    Commands: CommandAPI;
+    React: typeof React;
+    ReactDOM: typeof ReactDOM;
+    version: string;
+
+    get Plugins(): AddonAPI;
+    get Themes(): AddonAPI;
+    get Webpack(): WebpackAPI;
+    get Utils(): UtilsAPI;
+    get UI(): UIAPI;
+    get ReactUtils(): ReactUtilsAPI;
+    get ContextMenu(): ContextMenuAPI;
+    get Components(): ComponentsAPI;
+    get Common(): CommonModulesAPI;
+    get Net(): NetAPI;
+    get Hooks(): HooksAPI;
+
+    static Plugins: AddonAPI;
+    static Themes: AddonAPI;
+    static Patcher: PatcherAPIUnbound;
+    static Webpack: WebpackAPI;
+    static Data: DataAPIUnbound;
+    static UI: UIAPI;
+    static ReactUtils: ReactUtilsAPI;
+    static Utils: UtilsAPI;
+    static DOM: DOMAPI;
+    static ContextMenu: ContextMenuAPI;
+    static Components: ComponentsAPI;
+    static Common: CommonModulesAPI;
+    static Commands: CommandAPIUnbound;
+    static Net: NetAPI;
+    static Logger: LoggerAPIUnbound;
+    static Hooks: HooksAPIUnbound;
+    static React: typeof React;
+    static ReactDOM: typeof ReactDOM;
+    static version: string;
+}
+
+declare global {
+    const BdApi: typeof BdApi;
+}
+
+declare namespace JSX {
+    type Element = React.ReactElement;
+    interface ElementClass extends React.Component {}
+    interface ElementAttributesProperty { props: {}; }
+    interface ElementChildrenAttribute { children: {}; }
+    interface IntrinsicAttributes {}
+    interface IntrinsicClassAttributes<T> {}
+    interface IntrinsicElements {
+        // HTML
+        a: any; abbr: any; address: any; area: any; article: any; aside: any; audio: any;
+        b: any; base: any; bdi: any; bdo: any; blockquote: any; body: any; br: any; button: any;
+        canvas: any; caption: any; cite: any; code: any; col: any; colgroup: any;
+        data: any; datalist: any; dd: any; del: any; details: any; dfn: any; dialog: any; div: any; dl: any; dt: any;
+        em: any; embed: any;
+        fieldset: any; figcaption: any; figure: any; footer: any; form: any;
+        h1: any; h2: any; h3: any; h4: any; h5: any; h6: any; head: any; header: any; hgroup: any; hr: any; html: any;
+        i: any; iframe: any; img: any; input: any; ins: any;
+        kbd: any;
+        label: any; legend: any; li: any; link: any;
+        main: any; map: any; mark: any; menu: any; meta: any; meter: any;
+        nav: any; noscript: any;
+        object: any; ol: any; optgroup: any; option: any; output: any;
+        p: any; picture: any; pre: any; progress: any;
+        q: any;
+        rp: any; rt: any; ruby: any;
+        s: any; samp: any; script: any; search: any; section: any; select: any; slot: any; small: any;
+        source: any; span: any; strong: any; style: any; sub: any; summary: any; sup: any;
+        table: any; tbody: any; td: any; template: any; textarea: any; tfoot: any; th: any; thead: any;
+        time: any; title: any; tr: any; track: any;
+        u: any; ul: any;
+        var: any; video: any;
+        wbr: any;
+        // SVG
+        svg: any; animate: any; circle: any; clipPath: any; defs: any; desc: any; ellipse: any;
+        feBlend: any; feColorMatrix: any; feComponentTransfer: any; feComposite: any;
+        feConvolveMatrix: any; feDiffuseLighting: any; feDisplacementMap: any; feDistantLight: any;
+        feFlood: any; feFuncA: any; feFuncB: any; feFuncG: any; feFuncR: any; feGaussianBlur: any;
+        feImage: any; feMerge: any; feMergeNode: any; feMorphology: any; feOffset: any;
+        fePointLight: any; feSpecularLighting: any; feSpotLight: any; feTile: any; feTurbulence: any;
+        filter: any; foreignObject: any; g: any; image: any; line: any; linearGradient: any;
+        marker: any; mask: any; metadata: any; path: any; pattern: any; polygon: any; polyline: any;
+        radialGradient: any; rect: any; stop: any; switch: any; symbol: any;
+        text: any; textPath: any; tspan: any; use: any; view: any;
+        [key: string]: any;
+    }
+}
