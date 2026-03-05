@@ -292,8 +292,9 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         isHoveredRef.current = false;
       },
       onDoubleClick: () => {
+        console.log(initialMessage.guild_id);
         NavigationUtils.transitionTo(
-          `/channels/${message.guild_id ?? "@me"}/${message.channel_id}/${message.id}`
+          `/channels/${initialMessage.guild_id ?? "@me"}/${message.channel_id}/${message.id}`
         );
         NotificationStore.removeMessage(message.id);
       },

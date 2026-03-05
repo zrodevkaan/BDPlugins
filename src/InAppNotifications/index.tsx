@@ -376,7 +376,7 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
             }}
             onDoubleClick={() => {
                 NavigationUtils.transitionTo(
-                    `/channels/${(message as any).guild_id ?? "@me"}/${message.channel_id}/${message.id}`
+                    `/channels/${(initialMessage as any).guild_id ?? "@me"}/${message.channel_id}/${message.id}`
                 );
                 NotificationStore.removeMessage(message.id)
             }}
