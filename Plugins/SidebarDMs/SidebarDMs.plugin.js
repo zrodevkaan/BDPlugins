@@ -4,6 +4,7 @@
  * @version 1.0.1
  * @description startTyping compiler test
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/SidebarDMs/SidebarDMs.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

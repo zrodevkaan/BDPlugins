@@ -4,6 +4,7 @@
  * @version 1.0.0
  * @description Overrides non-friend users name with a global nickname
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/GlobalNicks/GlobalNicks.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

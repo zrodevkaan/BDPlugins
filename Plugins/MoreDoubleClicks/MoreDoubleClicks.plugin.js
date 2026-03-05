@@ -4,6 +4,7 @@
  * @author Kaan
  * @version 3.0.0
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MoreDoubleClicks/MoreDoubleClicks.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

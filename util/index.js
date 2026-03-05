@@ -14,7 +14,7 @@ function extractMeta(fileContents, pluginName) {
     }
 
     jsdocHeader += ` * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/${pluginName}/${pluginName}.plugin.js \n`; // https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping
-
+    jsdocHeader += ` * @invite t3zMgv7Nvb\n`;
     jsdocHeader += " */";
 
     return jsdocHeader;

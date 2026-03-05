@@ -4,6 +4,7 @@
  * @version 1.0.0
  * @description Allows you to hide, show and collapse roles!
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/RoleFilters/RoleFilters.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

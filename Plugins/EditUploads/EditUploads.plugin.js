@@ -4,6 +4,7 @@
  * @version 1.0.0
  * @description Edit uploads before they are sent
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/EditUploads/EditUploads.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

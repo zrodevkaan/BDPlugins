@@ -2,6 +2,7 @@
  * @name GuildChannels
  * @author Kaan
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/GuildChannels/GuildChannels.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

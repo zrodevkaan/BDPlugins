@@ -4,6 +4,7 @@
  * @version 1.0.0
  * @description you love spam :)
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/UnhideSpam/UnhideSpam.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

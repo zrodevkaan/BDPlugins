@@ -4,6 +4,7 @@
  * @version 1.0.0
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

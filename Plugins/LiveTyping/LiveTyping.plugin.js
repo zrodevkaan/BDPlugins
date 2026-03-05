@@ -5,6 +5,7 @@
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 

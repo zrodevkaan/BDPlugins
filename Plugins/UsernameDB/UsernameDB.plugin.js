@@ -3,6 +3,7 @@
  * @author Kaan
  * @description Colors or names ;p
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/UsernameDB/UsernameDB.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

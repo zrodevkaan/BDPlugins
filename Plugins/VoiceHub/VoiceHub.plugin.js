@@ -4,6 +4,7 @@
  * @version 2.0.0
  * @description Wanna know what people are in VCs? Here ya go.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/VoiceHub/VoiceHub.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

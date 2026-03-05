@@ -4,6 +4,7 @@
  * @version 2.0.0
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/GuildProfile/GuildProfile.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

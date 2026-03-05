@@ -4,6 +4,7 @@
  * @version 1.0.0
  * @description Customize which chat buttons are visible in Discord by right clicking the chat area and forget that breakable css filter that only supports aria-label :)
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DynamicChatButtons/DynamicChatButtons.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

@@ -4,6 +4,7 @@
  * @version 2.0.0
  * @description Adds an option button next to voice messages.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/AudioOptions/AudioOptions.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 

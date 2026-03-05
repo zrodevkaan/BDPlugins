@@ -5,6 +5,7 @@
  * @author Kaan
  * @keyframes barrel-roll {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterMedia/BetterMedia.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

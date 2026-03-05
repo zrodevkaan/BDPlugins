@@ -4,6 +4,7 @@
  * @version 2.0.0
  * @author Kaan
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/HoldYourTongue/HoldYourTongue.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

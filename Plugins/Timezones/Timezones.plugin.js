@@ -4,6 +4,7 @@
  * @version 2.0.5
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

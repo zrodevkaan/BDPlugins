@@ -3,6 +3,7 @@
  * @author Kaan
  * @description Allows you to double click an message and reply to it :)
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DoubleClickToReply/DoubleClickToReply.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;

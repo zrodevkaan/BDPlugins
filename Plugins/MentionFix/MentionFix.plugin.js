@@ -4,6 +4,7 @@
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MentionFix/MentionFix.plugin.js 
+ * @invite t3zMgv7Nvb
  */
 "use strict";
 
