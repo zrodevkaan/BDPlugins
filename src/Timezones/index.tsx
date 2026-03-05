@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.5
+ * @version 2.0.6
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
@@ -226,7 +226,7 @@ function Timezone({ user }: { user: User }) {
 
     const time = getCurrentTime(timezone);
 
-    return (timezone && settings.bannerTimezoneDisplay === "ENABLED") ? <TimezoneText className={"bz-banner"}>{time}</TimezoneText> : null
+    return (timezone && settings.bannerTimezoneDisplay === "ENABLED") ? <TimezoneText className={"tz-banner"}>{time}</TimezoneText> : null
 }
 
 function returnSpoof(timezone: string, offset: string, time: string) {
