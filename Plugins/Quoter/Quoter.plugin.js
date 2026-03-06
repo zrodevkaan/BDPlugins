@@ -2,9 +2,8 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.3
+ * @version 1.0.4
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Quoter/Quoter.plugin.js 
- * @invite t3zMgv7Nvb
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -59,37 +58,127 @@ function calculateFontSize({
   }
   return Math.max(16, Math.min(baseSize, 60));
 }
+var parseEmotes = (text) => {
+  const emoteRegex = /<a?:(\w+):(\d+)>/g;
+  const tokens = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = emoteRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      tokens.push({ type: "text", content: text.slice(lastIndex, match.index) });
+    }
+    const isAnimated = match[0].startsWith("<a:");
+    tokens.push({
+      type: "emote",
+      name: match[1],
+      id: match[2],
+      animated: isAnimated
+    });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    tokens.push({ type: "text", content: text.slice(lastIndex) });
+  }
+  return tokens.length > 0 ? tokens : [{ type: "text", content: text }];
+};
+var loadEmoteImage = async (emoteId, animated) => {
+  try {
+    const url = `https://cdn.discordapp.com/emojis/${emoteId}.${animated ? "gif" : "png"}`;
+    const res = await BdApi.Net.fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(blob);
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+    });
+  } catch (err) {
+    return null;
+  }
+};
+var preloadEmotes = async (tokens) => {
+  const emoteMap = new Map();
+  for (const token of tokens) {
+    if (token.type === "emote" && !emoteMap.has(token.id)) {
+      const img = await loadEmoteImage(token.id, token.animated);
+      emoteMap.set(token.id, img);
+    }
+  }
+  return emoteMap;
+};
 var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, height = 530) => {
   return new Promise(async (resolve, reject) => {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
-    function wrapTextCentered(ctx2, text2, x, y, maxWidth, lineHeight) {
-      var words = text2.split(" ");
-      var lines = [];
-      var line = "";
-      for (var n = 0; n < words.length; n++) {
-        var testLine = line + words[n] + " ";
-        var metrics = ctx2.measureText(testLine);
-        var testWidth = metrics.width;
-        if (testWidth > maxWidth && n > 0) {
-          lines.push(line.trim());
-          line = words[n] + " ";
+    const tokens = parseEmotes(text);
+    const emoteMap = await preloadEmotes(tokens);
+    function wrapTextWithEmotes(ctx2, tokens2, x, y, maxWidth, lineHeight) {
+      const textTokens = [];
+      for (const token of tokens2) {
+        if (token.type === "text") {
+          textTokens.push(...token.content.split(" ").filter((w) => w).map((w) => ({ type: "text", content: w })));
         } else {
-          line = testLine;
+          textTokens.push(token);
         }
       }
-      if (line.trim()) {
-        lines.push(line.trim());
+      var lines = [];
+      var line = [];
+      var lineWidth = 0;
+      const emoteSize = lineHeight * 0.95;
+      for (var n = 0; n < textTokens.length; n++) {
+        var token = textTokens[n];
+        var tokenWidth;
+        if (token.type === "text") {
+          tokenWidth = ctx2.measureText(token.content + " ").width;
+        } else {
+          tokenWidth = emoteSize + 5;
+        }
+        if (lineWidth + tokenWidth > maxWidth && line.length > 0) {
+          lines.push(line);
+          line = [];
+          lineWidth = 0;
+        }
+        line.push(token);
+        if (token.type === "text") {
+          lineWidth += ctx2.measureText(token.content + " ").width;
+        } else {
+          lineWidth += emoteSize + 5;
+        }
+      }
+      if (line.length > 0) {
+        lines.push(line);
       }
       var totalHeight = lines.length * lineHeight;
       var startY = y - totalHeight / 2 + lineHeight;
       var currentY = startY;
       for (var i = 0; i < lines.length; i++) {
-        var lineWidth = ctx2.measureText(lines[i]).width;
-        var centeredX = x + (maxWidth - lineWidth) / 2;
-        ctx2.fillText(lines[i], centeredX, currentY);
+        var currentLine = lines[i];
+        var lineWidthPx = 0;
+        for (var j = 0; j < currentLine.length; j++) {
+          var t = currentLine[j];
+          if (t.type === "text") {
+            lineWidthPx += ctx2.measureText(t.content + " ").width;
+          } else {
+            lineWidthPx += emoteSize + 5;
+          }
+        }
+        var centeredX = x + (maxWidth - lineWidthPx) / 2;
+        var currentX = centeredX;
+        for (var j = 0; j < currentLine.length; j++) {
+          var t = currentLine[j];
+          if (t.type === "text") {
+            ctx2.fillText(t.content + " ", currentX, currentY);
+            currentX += ctx2.measureText(t.content + " ").width;
+          } else {
+            var emoteImg = emoteMap.get(t.id);
+            if (emoteImg) {
+              ctx2.drawImage(emoteImg, currentX, currentY - emoteSize * 0.8, emoteSize, emoteSize);
+            }
+            currentX += emoteSize + 5;
+          }
+        }
         currentY += lineHeight;
       }
       return currentY;
@@ -117,10 +206,10 @@ var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, heigh
           });
           const lineHeight = fontSize * 1.2;
           ctx.fillStyle = "white";
-          ctx.font = `bold ${fontSize}px Arial`;
+          ctx.font = `bold ${fontSize}px Arial, "Segoe UI Emoji"`;
           const centerX = 650;
           const centerY = height / 2;
-          const endY = wrapTextCentered(ctx, text, centerX, centerY, availableWidth, lineHeight);
+          const endY = wrapTextWithEmotes(ctx, tokens, centerX, centerY, availableWidth, lineHeight);
           ctx.fillStyle = "rgba(104, 104, 104, 1)";
           ctx.font = "italic 20px Arial";
           const attrWidth = ctx.measureText(attribution).width;
