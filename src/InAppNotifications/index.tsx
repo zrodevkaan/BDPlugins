@@ -340,6 +340,7 @@ function KeywordBadges({keywords}: { keywords: string[] }) {
 
 function NotificationCard({message: initialMessage, matchedKeywords}: { message: Message, matchedKeywords: string[] }) {
     const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? (15 * 1000));
+    const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
 
     // subscribe to MessageStore so that when Discord pushes a MESSAGE_UPDATE
     // (e.g. a bot filling in embed fields after the initial MESSAGE_CREATE),
@@ -409,6 +410,7 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                 position: "relative",
             }}
         >
+            {/* wrap everything in a div so the chatbar doesnt turn into superman and hover under the div. */}
             <div>
                 <CardHeader channel={channel} onRemove={() => NotificationStore.removeMessage(message.id)}/>
                 <ErrorBoundary>
@@ -436,15 +438,26 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                     transition: "width 50ms linear",
                 }}/>
             </div>
-            {/* wrap everything in a div so the chatbar doesnt turn into superman and hover under the div. */}
-            <div style={{padding: '10px'}}>
-                <Components.TextInput value={getText} onChange={(e) => setText(e)} placeholder={"Reply to user?"} onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        upload(initialMessage?.guild_id ? initialMessage.guild_id : undefined, message.channel_id, message.id, getText);
-                        NotificationStore.removeMessage(message.id)
-                    }
-                }}></Components.TextInput>
-            </div>
+            {showTextarea && (
+                <div style={{ padding: '10px' }}>
+                    <Components.TextInput
+                        value={getText}
+                        onChange={(val) => setText(val)}
+                        placeholder="Reply to user?"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                upload(
+                                    initialMessage?.guild_id ?? undefined,
+                                    message.channel_id,
+                                    message.id,
+                                    getText
+                                );
+                                NotificationStore.removeMessage(message.id);
+                            }
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
@@ -753,13 +766,14 @@ export default class InAppNotifications {
 
             const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15000);
             const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
+            const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
 
             return (
                 <div>
                     <Components.SettingItem
                         id="keywords"
                         name="Keywords"
-                        note="Semicolon-separated list of keywords to always show notifications for."
+                        note="A semicolon-separated list of keywords that will always trigger notifications."
                         inline={false}
                     >
                         <Components.TextInput
@@ -776,7 +790,7 @@ export default class InAppNotifications {
                     <Components.SettingItem
                         id="duration"
                         name="Notification Duration"
-                        note={`How long notifications stay on screen. Currently: ${(duration / 1000).toFixed(1)}s`}
+                        note={`How long notifications remain on screen. Currently: ${(duration / 1000).toFixed(1)}s`}
                         inline={false}
                     >
                         <Components.SliderInput
@@ -792,15 +806,29 @@ export default class InAppNotifications {
                     </Components.SettingItem>
 
                     <Components.SettingItem
-                        id="duration"
-                        name="Reply to Message"
-                        note={`Should you reply to the message.`}
+                        id="shouldReply"
+                        name="Reply to Messages"
+                        note="When enabled, allows you to reply directly to messages from the notification."
                         inline={true}
                     >
                         <Components.SwitchInput
                             value={shouldReply}
                             onChange={(v: number) => {
                                 SettingsStore.setSetting("shouldReply", v);
+                            }}
+                        />
+                    </Components.SettingItem>
+
+                    <Components.SettingItem
+                        id="showTextarea"
+                        name="Show Reply Textarea"
+                        note="Displays a text input in the notification to reply to messages and DMs."
+                        inline={true}
+                    >
+                        <Components.SwitchInput
+                            value={showTextarea}
+                            onChange={(v: boolean) => {
+                                SettingsStore.setSetting("showTextarea", v);
                             }}
                         />
                     </Components.SettingItem>

@@ -270,6 +270,7 @@ function KeywordBadges({ keywords }) {
 }
 function NotificationCard({ message: initialMessage, matchedKeywords }) {
   const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15 * 1e3);
+  const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
   const message = Hooks.useStateFromStores(
     [MessageStore],
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
@@ -343,12 +344,25 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
       borderRadius: "0 0 4px 4px",
       transition: "width 50ms linear"
     } })),
-    /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(Components.TextInput, { value: getText, onChange: (e) => setText(e), placeholder: "Reply to user?", onKeyDown: (e) => {
-      if (e.key === "Enter") {
-        upload(initialMessage?.guild_id ? initialMessage.guild_id : void 0, message.channel_id, message.id, getText);
-        NotificationStore.removeMessage(message.id);
+    showTextarea && /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(
+      Components.TextInput,
+      {
+        value: getText,
+        onChange: (val) => setText(val),
+        placeholder: "Reply to user?",
+        onKeyDown: (e) => {
+          if (e.key === "Enter") {
+            upload(
+              initialMessage?.guild_id ?? void 0,
+              message.channel_id,
+              message.id,
+              getText
+            );
+            NotificationStore.removeMessage(message.id);
+          }
+        }
       }
-    } }))
+    ))
   );
 }
 function NotificationContainer() {
@@ -490,12 +504,13 @@ var InAppNotifications = class {
       );
       const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15e3);
       const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
+      const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
       return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
           id: "keywords",
           name: "Keywords",
-          note: "Semicolon-separated list of keywords to always show notifications for.",
+          note: "A semicolon-separated list of keywords that will always trigger notifications.",
           inline: false
         },
         /* @__PURE__ */ BdApi.React.createElement(
@@ -515,7 +530,7 @@ var InAppNotifications = class {
         {
           id: "duration",
           name: "Notification Duration",
-          note: `How long notifications stay on screen. Currently: ${(duration / 1e3).toFixed(1)}s`,
+          note: `How long notifications remain on screen. Currently: ${(duration / 1e3).toFixed(1)}s`,
           inline: false
         },
         /* @__PURE__ */ BdApi.React.createElement(
@@ -534,9 +549,9 @@ var InAppNotifications = class {
       ), /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
-          id: "duration",
-          name: "Reply to Message",
-          note: `Should you reply to the message.`,
+          id: "shouldReply",
+          name: "Reply to Messages",
+          note: "When enabled, allows you to reply directly to messages from the notification.",
           inline: true
         },
         /* @__PURE__ */ BdApi.React.createElement(
@@ -545,6 +560,23 @@ var InAppNotifications = class {
             value: shouldReply,
             onChange: (v) => {
               SettingsStore.setSetting("shouldReply", v);
+            }
+          }
+        )
+      ), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          id: "showTextarea",
+          name: "Show Reply Textarea",
+          note: "Displays a text input in the notification to reply to messages and DMs.",
+          inline: true
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.SwitchInput,
+          {
+            value: showTextarea,
+            onChange: (v) => {
+              SettingsStore.setSetting("showTextarea", v);
             }
           }
         )
