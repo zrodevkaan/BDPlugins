@@ -16,6 +16,7 @@ const {
     UserGuildSettingsStore,
     GuildMemberStore,
     ReferencedMessageStore,
+    PendingReplyStore,
     SelectedChannelStore
 } = Webpack.Stores;
 
@@ -88,9 +89,20 @@ enum FlagTypes {
 
 const SettingsStore = new class extends Utils.Store {
     #keywords: string[] = Data.load("keywords") ?? [];
+    #settings: Record<string, any> = Data.load("settings") ?? {};
 
     getKeywords(): string[] {
         return [...this.#keywords];
+    }
+
+    getSetting(key: string) {
+        return this.#settings[key];
+    }
+
+    setSetting(key: string, value: any) {
+        this.#settings[key] = value;
+        Data.save("settings", this.#settings);
+        this.emitChange();
     }
 
     setKeywords(keywords: string[]) {
@@ -283,6 +295,7 @@ function CardHeader({channel, onRemove}: { channel: any, onRemove: () => void })
             }}>
                 {primaryLabel}
             </span>
+            <span style={{fontSize: '20px', color: 'white'}}>·</span>
             <span style={{
                 fontSize: "12px",
                 color: "var(--text-muted)",
@@ -326,7 +339,7 @@ function KeywordBadges({keywords}: { keywords: string[] }) {
 }
 
 function NotificationCard({message: initialMessage, matchedKeywords}: { message: Message, matchedKeywords: string[] }) {
-    const DURATION = 45_000;
+    const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? (15 * 1000));
 
     // subscribe to MessageStore so that when Discord pushes a MESSAGE_UPDATE
     // (e.g. a bot filling in embed fields after the initial MESSAGE_CREATE),
@@ -337,6 +350,9 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
         [MessageStore],
         () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
     );
+
+    const [getText, setText] = React.useState("");
+    const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
 
     const channel = ChannelStore.getChannel(message.channel_id);
 
@@ -408,6 +424,14 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                     />
                 </ul>
             </ErrorBoundary>
+            <div style={{padding: '10px'}}>
+                <Components.TextInput value={getText} onChange={(e) => setText(e)} placeholder={"Reply to user?"} onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        upload(initialMessage?.guild_id ? initialMessage.guild_id : "@me", message.channel_id, message.id, getText);
+                        NotificationStore.removeMessage(message.id)
+                    }
+                }}></Components.TextInput>
+            </div>
             <KeywordBadges keywords={matchedKeywords}/>
             <div style={{
                 position: "absolute",
@@ -582,6 +606,33 @@ function NotificationContainer() {
     );
 }
 
+var timestampToSnowflake = (timestamp) => {
+    const DISCORD_EPOCH = BigInt(14200704e5);
+    const SHIFT = BigInt(22);
+    const ms = BigInt(timestamp) - DISCORD_EPOCH;
+    return ms <= BigInt(0) ? "0" : (ms << SHIFT).toString();
+};
+
+async function upload(guildId, channelId, messageId, text) {
+    const useReply = SettingsStore.getSetting("shouldReply");
+    MessageActions.sendMessage(channelId, {
+        content: text,
+        tts: false,
+        invalidEmojis: [],
+        validNonShortcutEmojis: [],
+    }, true, {
+        nonce: timestampToSnowflake(Date.now()),
+        ...(useReply ? {
+            messageReference: {
+                guild_id: guildId,
+                channel_id: channelId,
+                message_id: messageId,
+            },
+        } : {}),
+        location: "chat_input",
+    });
+}
+
 function ForceUpdateRoot() {
     // when updating the App mount, a weird error can cause webpack to attempt at reloading modules?
     // so instead, if we use domain migration start, this safely remounts app mount.
@@ -636,6 +687,8 @@ export default class InAppNotifications {
     #reactionHandler = async ({userId, channelId, messageId, guildId, emoji}: DispatchedReaction) => {
         const currentUser = UserStore.getCurrentUser();
         if (!currentUser) return;
+
+        if (document.visibilityState === "hidden") return; // if its hidden, dont show any messages. it just spams your screen.
         // if (userId === currentUser.id) return; // don't notify for your own reactions
         // does this even trigger.
 
@@ -664,7 +717,10 @@ export default class InAppNotifications {
     }
 
     start() {
-        BdApi.DOM.addStyle("IAN", `#ian-container::-webkit-scrollbar { display: none; }`);
+        BdApi.DOM.addStyle("IAN", `
+            #ian-container::-webkit-scrollbar { display: none; }
+            #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
+        `);
         Patcher.after(Webpack.getModule(Webpack.Filters.bySource("Shakeable")).A, "type", (_: any, __: any, res: any) => {
             res.props.children.push(<ErrorBoundary><NotificationContainer/></ErrorBoundary>);
         });
@@ -693,16 +749,60 @@ export default class InAppNotifications {
                 SettingsStore.getKeywords().join(";")
             );
 
+            const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15000);
+            const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
+
             return (
-                <Components.TextInput
-                    value={value}
-                    placeholder="keyword1;keyword2;keyword3"
-                    onChange={(v: string) => {
-                        setValue(v);
-                        const keywords = v.split(";").map((k: string) => k.trim()).filter((k: string) => k.length > 0);
-                        SettingsStore.setKeywords(keywords);
-                    }}
-                />
+                <div>
+                    <Components.SettingItem
+                        id="keywords"
+                        name="Keywords"
+                        note="Semicolon-separated list of keywords to always show notifications for."
+                        inline={false}
+                    >
+                        <Components.TextInput
+                            value={value}
+                            placeholder="keyword1;keyword2;keyword3"
+                            onChange={(v: string) => {
+                                setValue(v);
+                                const keywords = v.split(";").map((k: string) => k.trim()).filter((k: string) => k.length > 0);
+                                SettingsStore.setKeywords(keywords);
+                            }}
+                        />
+                    </Components.SettingItem>
+
+                    <Components.SettingItem
+                        id="duration"
+                        name="Notification Duration"
+                        note={`How long notifications stay on screen. Currently: ${(duration / 1000).toFixed(1)}s`}
+                        inline={false}
+                    >
+                        <Components.SliderInput
+                            min={3000}
+                            max={60000}
+                            step={1000}
+                            value={duration}
+                            units="ms"
+                            onChange={(v: number) => {
+                                SettingsStore.setSetting("duration", v);
+                            }}
+                        />
+                    </Components.SettingItem>
+
+                    <Components.SettingItem
+                        id="duration"
+                        name="Reply to Message"
+                        note={`Should you reply to the message.`}
+                        inline={true}
+                    >
+                        <Components.SwitchInput
+                            value={shouldReply}
+                            onChange={(v: number) => {
+                                SettingsStore.setSetting("shouldReply", v);
+                            }}
+                        />
+                    </Components.SettingItem>
+                </div>
             );
         };
     }

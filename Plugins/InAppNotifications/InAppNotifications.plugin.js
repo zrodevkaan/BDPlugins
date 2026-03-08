@@ -40,6 +40,7 @@ var {
   UserGuildSettingsStore,
   GuildMemberStore,
   ReferencedMessageStore,
+  PendingReplyStore,
   SelectedChannelStore
 } = Webpack.Stores;
 var [
@@ -80,8 +81,17 @@ function injectMessage(rawMessage) {
 }
 var SettingsStore = new class extends Utils.Store {
   #keywords = Data.load("keywords") ?? [];
+  #settings = Data.load("settings") ?? {};
   getKeywords() {
     return [...this.#keywords];
+  }
+  getSetting(key) {
+    return this.#settings[key];
+  }
+  setSetting(key, value) {
+    this.#settings[key] = value;
+    Data.save("settings", this.#settings);
+    this.emitChange();
   }
   setKeywords(keywords) {
     this.#keywords = keywords;
@@ -233,7 +243,7 @@ function CardHeader({ channel, onRemove }) {
     textOverflow: "ellipsis",
     flexShrink: 1,
     minWidth: 0
-  } }, primaryLabel), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
+  } }, primaryLabel), /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "20px", color: "white" } }, "\xB7"), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
     fontSize: "12px",
     color: "var(--text-muted)",
     whiteSpace: "nowrap",
@@ -259,11 +269,13 @@ function KeywordBadges({ keywords }) {
   } }, k)));
 }
 function NotificationCard({ message: initialMessage, matchedKeywords }) {
-  const DURATION = 45e3;
+  const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15 * 1e3);
   const message = Hooks.useStateFromStores(
     [MessageStore],
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
   );
+  const [getText, setText] = React.useState("");
+  const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
   const channel = ChannelStore.getChannel(message.channel_id);
   const [progress, setProgress] = React.useState(100);
   const isHoveredRef = React.useRef(false);
@@ -324,6 +336,12 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         __ian: true
       }
     ))),
+    /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(Components.TextInput, { value: getText, onChange: (e) => setText(e), placeholder: "Reply to user?", onKeyDown: (e) => {
+      if (e.key === "Enter") {
+        upload(initialMessage?.guild_id ? initialMessage.guild_id : "@me", message.channel_id, message.id, getText);
+        NotificationStore.removeMessage(message.id);
+      }
+    } })),
     /* @__PURE__ */ BdApi.React.createElement(KeywordBadges, { keywords: matchedKeywords }),
     /* @__PURE__ */ BdApi.React.createElement("div", { style: {
       position: "absolute",
@@ -365,6 +383,31 @@ function NotificationContainer() {
     entries.map(({ message, matchedKeywords }) => /* @__PURE__ */ BdApi.React.createElement(NotificationCard, { key: message.id, message, matchedKeywords }))
   );
 }
+var timestampToSnowflake = (timestamp) => {
+  const DISCORD_EPOCH = BigInt(14200704e5);
+  const SHIFT = BigInt(22);
+  const ms = BigInt(timestamp) - DISCORD_EPOCH;
+  return ms <= BigInt(0) ? "0" : (ms << SHIFT).toString();
+};
+async function upload(guildId, channelId, messageId, text) {
+  const useReply = SettingsStore.getSetting("shouldReply");
+  MessageActions.sendMessage(channelId, {
+    content: text,
+    tts: false,
+    invalidEmojis: [],
+    validNonShortcutEmojis: []
+  }, true, {
+    nonce: timestampToSnowflake(Date.now()),
+    ...useReply ? {
+      messageReference: {
+        guild_id: guildId,
+        channel_id: channelId,
+        message_id: messageId
+      }
+    } : {},
+    location: "chat_input"
+  });
+}
 function ForceUpdateRoot() {
   Dispatcher.dispatch({ type: "DOMAIN_MIGRATION_START" });
   requestIdleCallback(() => Dispatcher.dispatch({ type: "DOMAIN_MIGRATION_SKIP" }));
@@ -403,6 +446,7 @@ var InAppNotifications = class {
   #reactionHandler = async ({ userId, channelId, messageId, guildId, emoji }) => {
     const currentUser = UserStore.getCurrentUser();
     if (!currentUser) return;
+    if (document.visibilityState === "hidden") return;
     let message = MessageStore.getMessage(channelId, messageId);
     if (!message) {
       message = await MessageActions.fetchMessage({ channelId, messageId }).catch(() => null);
@@ -422,7 +466,10 @@ var InAppNotifications = class {
     });
   }
   start() {
-    BdApi.DOM.addStyle("IAN", `#ian-container::-webkit-scrollbar { display: none; }`);
+    BdApi.DOM.addStyle("IAN", `
+            #ian-container::-webkit-scrollbar { display: none; }
+            #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
+        `);
     Patcher.after(Webpack.getModule(Webpack.Filters.bySource("Shakeable")).A, "type", (_, __, res) => {
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement(NotificationContainer, null)));
     });
@@ -445,18 +492,67 @@ var InAppNotifications = class {
       const [value, setValue] = React.useState(
         SettingsStore.getKeywords().join(";")
       );
-      return /* @__PURE__ */ BdApi.React.createElement(
-        Components.TextInput,
+      const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15e3);
+      const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
+      return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
         {
-          value,
-          placeholder: "keyword1;keyword2;keyword3",
-          onChange: (v) => {
-            setValue(v);
-            const keywords = v.split(";").map((k) => k.trim()).filter((k) => k.length > 0);
-            SettingsStore.setKeywords(keywords);
+          id: "keywords",
+          name: "Keywords",
+          note: "Semicolon-separated list of keywords to always show notifications for.",
+          inline: false
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.TextInput,
+          {
+            value,
+            placeholder: "keyword1;keyword2;keyword3",
+            onChange: (v) => {
+              setValue(v);
+              const keywords = v.split(";").map((k) => k.trim()).filter((k) => k.length > 0);
+              SettingsStore.setKeywords(keywords);
+            }
           }
-        }
-      );
+        )
+      ), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          id: "duration",
+          name: "Notification Duration",
+          note: `How long notifications stay on screen. Currently: ${(duration / 1e3).toFixed(1)}s`,
+          inline: false
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.SliderInput,
+          {
+            min: 3e3,
+            max: 6e4,
+            step: 1e3,
+            value: duration,
+            units: "ms",
+            onChange: (v) => {
+              SettingsStore.setSetting("duration", v);
+            }
+          }
+        )
+      ), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          id: "duration",
+          name: "Reply to Message",
+          note: `Should you reply to the message.`,
+          inline: true
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.SwitchInput,
+          {
+            value: shouldReply,
+            onChange: (v) => {
+              SettingsStore.setSetting("shouldReply", v);
+            }
+          }
+        )
+      ));
     };
   }
 };
