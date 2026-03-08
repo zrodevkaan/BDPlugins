@@ -440,7 +440,7 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
             <div style={{padding: '10px'}}>
                 <Components.TextInput value={getText} onChange={(e) => setText(e)} placeholder={"Reply to user?"} onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                        upload(initialMessage?.guild_id ? initialMessage.guild_id : "@me", message.channel_id, message.id, getText);
+                        upload(initialMessage?.guild_id ? initialMessage.guild_id : undefined, message.channel_id, message.id, getText);
                         NotificationStore.removeMessage(message.id)
                     }
                 }}></Components.TextInput>

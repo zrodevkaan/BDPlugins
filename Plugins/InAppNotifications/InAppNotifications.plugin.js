@@ -275,7 +275,6 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
   );
   const [getText, setText] = React.useState("");
-  const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
   const channel = ChannelStore.getChannel(message.channel_id);
   const [progress, setProgress] = React.useState(100);
   const isHoveredRef = React.useRef(false);
@@ -346,7 +345,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     } })),
     /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(Components.TextInput, { value: getText, onChange: (e) => setText(e), placeholder: "Reply to user?", onKeyDown: (e) => {
       if (e.key === "Enter") {
-        upload(initialMessage?.guild_id ? initialMessage.guild_id : "@me", message.channel_id, message.id, getText);
+        upload(initialMessage?.guild_id ? initialMessage.guild_id : void 0, message.channel_id, message.id, getText);
         NotificationStore.removeMessage(message.id);
       }
     } }))
