@@ -352,7 +352,6 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
     );
 
     const [getText, setText] = React.useState("");
-    const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
 
     const channel = ChannelStore.getChannel(message.channel_id);
 
@@ -410,20 +409,34 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                 position: "relative",
             }}
         >
-            <CardHeader channel={channel} onRemove={() => NotificationStore.removeMessage(message.id)}/>
-            <ErrorBoundary>
-                <ul style={{listStyle: "none", margin: 0, padding: 0}}>
-                    <MessageWrapper
-                        id={`${message.id}-${message.id}`}
-                        groupId={message.id}
-                        message={message}
-                        channel={channel}
-                        compact={false}
-                        renderContentOnly={false}
-                        __ian={true}
-                    />
-                </ul>
-            </ErrorBoundary>
+            <div>
+                <CardHeader channel={channel} onRemove={() => NotificationStore.removeMessage(message.id)}/>
+                <ErrorBoundary>
+                    <ul style={{listStyle: "none", margin: 0, padding: 0}}>
+                        <MessageWrapper
+                            id={`${message.id}-${message.id}`}
+                            groupId={message.id}
+                            message={message}
+                            channel={channel}
+                            compact={false}
+                            renderContentOnly={false}
+                            __ian={true}
+                        />
+                    </ul>
+                </ErrorBoundary>
+                <KeywordBadges keywords={matchedKeywords}/>
+                <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    height: "3px",
+                    width: `${progress}%`,
+                    backgroundColor: "var(--youtube)",
+                    borderRadius: "0 0 4px 4px",
+                    transition: "width 50ms linear",
+                }}/>
+            </div>
+            {/* wrap everything in a div so the chatbar doesnt turn into superman and hover under the div. */}
             <div style={{padding: '10px'}}>
                 <Components.TextInput value={getText} onChange={(e) => setText(e)} placeholder={"Reply to user?"} onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -432,17 +445,6 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                     }
                 }}></Components.TextInput>
             </div>
-            <KeywordBadges keywords={matchedKeywords}/>
-            <div style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                height: "3px",
-                width: `${progress}%`,
-                backgroundColor: "var(--youtube)",
-                borderRadius: "0 0 4px 4px",
-                transition: "width 50ms linear",
-            }}/>
         </div>
     );
 }

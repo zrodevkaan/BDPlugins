@@ -323,8 +323,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         position: "relative"
       }
     },
-    /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }),
-    /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement(
+    /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }), /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement(
       MessageWrapper,
       {
         id: `${message.id}-${message.id}`,
@@ -335,15 +334,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         renderContentOnly: false,
         __ian: true
       }
-    ))),
-    /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(Components.TextInput, { value: getText, onChange: (e) => setText(e), placeholder: "Reply to user?", onKeyDown: (e) => {
-      if (e.key === "Enter") {
-        upload(initialMessage?.guild_id ? initialMessage.guild_id : "@me", message.channel_id, message.id, getText);
-        NotificationStore.removeMessage(message.id);
-      }
-    } })),
-    /* @__PURE__ */ BdApi.React.createElement(KeywordBadges, { keywords: matchedKeywords }),
-    /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    ))), /* @__PURE__ */ BdApi.React.createElement(KeywordBadges, { keywords: matchedKeywords }), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
       position: "absolute",
       bottom: 0,
       left: 0,
@@ -352,7 +343,13 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
       backgroundColor: "var(--youtube)",
       borderRadius: "0 0 4px 4px",
       transition: "width 50ms linear"
-    } })
+    } })),
+    /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(Components.TextInput, { value: getText, onChange: (e) => setText(e), placeholder: "Reply to user?", onKeyDown: (e) => {
+      if (e.key === "Enter") {
+        upload(initialMessage?.guild_id ? initialMessage.guild_id : "@me", message.channel_id, message.id, getText);
+        NotificationStore.removeMessage(message.id);
+      }
+    } }))
   );
 }
 function NotificationContainer() {
