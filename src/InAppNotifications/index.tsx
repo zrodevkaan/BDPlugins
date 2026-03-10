@@ -320,8 +320,6 @@ function KeywordBadges({keywords}: { keywords: string[] }) {
         <div style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: "4px",
-            marginTop: "6px",
         }}>
             {keywords.map(k => (
                 <span key={k} style={{
@@ -351,6 +349,11 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
         [MessageStore],
         () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
     );
+
+    const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId())
+    if (selectedChannel == initialMessage.channel_id) {
+        NotificationStore.removeMessage(message.id)
+    }
 
     const [getText, setText] = React.useState("");
 
@@ -406,12 +409,13 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                 boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
                 overflow: "hidden",
                 flexShrink: 0,
-                maxHeight: '500px',
                 position: "relative",
             }}
         >
             {/* wrap everything in a div so the chatbar doesnt turn into superman and hover under the div. */}
-            <div>
+            <div style={{
+                maxHeight: '500px',
+            }}>
                 <CardHeader channel={channel} onRemove={() => NotificationStore.removeMessage(message.id)}/>
                 <ErrorBoundary>
                     <ul style={{listStyle: "none", margin: 0, padding: 0}}>
@@ -426,7 +430,6 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                         />
                     </ul>
                 </ErrorBoundary>
-                <KeywordBadges keywords={matchedKeywords}/>
                 <div style={{
                     position: "absolute",
                     bottom: 0,
@@ -458,6 +461,7 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                     />
                 </div>
             )}
+            <KeywordBadges keywords={matchedKeywords}/>
         </div>
     );
 }
@@ -658,6 +662,9 @@ function ForceUpdateRoot() {
 export default class InAppNotifications {
     isAllowed(message: any, guildId: string) {
         const currentUser = UserStore.getCurrentUser();
+        if (document.visibilityState === "hidden") return; // if its hidden, dont show any messages. it just spams your screen.
+        // omg this was on the wrong line....
+
 
         if (!message?.channel_id) return false;
         if (message?.channel_id == SelectedChannelStore.getChannelId()) return false;

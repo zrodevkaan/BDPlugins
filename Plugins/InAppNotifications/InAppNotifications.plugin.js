@@ -257,9 +257,7 @@ function KeywordBadges({ keywords }) {
   if (keywords.length === 0) return null;
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: {
     display: "flex",
-    flexWrap: "wrap",
-    gap: "4px",
-    marginTop: "6px"
+    flexWrap: "wrap"
   } }, keywords.map((k) => /* @__PURE__ */ BdApi.React.createElement("span", { key: k, style: {
     fontSize: "11px",
     fontWeight: 600,
@@ -275,6 +273,10 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     [MessageStore],
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
   );
+  const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId());
+  if (selectedChannel == initialMessage.channel_id) {
+    NotificationStore.removeMessage(message.id);
+  }
   const [getText, setText] = React.useState("");
   const channel = ChannelStore.getChannel(message.channel_id);
   const [progress, setProgress] = React.useState(100);
@@ -319,11 +321,12 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
         overflow: "hidden",
         flexShrink: 0,
-        maxHeight: "500px",
         position: "relative"
       }
     },
-    /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }), /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement(
+    /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+      maxHeight: "500px"
+    } }, /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }), /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement(
       MessageWrapper,
       {
         id: `${message.id}-${message.id}`,
@@ -334,7 +337,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         renderContentOnly: false,
         __ian: true
       }
-    ))), /* @__PURE__ */ BdApi.React.createElement(KeywordBadges, { keywords: matchedKeywords }), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    ))), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
       position: "absolute",
       bottom: 0,
       left: 0,
@@ -362,7 +365,8 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
           }
         }
       }
-    ))
+    )),
+    /* @__PURE__ */ BdApi.React.createElement(KeywordBadges, { keywords: matchedKeywords })
   );
 }
 function NotificationContainer() {
