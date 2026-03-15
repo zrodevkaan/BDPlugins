@@ -374,6 +374,13 @@ function NotificationContainer() {
     [NotificationStore],
     () => NotificationStore.getMessages()
   );
+  const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
+  const pos = {
+    top: position.startsWith("top") ? "5px" : void 0,
+    bottom: position.startsWith("bottom") ? "5px" : void 0,
+    left: position.endsWith("left") ? "5px" : void 0,
+    right: position.endsWith("right") ? "5px" : void 0
+  };
   if (entries.length === 0) return null;
   return /* @__PURE__ */ BdApi.React.createElement(
     "div",
@@ -388,6 +395,7 @@ function NotificationContainer() {
         display: "flex",
         flexDirection: "column",
         gap: "20px",
+        ...pos,
         maxHeight: "100vh",
         overflowY: "auto",
         backgroundColor: "transparent",
@@ -510,6 +518,7 @@ var InAppNotifications = class {
       const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15e3);
       const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
       const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
+      const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
       return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
@@ -583,6 +592,26 @@ var InAppNotifications = class {
             onChange: (v) => {
               SettingsStore.setSetting("showTextarea", v);
             }
+          }
+        )
+      ), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          id: "position",
+          name: "Notification Position",
+          note: "Where notifications appear on screen."
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.RadioInput,
+          {
+            value: position,
+            onChange: (v) => SettingsStore.setSetting("position", v),
+            options: [
+              { value: "top-left", name: "Top Left" },
+              { value: "top-right", name: "Top Right" },
+              { value: "bottom-right", name: "Bottom Right" },
+              { value: "bottom-left", name: "Bottom Left" }
+            ]
           }
         )
       ));

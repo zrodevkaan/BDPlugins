@@ -584,6 +584,14 @@ function NotificationContainer() {
         [NotificationStore],
         () => NotificationStore.getMessages()
     );
+    const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
+
+    const pos: React.CSSProperties = {
+        top:    position.startsWith("top")    ? "5px" : undefined,
+        bottom: position.startsWith("bottom") ? "5px" : undefined,
+        left:   position.endsWith("left")     ? "5px" : undefined,
+        right:  position.endsWith("right")    ? "5px" : undefined,
+    };
 
     // const reactions = Hooks.useStateFromStores(
     //     [NotificationStore],
@@ -610,6 +618,7 @@ function NotificationContainer() {
                 display: "flex",
                 flexDirection: "column",
                 gap: "20px",
+                ...pos,
                 maxHeight: "100vh",
                 overflowY: "auto",
                 backgroundColor: "transparent",
@@ -657,6 +666,13 @@ function ForceUpdateRoot() {
     Dispatcher.dispatch({type: 'DOMAIN_MIGRATION_START'});
     requestIdleCallback(() => Dispatcher.dispatch({type: 'DOMAIN_MIGRATION_SKIP'}));
 }
+
+const POSITIONS = [
+    { value: "top-left",     label: "Top Left" },
+    { value: "top-right",    label: "Top Right" },
+    { value: "bottom-right", label: "Bottom Right" },
+    { value: "bottom-left",  label: "Bottom Left" },
+];
 
 export default class InAppNotifications {
     isAllowed(message: any, guildId: string) {
@@ -773,6 +789,7 @@ export default class InAppNotifications {
             const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15000);
             const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
             const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
+            const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
 
             return (
                 <div>
@@ -836,6 +853,23 @@ export default class InAppNotifications {
                             onChange={(v: boolean) => {
                                 SettingsStore.setSetting("showTextarea", v);
                             }}
+                        />
+                    </Components.SettingItem>
+
+                    <Components.SettingItem
+                        id="position"
+                        name="Notification Position"
+                        note="Where notifications appear on screen."
+                    >
+                        <Components.RadioInput
+                            value={position}
+                            onChange={(v: string) => SettingsStore.setSetting("position", v)}
+                            options={[
+                                { value: "top-left",     name: "Top Left" },
+                                { value: "top-right",    name: "Top Right" },
+                                { value: "bottom-right", name: "Bottom Right" },
+                                { value: "bottom-left",  name: "Bottom Left" },
+                            ]}
                         />
                     </Components.SettingItem>
                 </div>
