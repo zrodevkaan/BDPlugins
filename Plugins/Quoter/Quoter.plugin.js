@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.3
+ * @version 1.0.4
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Quoter/Quoter.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -32,7 +32,7 @@ __export(index_exports, {
   timestampToSnowflake: () => timestampToSnowflake
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, ContextMenu } = new BdApi("Quoter");
+var { Webpack, Patcher, ContextMenu, Data, Components, Utils } = new BdApi("Quoter");
 function calculateFontSize({
   charCount,
   width,
@@ -151,6 +151,8 @@ var generateQuoteImage = async (imageUrl, text, attribution, width = 1250, heigh
 var CloudUploader = Webpack.getByStrings("uploadFileToCloud", { searchExports: true });
 var SelectedStore = Webpack.getStore("SelectedChannelStore");
 var UserStore = Webpack.getStore("UserStore");
+var GuildMemberStore = Webpack.getStore("GuildMemberStore");
+var SelectedGuildStore = Webpack.getStore("SelectedGuildStore");
 var mods = Webpack.getByKeys("getSendMessageOptionsForReply");
 var PendingReplyStore = Webpack.getStore("PendingReplyStore");
 var FluxDispatcher = Webpack.getModule((x) => x._dispatch);
@@ -186,9 +188,23 @@ async function upload(a, b, c, channelId) {
     ...messagePayload
   });
 }
+var SettingStore = new class SS extends Utils.Store {
+  #settings = Data.load("settings");
+  getSetting(key) {
+    return this.#settings[key];
+  }
+  setSetting(key, value) {
+    this.#settings[key] = value;
+    this.emitChange();
+  }
+}();
 var Quoter = class {
   constructor() {
     this.contextMenuPatch = null;
+    Data.save("settings", {
+      username: 0,
+      ...Data.load("settings")
+    });
   }
   async start() {
     this.contextMenuPatch = ContextMenu.patch("message", (res, props) => {
@@ -196,11 +212,44 @@ var Quoter = class {
         label: "Quote User",
         action: async () => {
           const yesImage = UserStore.getUser(props.message.author.id).getAvatarURL(null, 1 << 12);
-          const img = yesImage, text = props.message.content, attribution = props.message.author.username;
+          const img = yesImage;
+          const text = props.message.content;
+          const setting = SettingStore.getSetting("username");
+          let attribution;
+          if (setting == 0) {
+            attribution = props.message.author.username;
+          } else if (setting == 1) {
+            attribution = UserStore.getUser(props.message.author.id).globalName;
+          } else if (setting == 2) {
+            const member = GuildMemberStore.getMember(SelectedGuildStore.getGuildId(), props.message.author.id);
+            attribution = member.nick;
+          } else {
+            attribution = props.message.author.username;
+          }
           await upload(img, text, attribution, props.message.channel_id);
         }
       }));
     });
+  }
+  getSettingsPanel() {
+    return () => {
+      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Username Option", note: "Changes what name shows of a user under the quote." }, /* @__PURE__ */ BdApi.React.createElement(Components.RadioInput, { value: SettingStore.getSetting("username"), onChange: (e) => {
+        SettingStore.setSetting("username", e);
+      }, options: [
+        {
+          value: 0,
+          name: "Username"
+        },
+        {
+          value: 1,
+          name: "Global Username"
+        },
+        {
+          value: 2,
+          name: "Server Username"
+        }
+      ] }));
+    };
   }
   stop() {
     Patcher.unpatchAll();

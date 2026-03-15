@@ -2,10 +2,10 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.3
+ * @version 1.0.4
  */
 
-const { Webpack, Patcher, ContextMenu } = new BdApi("Quoter")
+const { Webpack, Patcher, ContextMenu, Data, Components, Utils } = new BdApi("Quoter")
 
 function calculateFontSize({
     charCount,
@@ -140,6 +140,8 @@ const generateQuoteImage = async (imageUrl, text, attribution, width = 1250, hei
 const CloudUploader = Webpack.getByStrings('uploadFileToCloud', { searchExports: true })
 const SelectedStore = Webpack.getStore('SelectedChannelStore')
 const UserStore = Webpack.getStore("UserStore")
+const GuildMemberStore = Webpack.getStore("GuildMemberStore")
+const SelectedGuildStore = Webpack.getStore("SelectedGuildStore")
 const mods = Webpack.getByKeys('getSendMessageOptionsForReply')
 const PendingReplyStore = Webpack.getStore("PendingReplyStore")
 const FluxDispatcher = Webpack.getModule(x => x._dispatch)
@@ -184,9 +186,26 @@ async function upload(a, b, c, channelId) {
     });
 }
 
+const SettingStore = new class SS extends Utils.Store {
+    #settings: Record<string, any> = Data.load("settings")
+
+    getSetting(key: string): any {
+        return this.#settings[key]
+    }
+
+    setSetting(key: string, value: any) {
+        this.#settings[key] = value;
+        this.emitChange();
+    }
+}
+
 export default class Quoter {
     constructor() {
         this.contextMenuPatch = null;
+        Data.save("settings", {
+            username: 0x00,
+            ...Data.load("settings"),
+        })
     }
 
     async start() {
@@ -195,11 +214,51 @@ export default class Quoter {
                 label: 'Quote User',
                 action: async () => {
                     const yesImage = UserStore.getUser(props.message.author.id).getAvatarURL(null, (1 << 12))
-                    const img = yesImage, text = props.message.content, attribution = props.message.author.username
+                    const img = yesImage
+                    const text = props.message.content
+
+                    const setting = SettingStore.getSetting("username")
+
+                    let attribution;
+                    if (setting == 0x00) {
+                        attribution = props.message.author.username
+                    } else if (setting == 0x01) {
+                        attribution = UserStore.getUser(props.message.author.id).globalName
+                    } else if (setting == 0x02) {
+                        const member = GuildMemberStore.getMember(SelectedGuildStore.getGuildId(), props.message.author.id)
+                        attribution = member.nick
+                    } else {
+                        attribution = props.message.author.username
+                    }
+
                     await upload(img, text, attribution, props.message.channel_id);
                 }
             }));
         });
+    }
+
+    getSettingsPanel()
+    {
+        return () => {
+            return <Components.SettingItem name={"Username Option"} note={"Changes what name shows of a user under the quote."}>
+                <Components.RadioInput value={SettingStore.getSetting("username")} onChange={(e) => {
+                    SettingStore.setSetting("username", e);
+                }} options={[
+                    {
+                        value: 0x00,
+                        name: 'Username'
+                    },
+                    {
+                        value: 0x01,
+                        name: 'Global Username'
+                    },
+                    {
+                        value: 0x02,
+                        name: 'Server Username'
+                    }
+                ]}/>
+            </Components.SettingItem>
+        }
     }
 
     stop() {
