@@ -243,7 +243,7 @@ function CardHeader({ channel, onRemove }) {
     textOverflow: "ellipsis",
     flexShrink: 1,
     minWidth: 0
-  } }, primaryLabel), /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "20px", color: "white" } }, "\xB7"), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
+  } }, primaryLabel), /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "20px", color: "white" } }, "\u2022"), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
     fontSize: "12px",
     color: "var(--text-muted)",
     whiteSpace: "nowrap",
@@ -273,15 +273,15 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     [MessageStore],
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
   );
-  const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId());
-  if (selectedChannel == initialMessage.channel_id) {
-    NotificationStore.removeMessage(message.id);
-  }
   const [getText, setText] = React.useState("");
   const channel = ChannelStore.getChannel(message.channel_id);
   const [progress, setProgress] = React.useState(100);
   const isHoveredRef = React.useRef(false);
   const elapsedRef = React.useRef(0);
+  const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId());
+  if (selectedChannel == initialMessage.channel_id) {
+    NotificationStore.removeMessage(message.id);
+  }
   React.useEffect(() => {
     const interval = setInterval(() => {
       if (isHoveredRef.current) return;
@@ -324,9 +324,9 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         position: "relative"
       }
     },
-    /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }), /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: {
       maxHeight: "500px"
-    } }, /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }), /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement(
+    } }, /* @__PURE__ */ BdApi.React.createElement(
       MessageWrapper,
       {
         id: `${message.id}-${message.id}`,
@@ -337,7 +337,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
         renderContentOnly: false,
         __ian: true
       }
-    ))), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    )))), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
       position: "absolute",
       bottom: 0,
       left: 0,
@@ -347,7 +347,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
       borderRadius: "0 0 4px 4px",
       transition: "width 50ms linear"
     } })),
-    showTextarea && /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(
+    showTextarea && /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px", zIndex: "10" } }, /* @__PURE__ */ BdApi.React.createElement(
       Components.TextInput,
       {
         value: getText,
@@ -429,6 +429,7 @@ function ForceUpdateRoot() {
 var InAppNotifications = class {
   isAllowed(message, guildId) {
     const currentUser = UserStore.getCurrentUser();
+    if (document.visibilityState === "hidden") return;
     if (!message?.channel_id) return false;
     if (message?.channel_id == SelectedChannelStore.getChannelId()) return false;
     if (message.author?.id === currentUser?.id) return false;

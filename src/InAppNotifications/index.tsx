@@ -295,7 +295,7 @@ function CardHeader({channel, onRemove}: { channel: any, onRemove: () => void })
             }}>
                 {primaryLabel}
             </span>
-            <span style={{fontSize: '20px', color: 'white'}}>·</span>
+            <span style={{fontSize: '20px', color: 'white'}}>•</span>
             <span style={{
                 fontSize: "12px",
                 color: "var(--text-muted)",
@@ -349,19 +349,16 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
         [MessageStore],
         () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
     );
+    const [getText, setText] = React.useState("");
+    const channel = ChannelStore.getChannel(message.channel_id);
+    const [progress, setProgress] = React.useState(100);
+    const isHoveredRef = React.useRef(false);
+    const elapsedRef = React.useRef(0);
 
     const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId())
     if (selectedChannel == initialMessage.channel_id) {
         NotificationStore.removeMessage(message.id)
     }
-
-    const [getText, setText] = React.useState("");
-
-    const channel = ChannelStore.getChannel(message.channel_id);
-
-    const [progress, setProgress] = React.useState(100);
-    const isHoveredRef = React.useRef(false);
-    const elapsedRef = React.useRef(0);
 
     React.useEffect(() => {
         const interval = setInterval(() => {
@@ -413,21 +410,23 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
             }}
         >
             {/* wrap everything in a div so the chatbar doesnt turn into superman and hover under the div. */}
-            <div style={{
-                maxHeight: '500px',
-            }}>
+            <div>
                 <CardHeader channel={channel} onRemove={() => NotificationStore.removeMessage(message.id)}/>
                 <ErrorBoundary>
                     <ul style={{listStyle: "none", margin: 0, padding: 0}}>
-                        <MessageWrapper
-                            id={`${message.id}-${message.id}`}
-                            groupId={message.id}
-                            message={message}
-                            channel={channel}
-                            compact={false}
-                            renderContentOnly={false}
-                            __ian={true}
-                        />
+                        <div style={{
+                            maxHeight: '500px',
+                        }}>
+                            <MessageWrapper
+                                id={`${message.id}-${message.id}`}
+                                groupId={message.id}
+                                message={message}
+                                channel={channel}
+                                compact={false}
+                                renderContentOnly={false}
+                                __ian={true}
+                            />
+                        </div>
                     </ul>
                 </ErrorBoundary>
                 <div style={{
@@ -442,7 +441,7 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                 }}/>
             </div>
             {showTextarea && (
-                <div style={{ padding: '10px' }}>
+                <div style={{ padding: '10px', zIndex: '10' }}>
                     <Components.TextInput
                         value={getText}
                         onChange={(val) => setText(val)}
