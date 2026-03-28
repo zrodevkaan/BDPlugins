@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.0
+ * @version 3.0.1
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
@@ -17,9 +17,6 @@ const addReaction = Webpack.getByStrings('uaUU/g', {searchExports: true})
 // const removeReaction = Webpack.getByStrings('3l9f6u', {searchExports: true})
 
 const Permissions = Webpack.getByKeys('BAN_MEMBERS', {searchExports: true})
-
-const SwitchItem = Webpack.getByStrings('"tooltipText"in')
-const Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), {searchExports: true})
 
 const {ChannelStore, UserStore, RawGuildEmojiStore, GuildStore, PermissionStore} = Webpack.Stores
 const {useStateFromStores} = Hooks;
@@ -52,7 +49,7 @@ const MoreDoubleClickStore = new class MDCS extends Utils.Store {
     }
 
     getSetting(key) {
-        return DataStore.settings[key]
+        return (DataStore.settings ?? {})[key]
     }
 
     settings() {
@@ -191,106 +188,90 @@ function SettingsPanel() {
     guildMapping.unshift({label: "Default", value: "0"})
 
     return <div style={{minHeight: '500px', padding: '10px'}}>
-        <div style={{marginBottom: '15px'}}>
-            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Normal Double-Click</label>
-            <Selectable
+        <Components.SettingItem id="normalAction" name="Normal Double-Click" inline={true}>
+            <Components.DropdownInput
                 value={normalAction}
-                onSelectionChange={(e) => MoreDoubleClickStore.setSetting('normalDoubleClickAction', e)}
+                onChange={(e) => MoreDoubleClickStore.setSetting('normalDoubleClickAction', e)}
                 options={actionOptions}
             />
-        </div>
+        </Components.SettingItem>
 
-        <div style={{marginBottom: '15px'}}>
-            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Shift + Double-Click</label>
-            <Selectable
+        <Components.SettingItem id="shiftAction" name="Shift + Double-Click" inline={true}>
+            <Components.DropdownInput
                 value={shiftAction}
-                onSelectionChange={(e) => MoreDoubleClickStore.setSetting('shiftDoubleClickAction', e)}
+                onChange={(e) => MoreDoubleClickStore.setSetting('shiftDoubleClickAction', e)}
                 options={actionOptions}
             />
-        </div>
+        </Components.SettingItem>
 
-        <div style={{marginBottom: '15px'}}>
-            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Ctrl/Cmd + Double-Click</label>
-            <Selectable
+        <Components.SettingItem id="ctrlAction" name="Ctrl/Cmd + Double-Click" inline={true}>
+            <Components.DropdownInput
                 value={ctrlAction}
-                onSelectionChange={(e) => MoreDoubleClickStore.setSetting('ctrlDoubleClickAction', e)}
+                onChange={(e) => MoreDoubleClickStore.setSetting('ctrlDoubleClickAction', e)}
                 options={actionOptions}
             />
-        </div>
+        </Components.SettingItem>
 
-        <div style={{marginBottom: '15px'}}>
-            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>DEL + Double-Click</label>
-            <Selectable
+        <Components.SettingItem id="delAction" name="DEL + Double-Click" inline={true}>
+            <Components.DropdownInput
                 value={delAction}
-                onSelectionChange={(e) => MoreDoubleClickStore.setSetting('delDoubleClickAction', e)}
+                onChange={(e) => MoreDoubleClickStore.setSetting('delDoubleClickAction', e)}
                 options={actionOptions}
             />
-        </div>
+        </Components.SettingItem>
 
-        <h3 style={{marginTop: '20px', marginBottom: '10px'}}>Reaction Settings</h3>
+        <Components.SettingItem id="shouldBurst" name="Use Burst Reaction" note="Enable burst/super reactions" inline={true}>
+            <Components.SwitchInput
+                value={shouldBurst}
+                onChange={(v) => MoreDoubleClickStore.setSetting('shouldEmojiBurst', v)}
+            />
+        </Components.SettingItem>
 
-        <SwitchItem
-            onChange={(v) => MoreDoubleClickStore.setSetting('shouldEmojiBurst', v)}
-            title="Enable burst/super reactions"
-            note="Use Burst Reaction"
-            value={shouldBurst}
-        />
+        <Components.SettingItem id="textOverride" name="Allow double click on text" note="Allows double clicks to trigger when double clicking/selecting text." inline={true}>
+            <Components.SwitchInput
+                value={textOverride}
+                onChange={(v) => MoreDoubleClickStore.setSetting('textOverride', v)}
+            />
+        </Components.SettingItem>
 
-        <SwitchItem
-            onChange={(v) => MoreDoubleClickStore.setSetting('textOverride', v)}
-            title="Allow double click on text"
-            note="Allows double clicks to trigger when double clicking/selecting text."
-            value={textOverride}
-        />
-
-        <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', marginBottom: '10px'}}>
-            <span style={{fontWeight: 'bold'}}>Currently Selected Emoji:</span>
+        <Components.SettingItem id="selectedEmoji" name="Currently Selected Emoji" inline={true}>
             {emoji?.isGuildEmoji ? (
                 <img src={emoji.icon} style={{width: '32px', height: '32px'}}/>
             ) : (
                 <span style={{fontSize: '32px'}}>{emoji?.name}</span>
             )}
-        </div>
+        </Components.SettingItem>
 
-        <div style={{marginBottom: '10px'}}>
-            <label style={{display: 'block', marginBottom: '5px', fontWeight: 'bold'}}>Select Guild for Emojis</label>
-            <Selectable
-                onSelectionChange={(e) => {
-                    MoreDoubleClickStore.setSetting("selectedGuildForReaction", e)
-                }}
+        <Components.SettingItem id="selectedGuild" name="Select Guild for Emojis" inline={true}>
+            <Components.DropdownInput
                 value={GuildStore.getGuild(guild)?.id}
+                onChange={(e) => MoreDoubleClickStore.setSetting("selectedGuildForReaction", e)}
                 options={guildMapping}
             />
-        </div>
+        </Components.SettingItem>
 
-        <div style={{marginTop: '15px'}}>
-            <label style={{display: 'block', marginBottom: '10px', fontWeight: 'bold'}}>Select Emoji</label>
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '5px'}}>
-                {guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild)).map(x => {
-                    return x?.id ?
+        <Components.SettingItem id="emojiGrid" name="Select Emoji">
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '5px', marginTop: '10px'}}>
+                {guild != 0
+                    ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild) ?? {}).filter(x => x?.id).map(x =>
                         <img
                             key={x.id}
                             onClick={() => setNewEmoji(x)}
                             src={`https://cdn.discordapp.com/emojis/${x.id}.${x.animated ? 'gif' : 'webp'}?size=80`}
                             style={{width: '40px', height: '40px', cursor: 'pointer', borderRadius: '4px'}}
                             title={x.name}
-                        /> :
-                        <span
-                            key={x.name}
+                        />
+                    )
+                    : Object.values(EmojiPack()).map(x =>
+                        <div
+                            key={String(x.names).split(' ').join(', ')}
                             onClick={() => setNewEmoji(x)}
-                            style={{fontSize: '40px', cursor: 'pointer', textAlign: 'center'}}
-                        >
-                            {x.name}
-                        </span>
-                }) : Object.values(EmojiPack()).map(x => {
-                    return <div
-                        key={String(x.names).split(' ').join(', ')}
-                        onClick={() => setNewEmoji(x)}
-                        style={{width: '40px', height: '40px', fontSize: '40px', cursor: 'pointer', textAlign: 'center'}}
-                    >{x.surrogates}</div>
-                })}
+                            style={{width: '40px', height: '40px', fontSize: '40px', cursor: 'pointer', textAlign: 'center'}}
+                        >{x.surrogates}</div>
+                    )
+                }
             </div>
-        </div>
+        </Components.SettingItem>
     </div>
 }
 

@@ -442,8 +442,7 @@ var InAppNotifications = class {
     if (message?.channel_id == SelectedChannelStore.getChannelId()) return false;
     if (message.author?.id === currentUser?.id) return false;
     if (!guildId) return true;
-    if (SettingsStore.hasKeywordMatch(message)) return true;
-    if (UserGuildSettingsStore.isChannelMuted(guildId, message.channel_id)) return false;
+    if (UserGuildSettingsStore.isChannelMuted(guildId ? guildId : null, message.channel_id)) return false;
     if (UserGuildSettingsStore.isMuted(guildId)) return false;
     const channelNotifLevel = UserGuildSettingsStore.getChannelMessageNotifications(guildId, message.channel_id);
     const guildNotifLevel = UserGuildSettingsStore.getMessageNotifications(guildId);
@@ -458,6 +457,7 @@ var InAppNotifications = class {
       const mentionsMyRole = !suppressRoles && message.mention_roles?.some((roleId) => myRoles.includes(roleId));
       if (!mentionsMe && !mentionsEveryone && !mentionsMyRole) return false;
     }
+    if (SettingsStore.hasKeywordMatch(message)) return true;
     return true;
   }
   #messageHandler = async ({ message, guildId }) => {

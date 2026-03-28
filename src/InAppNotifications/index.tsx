@@ -686,9 +686,8 @@ export default class InAppNotifications {
         if (message.author?.id === currentUser?.id) return false;
         if (!guildId) return true;
 
-        if (SettingsStore.hasKeywordMatch(message)) return true;
 
-        if (UserGuildSettingsStore.isChannelMuted(guildId, message.channel_id)) return false;
+        if (UserGuildSettingsStore.isChannelMuted(guildId ? guildId : null, message.channel_id)) return false;
         if (UserGuildSettingsStore.isMuted(guildId)) return false;
 
         const channelNotifLevel = UserGuildSettingsStore.getChannelMessageNotifications(guildId, message.channel_id);
@@ -709,6 +708,8 @@ export default class InAppNotifications {
             const mentionsMyRole = !suppressRoles && message.mention_roles?.some((roleId: string) => myRoles.includes(roleId));
             if (!mentionsMe && !mentionsEveryone && !mentionsMyRole) return false;
         }
+
+        if (SettingsStore.hasKeywordMatch(message)) return true;
 
         return true;
     }

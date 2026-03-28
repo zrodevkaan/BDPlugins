@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.0
+ * @version 3.0.1
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MoreDoubleClicks/MoreDoubleClicks.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -41,8 +41,6 @@ var EmojiPack = () => {
 };
 var addReaction = Webpack.getByStrings("uaUU/g", { searchExports: true });
 var Permissions = Webpack.getByKeys("BAN_MEMBERS", { searchExports: true });
-var SwitchItem = Webpack.getByStrings('"tooltipText"in');
-var Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true });
 var { ChannelStore, UserStore, RawGuildEmojiStore, GuildStore, PermissionStore } = Webpack.Stores;
 var { useStateFromStores } = Hooks;
 var DataStore = new Proxy(
@@ -70,7 +68,7 @@ var MoreDoubleClickStore = new class MDCS extends Utils.Store {
     this.emitChange();
   }
   getSetting(key) {
-    return DataStore.settings[key];
+    return (DataStore.settings ?? {})[key];
   }
   settings() {
     return DataStore.settings;
@@ -187,61 +185,55 @@ function SettingsPanel() {
     };
   });
   guildMapping.unshift({ label: "Default", value: "0" });
-  return /* @__PURE__ */ BdApi.React.createElement("div", { style: { minHeight: "500px", padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Normal Double-Click"), /* @__PURE__ */ BdApi.React.createElement(
-    Selectable,
+  return /* @__PURE__ */ BdApi.React.createElement("div", { style: { minHeight: "500px", padding: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "normalAction", name: "Normal Double-Click", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.DropdownInput,
     {
       value: normalAction,
-      onSelectionChange: (e) => MoreDoubleClickStore.setSetting("normalDoubleClickAction", e),
+      onChange: (e) => MoreDoubleClickStore.setSetting("normalDoubleClickAction", e),
       options: actionOptions
     }
-  )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Shift + Double-Click"), /* @__PURE__ */ BdApi.React.createElement(
-    Selectable,
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "shiftAction", name: "Shift + Double-Click", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.DropdownInput,
     {
       value: shiftAction,
-      onSelectionChange: (e) => MoreDoubleClickStore.setSetting("shiftDoubleClickAction", e),
+      onChange: (e) => MoreDoubleClickStore.setSetting("shiftDoubleClickAction", e),
       options: actionOptions
     }
-  )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Ctrl/Cmd + Double-Click"), /* @__PURE__ */ BdApi.React.createElement(
-    Selectable,
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "ctrlAction", name: "Ctrl/Cmd + Double-Click", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.DropdownInput,
     {
       value: ctrlAction,
-      onSelectionChange: (e) => MoreDoubleClickStore.setSetting("ctrlDoubleClickAction", e),
+      onChange: (e) => MoreDoubleClickStore.setSetting("ctrlDoubleClickAction", e),
       options: actionOptions
     }
-  )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "DEL + Double-Click"), /* @__PURE__ */ BdApi.React.createElement(
-    Selectable,
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "delAction", name: "DEL + Double-Click", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.DropdownInput,
     {
       value: delAction,
-      onSelectionChange: (e) => MoreDoubleClickStore.setSetting("delDoubleClickAction", e),
+      onChange: (e) => MoreDoubleClickStore.setSetting("delDoubleClickAction", e),
       options: actionOptions
     }
-  )), /* @__PURE__ */ BdApi.React.createElement("h3", { style: { marginTop: "20px", marginBottom: "10px" } }, "Reaction Settings"), /* @__PURE__ */ BdApi.React.createElement(
-    SwitchItem,
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "shouldBurst", name: "Use Burst Reaction", note: "Enable burst/super reactions", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.SwitchInput,
     {
-      onChange: (v) => MoreDoubleClickStore.setSetting("shouldEmojiBurst", v),
-      title: "Enable burst/super reactions",
-      note: "Use Burst Reaction",
-      value: shouldBurst
+      value: shouldBurst,
+      onChange: (v) => MoreDoubleClickStore.setSetting("shouldEmojiBurst", v)
     }
-  ), /* @__PURE__ */ BdApi.React.createElement(
-    SwitchItem,
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "textOverride", name: "Allow double click on text", note: "Allows double clicks to trigger when double clicking/selecting text.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.SwitchInput,
     {
-      onChange: (v) => MoreDoubleClickStore.setSetting("textOverride", v),
-      title: "Allow double click on text",
-      note: "Allows double clicks to trigger when double clicking/selecting text.",
-      value: textOverride
+      value: textOverride,
+      onChange: (v) => MoreDoubleClickStore.setSetting("textOverride", v)
     }
-  ), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "10px", marginTop: "10px", marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontWeight: "bold" } }, "Currently Selected Emoji:"), emoji?.isGuildEmoji ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "10px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "5px", fontWeight: "bold" } }, "Select Guild for Emojis"), /* @__PURE__ */ BdApi.React.createElement(
-    Selectable,
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "selectedEmoji", name: "Currently Selected Emoji", inline: true }, emoji?.isGuildEmoji ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "selectedGuild", name: "Select Guild for Emojis", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+    Components.DropdownInput,
     {
-      onSelectionChange: (e) => {
-        MoreDoubleClickStore.setSetting("selectedGuildForReaction", e);
-      },
       value: GuildStore.getGuild(guild)?.id,
+      onChange: (e) => MoreDoubleClickStore.setSetting("selectedGuildForReaction", e),
       options: guildMapping
     }
-  )), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginTop: "15px" } }, /* @__PURE__ */ BdApi.React.createElement("label", { style: { display: "block", marginBottom: "10px", fontWeight: "bold" } }, "Select Emoji"), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))", gap: "5px" } }, guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild)).map((x) => {
-    return x?.id ? /* @__PURE__ */ BdApi.React.createElement(
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "emojiGrid", name: "Select Emoji" }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))", gap: "5px", marginTop: "10px" } }, guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild) ?? {}).filter((x) => x?.id).map(
+    (x) => /* @__PURE__ */ BdApi.React.createElement(
       "img",
       {
         key: x.id,
@@ -250,17 +242,9 @@ function SettingsPanel() {
         style: { width: "40px", height: "40px", cursor: "pointer", borderRadius: "4px" },
         title: x.name
       }
-    ) : /* @__PURE__ */ BdApi.React.createElement(
-      "span",
-      {
-        key: x.name,
-        onClick: () => setNewEmoji(x),
-        style: { fontSize: "40px", cursor: "pointer", textAlign: "center" }
-      },
-      x.name
-    );
-  }) : Object.values(EmojiPack()).map((x) => {
-    return /* @__PURE__ */ BdApi.React.createElement(
+    )
+  ) : Object.values(EmojiPack()).map(
+    (x) => /* @__PURE__ */ BdApi.React.createElement(
       "div",
       {
         key: String(x.names).split(" ").join(", "),
@@ -268,8 +252,8 @@ function SettingsPanel() {
         style: { width: "40px", height: "40px", fontSize: "40px", cursor: "pointer", textAlign: "center" }
       },
       x.surrogates
-    );
-  }))));
+    )
+  ))));
 }
 var MoreDoubleClicks = class {
   load() {
