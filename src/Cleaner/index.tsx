@@ -1,6 +1,7 @@
 /**
  * @name Cleaner
  * @author kaan
+ * @description Clean URLs automatically every time you send a message.
  * @version 1.0.0
  */
 
