@@ -2,12 +2,12 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.1
+ * @version 2.0.2
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components
-const SelectableSearch = Webpack.getByStrings('hideTags','wrapTags','maxOptionsVisible',{searchExports:true})
+const SelectableSearch = Webpack.getModule(Webpack.Filters.combine(Webpack.Filters.byStrings('.A.modules.select.MAX_WIDTH),'), Webpack.Filters.not(Webpack.Filters.byStrings("combobox"))),{searchExports:true})
 const Textarea = Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
 const AboutMe = Webpack.getModule(x => x.A.toString().includes('disableInteractions'))
 const MessageActions = Webpack.getByKeys('_sendMessage')
@@ -259,7 +259,7 @@ function DomainCard({ domainObj, onChange }: { domainObj: { type: string; replac
                             if (index !== -1) setDefault(index)
                         }}
                         options={replacementsToSelectable(linkObject)}
-                        value={replacementsToSelectable(linkObject)[linkObject?.selected]}
+                        value={replacementsToSelectable(linkObject)[linkObject?.selected].value}
                         isDisabled={replacements.length === 0}
                     />
                 </div>

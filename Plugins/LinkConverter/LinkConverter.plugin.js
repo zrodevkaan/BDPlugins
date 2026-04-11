@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.1
+ * @version 2.0.2
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkConverter/LinkConverter.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -34,7 +34,7 @@ module.exports = __toCommonJS(index_exports);
 var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter");
 var { useState } = React;
 var { Button, ColorInput, SwitchInput } = Components;
-var SelectableSearch = Webpack.getByStrings("hideTags", "wrapTags", "maxOptionsVisible", { searchExports: true });
+var SelectableSearch = Webpack.getModule(Webpack.Filters.combine(Webpack.Filters.byStrings(".A.modules.select.MAX_WIDTH),"), Webpack.Filters.not(Webpack.Filters.byStrings("combobox"))), { searchExports: true });
 var Textarea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
 var AboutMe = Webpack.getModule((x) => x.A.toString().includes("disableInteractions"));
 var MessageActions = Webpack.getByKeys("_sendMessage");
@@ -264,7 +264,7 @@ function DomainCard({ domainObj, onChange }) {
         if (index !== -1) setDefault(index);
       },
       options: replacementsToSelectable(linkObject),
-      value: replacementsToSelectable(linkObject)[linkObject?.selected],
+      value: replacementsToSelectable(linkObject)[linkObject?.selected].value,
       isDisabled: replacements.length === 0
     }
   )), editing && /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 8 }, className: "discor-moment" }, /* @__PURE__ */ BdApi.React.createElement(
