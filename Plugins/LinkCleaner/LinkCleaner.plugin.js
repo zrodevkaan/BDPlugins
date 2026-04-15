@@ -2,7 +2,7 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.0
+ * @version 1.0.1
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkCleaner/LinkCleaner.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -36,29 +36,46 @@ var MessageActions = Webpack.getByKeys("sendMessage");
 var CleanStore = new class CleanStore2 extends Utils.Store {
   rules = null;
   async init() {
-    const res = await Net.fetch("https://rules2.clearurls.xyz/data.minify.json");
-    this.rules = (await res.json()).providers;
+    try {
+      const res = await Net.fetch("https://rules2.clearurls.xyz/data.minify.json");
+      this.rules = (await res.json()).providers;
+    } catch (e) {
+      console.error("[LinkCleaner] Failed to fetch rules:", e);
+    }
   }
   cleanURL(url) {
+    if (!this.rules) return url;
+    url = url.replace(/\?([^?]*)\?/, "?$1&");
+    if (!url.includes("?") && url.includes("&")) {
+      url = url.replace("&", "?");
+    }
+    url = url.replace(/(youtu\.be\/[^?&]+)&/, "$1?");
     let parsed;
     try {
       parsed = new URL(url);
     } catch {
       return url;
     }
-    for (const provider of Object.values(this.rules)) {
-      if (!new RegExp(provider.urlPattern, "i").test(url)) continue;
-      if (provider.exceptions?.some((e) => new RegExp(e, "i").test(url))) continue;
+    let href = parsed.toString();
+    const providers = Object.values(this.rules);
+    const matching = providers.filter(
+      (p) => new RegExp(p.urlPattern, "i").test(url) && !p.exceptions?.some((e) => new RegExp(e, "i").test(url))
+    );
+    matching.sort((a, b) => b.urlPattern.length - a.urlPattern.length);
+    for (const provider of matching) {
+      const rules = Array.isArray(provider.rules) ? provider.rules : Object.values(provider.rules ?? {});
+      const rawRules = Array.isArray(provider.rawRules) ? provider.rawRules : Object.values(provider.rawRules ?? {});
       for (const [key] of [...parsed.searchParams]) {
-        if (provider.rules?.some((r) => new RegExp(r, "i").test(key)))
+        if (rules.some((r) => new RegExp(r, "i").test(key))) {
           parsed.searchParams.delete(key);
+        }
       }
-      let href = parsed.toString();
-      for (const raw of provider.rawRules ?? [])
+      href = parsed.toString();
+      for (const raw of rawRules) {
         href = href.replace(new RegExp(raw, "i"), "");
-      return href;
+      }
     }
-    return parsed.toString();
+    return href;
   }
 }();
 var Cleaner = class {
