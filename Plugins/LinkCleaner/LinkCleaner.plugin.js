@@ -2,7 +2,7 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.1
+ * @version 1.0.2
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkCleaner/LinkCleaner.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -31,16 +31,16 @@ __export(index_exports, {
   default: () => Cleaner
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, Utils, Net } = new BdApi("LinkCleaner");
+var { Webpack, Patcher, Utils, Net, Logger } = new BdApi("LinkCleaner");
 var MessageActions = Webpack.getByKeys("sendMessage");
 var CleanStore = new class CleanStore2 extends Utils.Store {
-  rules = null;
+  rules = [];
   async init() {
     try {
       const res = await Net.fetch("https://rules2.clearurls.xyz/data.minify.json");
-      this.rules = (await res.json()).providers;
+      this.rules = (await res.json()).providers ?? ["deez-nuts"];
     } catch (e) {
-      console.error("[LinkCleaner] Failed to fetch rules:", e);
+      Logger.warn("[LinkCleaner] Failed to fetch rules:", e);
     }
   }
   cleanURL(url) {

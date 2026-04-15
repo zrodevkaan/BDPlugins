@@ -2,21 +2,21 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.1
+ * @version 1.0.2
  */
 
-const { Webpack, Patcher, Utils, Net } = new BdApi("LinkCleaner")
+const { Webpack, Patcher, Utils, Net, Logger } = new BdApi("LinkCleaner")
 const MessageActions = Webpack.getByKeys("sendMessage")
 
 const CleanStore = new class CleanStore extends Utils.Store {
-    private rules: any = null;
+    private rules: any = [];
 
     async init() {
         try {
             const res = await Net.fetch("https://rules2.clearurls.xyz/data.minify.json")
-            this.rules = (await res.json()).providers;
+            this.rules = (await res.json()).providers ?? ["deez-nuts"];
         } catch (e) {
-            console.error("[LinkCleaner] Failed to fetch rules:", e);
+            Logger.warn("[LinkCleaner] Failed to fetch rules:", e);
         }
     }
 
