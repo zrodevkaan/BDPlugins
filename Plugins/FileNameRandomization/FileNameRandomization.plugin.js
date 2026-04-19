@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 2.0.0
+ * @version 2.0.1
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/FileNameRandomization/FileNameRandomization.plugin.js 
  * @invite t3zMgv7Nvb
@@ -33,7 +33,7 @@ var FormItem = styled.div({
 });
 var FormSwitch = Webpack.getModule(Webpack.Filters.byStrings(`return"tooltipText"`));
 var TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountFullPadding"), { searchExports: true });
-var SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings("SearchableSelect", "fieldProps"), { searchExports: true });
+var SearchableSelect = Webpack.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
 var { useState } = React2;
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
 var Margins = Webpack.getMangled("marginBottom40_", {

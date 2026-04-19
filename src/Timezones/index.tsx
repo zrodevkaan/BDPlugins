@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.6
+ * @version 2.0.7
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
@@ -12,7 +12,7 @@ const { Patcher, Webpack, Data, Utils, Hooks, ContextMenu, Components, React } =
 const Banner_3 = Webpack.getBySource(".unsafe_rawColors.PRIMARY_800).hex(),") // displayProfile, canAnimate: pendingBanner
 const ModalUtils = Webpack.getByKeys("openModal")
 const Modal = Webpack.getByKeys("Modal").Modal
-const SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings('SearchableSelect', 'fieldProps'), { searchExports: true })
+const SearchableSelect = Webpack.getByStrings('horizontalControlColumnWidth:`min($',{searchExports:true})
 const MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
 const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true })
 
