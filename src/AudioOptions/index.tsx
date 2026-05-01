@@ -1,15 +1,16 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.1
  * @description Adds an option button next to voice messages.
  */
+import {getKey} from "../Helpers";
 
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils} = new BdApi('AudioOptions')
 
 const IconBase = Webpack.getModule(x => x.Icon)
-const VoiceMessagePlayer = Webpack.getBySource('.Ay.getPlaybackRate(', { searchDefault: false })
-
+const VoiceMessagePlayer = getKey(Webpack.getBySource("MEDIA_PLAYBACK_POSITION_UPDATE",{raw:true}).declarations, x => String(x.type).includes('.Ay.getPlaybackRate('))
+console.log(VoiceMessagePlayer)
 const PathIcon = () => {
     return React.createElement(
         'svg',
@@ -63,7 +64,7 @@ class AudioOptions {
     }
 
     patchAudioPlayer() {
-        Patcher.after(VoiceMessagePlayer.A, 'type', (_, [props], res) => {
+        Patcher.after(VoiceMessagePlayer.module[VoiceMessagePlayer.key], 'type', (_, [props], res) => {
             res.props.children.push(<AudioButton showOptionsMenu={this.showOptionsMenu.bind(this, props)}/>);
         })
     }

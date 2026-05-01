@@ -8,12 +8,35 @@
  */
 "use strict";
 
+// src/Helpers/index.tsx
+var { React, ContextMenu } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p, receiver) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+function getKey(module2, fn) {
+  for (var key in module2) {
+    if (fn(module2[key])) {
+      return { key, module: module2 };
+    }
+  }
+}
+
 // src/AudioOptions/index.tsx
-var { Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils } = new BdApi("AudioOptions");
+var { Patcher, React: React2, Webpack, DOM, ContextMenu: ContextMenu2, UI, Net, Utils } = new BdApi("AudioOptions");
 var IconBase = Webpack.getModule((x) => x.Icon);
-var VoiceMessagePlayer = Webpack.getBySource(".Ay.getPlaybackRate(", { searchDefault: false });
+var VoiceMessagePlayer = getKey(Webpack.getBySource("MEDIA_PLAYBACK_POSITION_UPDATE", { raw: true }).declarations, (x) => String(x.type).includes(".Ay.getPlaybackRate("));
+console.log(VoiceMessagePlayer);
 var PathIcon = () => {
-  return React.createElement(
+  return React2.createElement(
     "svg",
     {
       viewBox: "0 0 24 24",
@@ -21,7 +44,7 @@ var PathIcon = () => {
       height: 24,
       fill: "var(--interactive-icon-default)"
     },
-    React.createElement("path", {
+    React2.createElement("path", {
       d: "M4 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10-2a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm8 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"
     })
   );
@@ -60,7 +83,8 @@ var AudioOptions = class {
     this.patchAudioPlayer();
   }
   patchAudioPlayer() {
-    Patcher.after(VoiceMessagePlayer.A, "type", (_, [props], res) => {
+    Patcher.after(VoiceMessagePlayer.module[VoiceMessagePlayer.key], "type", (_, [props], res) => {
+      console.log(res);
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(AudioButton, { showOptionsMenu: this.showOptionsMenu.bind(this, props) }));
     });
   }
@@ -93,7 +117,7 @@ var AudioOptions = class {
         }
       });
     }
-    ContextMenu.open(e, ContextMenu.buildMenu(menuItems));
+    ContextMenu2.open(e, ContextMenu2.buildMenu(menuItems));
   }
   downloadAudio(url, filename) {
     createDownloadLink(url, filename);
