@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.0
+ * @version 2.1.1
  * @description Typing status per user on servers, channels or threads.
  */
 
@@ -77,13 +77,13 @@ const {
 
 /* when will Webpack.Stores be merged.... :( */
 
-const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.A?.render).includes('.charCode===') && String(x.A?.render).includes("onKeyPress")}, {
+const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.A?.render).includes('.button||(') && String(x.A?.render).includes(".metaKey||")}, {
     filter: Filters.byStrings("Unsupported animation config:"),
     searchExports: true
 }, {filter: Filters.byStrings("useStateFromStores"), searchExports: true})
 
 const Spinner = Components.Spinner
-const scrollersModule = Webpack.getById(599319,{raw:true})
+const scrollersModule = Webpack.getBySource(/disableFocusRingScope:.{1,2}=!1/) //Webpack.getById(475825,{raw:true}) // 689175
 const RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers")
 
 // const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip'), {raw: true}).exports

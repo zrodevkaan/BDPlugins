@@ -87,3 +87,11 @@ export const ContextMenuHelper = <T extends Props["navId"]>(patches: Patches<T>[
         unpatches.forEach(unpatch => unpatch())
     }
 }
+
+export function getKey(module2, fn) {
+    for (var key in module2) {
+        if (fn(module2[key])) {
+            return { key, module: module2 };
+        }
+    }
+}

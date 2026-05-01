@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.0
+ * @version 2.1.1
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js 
@@ -68,12 +68,12 @@ var {
   "ChannelStore",
   "UserGuildSettingsStore"
 ]);
-var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.A?.render).includes(".charCode===") && String(x.A?.render).includes("onKeyPress") }, {
+var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.A?.render).includes(".button||(") && String(x.A?.render).includes(".metaKey||") }, {
   filter: Filters.byStrings("Unsupported animation config:"),
   searchExports: true
 }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
 var Spinner = Components.Spinner;
-var scrollersModule = Webpack.getById(599319, { raw: true });
+var scrollersModule = Webpack.getBySource(/disableFocusRingScope:.{1,2}=!1/);
 var RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers");
 var GuildObject = getByStrings(".guildbar.AVATAR_SIZE", "backgroundStyle", {
   searchExports: true,

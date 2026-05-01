@@ -31,48 +31,45 @@ __export(index_exports, {
   default: () => index_default
 });
 module.exports = __toCommonJS(index_exports);
-var { Patcher, Webpack, React, DOM, Data } = new BdApi("VoiceHub");
+
+// src/Helpers/index.tsx
+var { React, ContextMenu } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p, receiver) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+
+// src/VoiceHub/index.tsx
+var { Patcher, Webpack, React: React2, DOM, Data, Components, Hooks } = new BdApi("VoiceHub");
+var { Tooltip } = Components;
 var Module = Webpack.getBySource(".A.CONTACTS_LIST");
 var [VoiceIcon, ModalRoot, openModal, SearchIcon, VideoIcon, LiveStream] = BdApi.Webpack.getBulk(
-  { filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'), searchExports: true },
+  {
+    filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'),
+    searchExports: true
+  },
   { filter: BdApi.Webpack.Filters.byStrings('.ImpressionTypes.MODAL,"aria-labelledby":'), searchExports: true },
-  { filter: BdApi.Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "instant", "backdropStyle"), searchExports: true },
-  { filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'), searchExports: true },
-  { filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'), searchExports: true },
+  {
+    filter: BdApi.Webpack.Filters.byStrings("onCloseRequest", "onCloseCallback", "instant", "backdropStyle"),
+    searchExports: true
+  },
+  {
+    filter: BdApi.Webpack.Filters.byStrings('"M15.62 17.03a9 9 0 1 1 1.41-1.41l4.68 4.67a1 1 0 0 1-1.42 1.42l-4.67-4.68ZM17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z'),
+    searchExports: true
+  },
+  {
+    filter: BdApi.Webpack.Filters.byStrings('"M4 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h11a3 3 0 0 0 3-3v-2.12a1 1 0'),
+    searchExports: true
+  },
   { filter: BdApi.Webpack.Filters.byStrings("dI3q4h", "disableColor"), searchExports: true }
-);
-var Eye = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
-  "svg",
-  {
-    viewBox: "0 0 24 24",
-    width: width ?? "24px",
-    height: height ?? "24px",
-    color: "color-mix(in oklab, hsl(0 0% 100%/1) 100%, #000 0%)"
-  },
-  /* @__PURE__ */ BdApi.React.createElement(
-    "path",
-    {
-      fill: "color-mix(in oklab, hsl(0 0% 100%/1) 100%, #000 0%)",
-      d: "M12 5C5.648 5 1 12 1 12C1 12 5.648 19 12 19C18.352 19 23 12 23 12C23 12 18.352 5 12 5ZM12 16C9.791 16 8 14.21 8 12C8 9.79 9.791 8 12 8C14.209 8 16 9.79 16 12C16 14.21 14.209 16 12 16Z M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z"
-    }
-  )
-);
-var EyeClose = ({ width, height }) => /* @__PURE__ */ BdApi.React.createElement(
-  "svg",
-  {
-    xmlns: "http://www.w3.org/2000/svg",
-    viewBox: "0 89.9801 1200 1020",
-    color: "color-mix(in oklab, hsl(0 0% 100%/1) 100%, #000 0%)",
-    width: width ?? "24px",
-    height: height ?? "24px"
-  },
-  /* @__PURE__ */ BdApi.React.createElement(
-    "path",
-    {
-      d: "M669.727,273.516c-22.891-2.476-46.15-3.895-69.727-4.248c-103.025,0.457-209.823,25.517-310.913,73.536  c-75.058,37.122-148.173,89.529-211.67,154.174C46.232,529.978,6.431,577.76,0,628.74c0.76,44.162,48.153,98.67,77.417,131.764  c59.543,62.106,130.754,113.013,211.67,154.174c2.75,1.335,5.51,2.654,8.276,3.955l-75.072,131.102l102.005,60.286l551.416-960.033  l-98.186-60.008L669.727,273.516z M902.563,338.995l-74.927,129.857c34.47,44.782,54.932,100.006,54.932,159.888  c0,149.257-126.522,270.264-282.642,270.264c-6.749,0-13.29-0.728-19.922-1.172l-49.585,85.84c22.868,2.449,45.99,4.233,69.58,4.541  c103.123-0.463,209.861-25.812,310.84-73.535c75.058-37.122,148.246-89.529,211.743-154.174  c31.186-32.999,70.985-80.782,77.417-131.764c-0.76-44.161-48.153-98.669-77.417-131.763  c-59.543-62.106-130.827-113.013-211.743-154.175C908.108,341.478,905.312,340.287,902.563,338.995L902.563,338.995z   M599.927,358.478c6.846,0,13.638,0.274,20.361,0.732l-58.081,100.561c-81.514,16.526-142.676,85.88-142.676,168.897  c0,20.854,3.841,40.819,10.913,59.325c0.008,0.021-0.008,0.053,0,0.074l-58.228,100.854  c-34.551-44.823-54.932-100.229-54.932-160.182C317.285,479.484,443.808,358.477,599.927,358.478L599.927,358.478z M768.896,570.513  L638.013,797.271c81.076-16.837,141.797-85.875,141.797-168.603C779.81,608.194,775.724,588.729,768.896,570.513L768.896,570.513z",
-      fill: "color-mix(in oklab, hsl(0 0% 100%/1) 100%, #000 0%)"
-    }
-  )
 );
 var DataStore = new Proxy(
   {},
@@ -99,272 +96,274 @@ var UserStore = Webpack.getStore("UserStore");
 var VoiceModule = Webpack.getModule((x) => x.A?.handleVoiceConnect?.toString?.().includes?.("async"));
 var UserModal = Webpack.getByKeys("openUserProfileModal");
 var UserContextMenu = Webpack.getByStrings(".isGroupDM()", { searchExports: true });
-var getAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
-var clsx = (...args) => [...args].join(" ");
-var SearchBar = ({ value, onChange }) => {
-  return /* @__PURE__ */ BdApi.React.createElement("div", { style: { position: "relative", marginBottom: "12px" } }, /* @__PURE__ */ BdApi.React.createElement(
-    "input",
-    {
-      className: clsx(InputModule.input),
-      style: { width: "95%" },
-      type: "text",
-      value,
-      onChange: (e) => onChange(e.target.value),
-      placeholder: "Search servers, channels, or users..."
-    }
-  ));
+var Trailing = n(71855);
+var Clickable = n(189252).A;
+var Modal = Webpack.getByKeys("Modal").Modal;
+var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true }).exports.Y;
+function ForceUpdateRoot() {
+  arven.Common.FluxDispatcher.dispatch({ type: "DOMAIN_MIGRATION_START" });
+  requestIdleCallback(() => arven.Common.FluxDispatcher.dispatch({ type: "DOMAIN_MIGRATION_SKIP" }));
+}
+var VoiceHubContainer = styled.div({
+  backgroundColor: "var(--background-base-lowest)",
+  width: "310px",
+  borderRadius: "8px",
+  border: "gray",
+  borderStyle: "solid",
+  borderWidth: "1px",
+  overflow: "hidden",
+  maxHeight: "600px",
+  display: "flex",
+  flexDirection: "column"
+});
+var VoiceHubHeaderContainer = styled.div({
+  color: "var(--text-default)",
+  borderBottom: "1px solid gray",
+  alignItems: "center",
+  padding: "12px 16px",
+  gap: "8px",
+  display: "flex",
+  width: "100%",
+  boxSizing: "border-box",
+  flexShrink: 0
+});
+var VoiceHubHeaderTitle = styled.span({
+  color: "var(--text-default)",
+  fontSize: "16px",
+  fontWeight: "600",
+  lineHeight: "20px"
+});
+var ScrollContainer = styled.div({
+  overflowY: "auto",
+  flex: 1,
+  padding: "8px 0px"
+});
+var SectionHeader = styled.div({
+  display: "flex",
+  alignItems: "center",
+  gap: "4px",
+  padding: "6px 16px 4px",
+  cursor: "pointer",
+  userSelect: "none"
+});
+var SectionHeaderText = styled.span({
+  color: "var(--text-muted",
+  fontSize: "12px",
+  fontWeight: "700",
+  textTransform: "uppercase",
+  letterSpacing: "0.02em"
+});
+var ChevronIcon = styled.span({
+  color: "var(--text-muted)",
+  fontSize: "10px",
+  display: "flex",
+  alignItems: "center"
+});
+var GuildEntry = styled.div({
+  paddingBottom: "4px"
+});
+var GuildRow = styled.div({
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  padding: "6px 16px",
+  cursor: "pointer"
+});
+var GuildIcon = styled.img({
+  borderRadius: "25%",
+  width: "24px",
+  height: "24px",
+  flexShrink: 0
+});
+var GuildName = styled.span({
+  color: "var(--text-default)",
+  fontSize: "14px",
+  fontWeight: "600"
+});
+var ChannelRow = styled.div({
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  padding: "1px 16px 1px 50px",
+  cursor: "pointer"
+});
+var ChannelName = styled.span({
+  color: "var(--text-muted)",
+  fontSize: "13px"
+});
+var UserRow = styled.div({
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "3px 16px 3px 50px",
+  cursor: "pointer",
+  borderRadius: "4px",
+  margin: "0 4px",
+  boxSizing: "border-box"
+});
+var UserAvatar = styled.img({
+  width: "24px",
+  height: "24px",
+  borderRadius: "50%",
+  flexShrink: 0
+});
+var UserName = styled.span({
+  color: "var(--text-default)",
+  fontSize: "14px",
+  flex: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap"
+});
+var StatusIcons = styled.div({
+  display: "flex",
+  alignItems: "center",
+  gap: "4px",
+  marginLeft: "auto",
+  flexShrink: 0
+});
+var getAvatarUrl = (user, member, guildId) => {
+  if (member?.avatar && guildId) {
+    return `https://cdn.discordapp.com/guilds/${guildId}/users/${user.id}/avatars/${member.avatar}.png?size=64`;
+  }
+  if (user?.avatar) {
+    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
+  }
+  const index = Number(BigInt(user.id) >> 22n) % 6;
+  return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
 };
-var CustomVoiceChannel = ({ channel, voiceStates, guild }) => {
-  const users = Object.entries(voiceStates).filter(([_, state]) => state.channelId === channel.id).map(([userId]) => UserStore.getUser(userId));
-  const handleChannelClick = () => {
-    VoiceModule.A.handleVoiceConnect({
-      channel,
-      connected: false,
-      needSubscriptionToAccess: false,
-      locked: false
-    });
+var getGuildIconUrl = (guild) => {
+  if (guild?.icon) {
+    return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=64`;
+  }
+  const index = Number(BigInt(guild.id) >> 22n) % 6;
+  return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+};
+var Chevron = ({ collapsed }) => /* @__PURE__ */ BdApi.React.createElement(
+  "svg",
+  {
+    width: "12",
+    height: "12",
+    viewBox: "0 0 24 24",
+    fill: "currentColor",
+    style: {
+      transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
+      transition: "transform 0.15s ease",
+      color: "var(--channels-default)"
+    }
+  },
+  /* @__PURE__ */ BdApi.React.createElement("path", { d: "M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" })
+);
+var GuildSection = ({ guild, voiceStates }) => {
+  const [collapsed, setCollapsed] = React2.useState(false);
+  const activeChannels = [...new Set(Object.values(voiceStates).map((s) => s.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
+  const handleUserClick = (e, user) => {
+    e.stopPropagation();
+    if (e.shiftKey) {
+      UserModal.openUserProfileModal({ userId: user.id, guildId: guild.id });
+    } else {
+      const dummyChannel = {
+        isGroupDM() {
+          return false;
+        },
+        isDM() {
+          return false;
+        },
+        guild_id: null
+      };
+      UserContextMenu(e, user, dummyChannel);
+    }
   };
-  const handleUserClick = (event, user) => {
-    const dummyChannel = {
-      isGroupDM() {
-        return false;
-      },
-      isDM() {
-        return false;
-      },
-      guild_id: null
-    };
-    UserContextMenu(event, user, dummyChannel);
-  };
-  return /* @__PURE__ */ BdApi.React.createElement(
-    "div",
-    {
-      className: "voice-channel",
-      onClick: handleChannelClick,
-      style: {
-        padding: "6px 8px",
-        marginBottom: "2px",
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-        gap: "4px",
-        borderLeft: "2px solid var(--border-subtle)",
-        transition: "background-color 0.2s ease",
-        ":hover": {
-          backgroundColor: "var(--background-modifier-hover)"
-        }
-      }
-    },
-    /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "6px" } }, /* @__PURE__ */ BdApi.React.createElement(
-      VoiceIcon,
-      {
-        width: "14",
-        height: "14",
-        color: "var(--interactive-icon-default)"
-      }
-    ), /* @__PURE__ */ BdApi.React.createElement("span", { style: {
-      color: "var(--text-default)",
-      fontSize: "13px",
-      fontWeight: "500"
-    } }, channel.name)),
-    /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: "4px",
-      paddingLeft: "20px"
-    } }, users.map((user) => {
-      const member = guild?.id ? Webpack.Stores.GuildMemberStore.getMember(guild.id, user.id) : null;
-      const directUser = member?.avatar ? member : user;
-      console.log(voiceStates, voiceStates?.[user?.id]);
-      const userState = voiceStates?.[user?.id] || { selfVideo: false, selfStream: false };
+  return /* @__PURE__ */ BdApi.React.createElement(GuildEntry, null, /* @__PURE__ */ BdApi.React.createElement(GuildRow, { onClick: () => setCollapsed((c) => !c) }, /* @__PURE__ */ BdApi.React.createElement(GuildIcon, { src: getGuildIconUrl(guild) }), /* @__PURE__ */ BdApi.React.createElement(GuildName, null, guild.name), /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginLeft: "auto" } }, /* @__PURE__ */ BdApi.React.createElement(Chevron, { collapsed }))), !collapsed && activeChannels.map((channel) => {
+    const usersInChannel = Object.entries(voiceStates).filter(([_, state]) => state.channelId === channel.id).map(([userId]) => UserStore.getUser(userId)).filter(Boolean);
+    return /* @__PURE__ */ BdApi.React.createElement("div", { key: channel.id }, /* @__PURE__ */ BdApi.React.createElement(ChannelRow, null, /* @__PURE__ */ BdApi.React.createElement(VoiceIcon, { width: "14", height: "14" }), /* @__PURE__ */ BdApi.React.createElement(ChannelName, null, channel.name)), usersInChannel.map((user) => {
+      const member = guild?.id ? GuildMemberStore.getMember(guild.id, user.id) : null;
+      const userState = voiceStates?.[user?.id] || {};
       return /* @__PURE__ */ BdApi.React.createElement(
-        "div",
+        UserRow,
         {
           key: user.id,
-          onClick: (e) => {
-            e.stopPropagation();
-            if (e.shiftKey) {
-              UserModal.openUserProfileModal({
-                userId: user.id,
-                channelId: channel.id,
-                guildId: guild.id
-              });
-            } else {
-              handleUserClick(e, user);
-            }
-          },
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            padding: "2px 6px",
-            borderRadius: "3px",
-            backgroundColor: "var(--background-base-lower)",
-            transition: "background-color 0.2s ease",
-            ":hover": {
-              backgroundColor: "var(--background-modifier-active)"
-            }
-          }
+          onClick: (e) => handleUserClick(e, user)
         },
-        /* @__PURE__ */ BdApi.React.createElement(
-          "img",
+        /* @__PURE__ */ BdApi.React.createElement(UserAvatar, { src: getAvatarUrl(user, member, guild.id) }),
+        /* @__PURE__ */ BdApi.React.createElement(UserName, null, user.globalName ?? user.username),
+        /* @__PURE__ */ BdApi.React.createElement(StatusIcons, null, userState.selfMute && /* @__PURE__ */ BdApi.React.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "var(--youtube)" }, /* @__PURE__ */ BdApi.React.createElement(
+          "path",
           {
-            src: directUser?.joinedAt && directUser?.avatar ? `https://cdn.discordapp.com/guilds/${guild.id}/users/${directUser.userId}/avatars/${directUser.avatar}.png` : directUser?.avatar ? `https://cdn.discordapp.com/avatars/${directUser?.id}/${directUser?.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${getAvatar(directUser.id)}.png`,
-            style: {
-              width: "20px",
-              height: "20px",
-              borderRadius: "50%"
-            }
+            d: "M6.7 11H5C5 14.31 7.39 17.07 10.5 17.5V20H13.5V17.5C13.96 17.44 14.4 17.32 14.82 17.16L6.7 11ZM19 11H17.3L12 7.07V5C12 3.9 11.1 3 10 3S8 3.9 8 5V7.18L19 16.44V11ZM3.27 2L2 3.27L10 9.41V11C10 12.1 10.9 13 12 13C12.16 13 12.31 12.97 12.46 12.94L14.12 14.24C13.47 14.7 12.77 15 12 15C9.79 15 8 13.21 8 11H6C6 14.31 8.39 17.07 11.5 17.5V20H14.5V17.5C15.45 17.28 16.3 16.81 17 16.17L20.73 19.27L22 18L3.27 2Z"
           }
-        ),
-        /* @__PURE__ */ BdApi.React.createElement("span", { style: {
-          color: "var(--interactive-icon-default)",
-          fontSize: "13px"
-        } }, user.username),
-        userState.selfVideo && /* @__PURE__ */ BdApi.React.createElement(VideoIcon, null),
-        userState.selfStream && /* @__PURE__ */ BdApi.React.createElement(LiveStream, null)
+        )), userState.selfDeaf && /* @__PURE__ */ BdApi.React.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "var(--youtube)" }, /* @__PURE__ */ BdApi.React.createElement(
+          "path",
+          {
+            d: "M12 1C8.14 1 5 4.14 5 8V15C5 18.86 8.14 22 12 22C15.86 22 19 18.86 19 15V8C19 4.14 15.86 1 12 1ZM17 15C17 17.76 14.76 20 12 20C9.24 20 7 17.76 7 15V8C7 5.24 9.24 3 12 3C14.76 3 17 5.24 17 8V15Z"
+          }
+        )), userState.selfVideo && /* @__PURE__ */ BdApi.React.createElement(VideoIcon, { width: "14", height: "14" }), userState.selfStream && /* @__PURE__ */ BdApi.React.createElement(LiveStream, { width: "14", height: "14" }))
       );
-    }))
-  );
+    }));
+  }));
 };
-var VoiceChannelList = () => {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [filterType, setFilterType] = React.useState("all");
-  const guilds = GuildStore.getGuilds();
-  const [dropped, setDropped] = React.useState(DataStore?.hiddenGuilds || []);
-  const searchLower = searchQuery.toLowerCase();
-  const filteredGuilds = Object.values(guilds).filter((guild) => {
-    const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
-    if (!Object.keys(voiceStates).length) return false;
-    const activeChannels = [...new Set(Object.values(voiceStates).map((state) => state.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
-    return guild.name.toLowerCase().includes(searchLower) || activeChannels.some((channel) => channel.name.toLowerCase().includes(searchLower)) || Object.keys(voiceStates).some((userId) => {
-      const user = UserStore.getUser(userId);
-      return user && user.username.toLowerCase().includes(searchLower);
-    });
-  });
-  const toggleDropped = (guildId) => {
-    const yue = {
-      ...dropped,
-      [guildId]: !dropped[guildId]
-    };
-    setDropped(yue);
-    DataStore.hiddenGuilds = yue;
-  };
-  return /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-    padding: "20px",
-    height: "600px",
-    display: "flex",
-    flexDirection: "column"
-  } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-    marginBottom: "16px",
+function VoiceHubPopout() {
+  const [activeNowCollapsed, setActiveNowCollapsed] = React2.useState(false);
+  const [recentsCollapsed, setRecentsCollapsed] = React2.useState(false);
+  const guildsWithVoice = Hooks.useStateFromStores(
+    [GuildStore, VoiceStateStore],
+    () => Object.values(GuildStore.getGuilds()).map((guild) => ({ guild, voiceStates: VoiceStateStore.getVoiceStates(guild.id) })).filter(({ voiceStates }) => Object.keys(voiceStates).length > 0)
+  );
+  const recentGuilds = guildsWithVoice.slice(0, 3);
+  return /* @__PURE__ */ BdApi.React.createElement(VoiceHubContainer, null, /* @__PURE__ */ BdApi.React.createElement(VoiceHubHeaderContainer, null, /* @__PURE__ */ BdApi.React.createElement(VoiceIcon, { width: "20", height: "20" }), /* @__PURE__ */ BdApi.React.createElement(VoiceHubHeaderTitle, null, "Voice Hub")), /* @__PURE__ */ BdApi.React.createElement(ScrollContainer, { className: "voice-modal-scroller" }, recentGuilds.length > 0 && /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(SectionHeader, { onClick: () => setRecentsCollapsed((c) => !c) }, /* @__PURE__ */ BdApi.React.createElement(SectionHeaderText, null, "Recents"), /* @__PURE__ */ BdApi.React.createElement(Chevron, { collapsed: recentsCollapsed })), !recentsCollapsed && recentGuilds.map(({ guild, voiceStates }) => {
+    const activeChannels = [...new Set(Object.values(voiceStates).map((s) => s.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
+    return /* @__PURE__ */ BdApi.React.createElement(GuildEntry, { key: guild.id }, /* @__PURE__ */ BdApi.React.createElement(GuildRow, null, /* @__PURE__ */ BdApi.React.createElement(GuildIcon, { src: getGuildIconUrl(guild) }), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: "1px" } }, /* @__PURE__ */ BdApi.React.createElement(GuildName, null, guild.name), activeChannels[0] && /* @__PURE__ */ BdApi.React.createElement("span", { style: {
+      color: "var(--channels-default)",
+      fontSize: "12px",
+      display: "flex",
+      alignItems: "center",
+      gap: "4px"
+    } }, /* @__PURE__ */ BdApi.React.createElement(VoiceIcon, { width: "12", height: "12" }), activeChannels[0].name))));
+  })), guildsWithVoice.length > 0 && /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(SectionHeader, { onClick: () => setActiveNowCollapsed((c) => !c) }, /* @__PURE__ */ BdApi.React.createElement(SectionHeaderText, null, "Active Now"), /* @__PURE__ */ BdApi.React.createElement(Chevron, { collapsed: activeNowCollapsed })), !activeNowCollapsed && guildsWithVoice.map(({ guild, voiceStates }) => /* @__PURE__ */ BdApi.React.createElement(GuildSection, { key: guild.id, guild, voiceStates }))), guildsWithVoice.length === 0 && /* @__PURE__ */ BdApi.React.createElement("div", { style: {
     display: "flex",
     flexDirection: "column",
-    gap: "12px"
-  } }, /* @__PURE__ */ BdApi.React.createElement(
-    SearchBar,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "32px 16px",
+    gap: "8px"
+  } }, /* @__PURE__ */ BdApi.React.createElement(VoiceIcon, { width: "32", height: "32", color: "var(--text-muted)" }), /* @__PURE__ */ BdApi.React.createElement("span", { style: { color: "var(--text-muted)", fontSize: "14px", textAlign: "center" } }, "No one is in a voice channel"))));
+}
+function VoiceHubButton() {
+  const [isOpen, setIsOpen] = React2.useState(false);
+  const ref = React2.useRef(null);
+  return /* @__PURE__ */ BdApi.React.createElement("div", { ref }, /* @__PURE__ */ BdApi.React.createElement(
+    Popout,
     {
-      value: searchQuery,
-      onChange: setSearchQuery
-    }
-  ), /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "8px" } })), /* @__PURE__ */ BdApi.React.createElement(
-    "div",
-    {
-      className: "voice-modal-scroller",
-      style: {
-        overflowY: "auto",
-        flex: 1
+      position: "bottom",
+      renderPopout: () => /* @__PURE__ */ BdApi.React.createElement(VoiceHubPopout, null),
+      targetElementRef: ref,
+      clickTrap: true,
+      offset: { x: 50, y: 0 },
+      onRequestClose: () => setIsOpen(false),
+      shouldShow: isOpen,
+      children: () => {
+        return /* @__PURE__ */ BdApi.React.createElement(Clickable, { tooltip: "VoiceHub", position: "bottom-left", onClick: () => {
+          setIsOpen((prev) => !prev);
+        }, icon: VoiceIcon });
       }
-    },
-    filteredGuilds.length <= 0 ? /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-      flex: "0 1 auto",
-      width: 433,
-      height: 232,
-      backgroundImage: "url(/assets/99ad5845cf7de1c326e2.svg)",
-      margin: "auto"
-    } }) : filteredGuilds.map((guild) => {
-      const voiceStates = VoiceStateStore.getVoiceStates(guild.id);
-      const activeChannels = [...new Set(Object.values(voiceStates).map((state) => state.channelId))].map((channelId) => ChannelStore.getChannel(channelId)).filter(Boolean);
-      return /* @__PURE__ */ BdApi.React.createElement(
-        "div",
-        {
-          key: guild.id,
-          style: { marginBottom: "24px" }
-        },
-        /* @__PURE__ */ BdApi.React.createElement(
-          "div",
-          {
-            style: { display: "flex", gap: "10px" },
-            onClick: () => toggleDropped(guild.id)
-          },
-          /* @__PURE__ */ BdApi.React.createElement(
-            "img",
-            {
-              src: guild?.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.webp?size=4096&quality=lossless` : `https://cdn.discordapp.com/embed/avatars/${getAvatar(guild.id)}.png`,
-              style: {
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%"
-              }
-            }
-          ),
-          /* @__PURE__ */ BdApi.React.createElement("h2", { style: {
-            marginBottom: "12px",
-            color: "var(--text-default)",
-            fontSize: "16px",
-            fontWeight: "600",
-            letterSpacing: "0.5px",
-            gap: "10px",
-            display: "flex",
-            alignItems: "center"
-          } }, guild.name, dropped[guild.id] ? /* @__PURE__ */ BdApi.React.createElement(EyeClose, { width: "24px", height: "24px" }) : /* @__PURE__ */ BdApi.React.createElement(Eye, { width: "24px", height: "24px" }))
-        ),
-        !dropped[guild.id] ? activeChannels.map((channel) => {
-          return channel && /* @__PURE__ */ BdApi.React.createElement(
-            CustomVoiceChannel,
-            {
-              key: channel.id,
-              channel,
-              guild,
-              voiceStates
-            }
-          );
-        }) : /* @__PURE__ */ BdApi.React.createElement("div", null)
-      );
-    })
+    }
   ));
-};
-var VoiceHubButton = Webpack.getByStrings("refresh_sm", "interactiveClassName", "innerClassName", { searchExports: true });
+}
 var VoiceHub = class {
   start() {
     DOM.addStyle(
       "voiceHub",
       `.voice-modal-scroller::-webkit-scrollbar {
-                display: none;
-            }`
+            display: none;
+        }
+        .voice-modal-scroller {
+            scrollbar-width: none;
+        }`
     );
-    Patcher.after(Module, "A", (_, __, res) => {
-      const isExisting = res.props.children.props.children.props.children.find((x) => x?.key === "voice-connect");
-      if (isExisting) return;
-      res.props.children.props.children.props.children.unshift(
-        /* @__PURE__ */ BdApi.React.createElement(
-          VoiceHubButton,
-          {
-            icon: VoiceIcon,
-            text: "Voice Hub",
-            key: "voice-connect",
-            onClick: () => {
-              openModal((modalProps) => /* @__PURE__ */ BdApi.React.createElement(
-                ModalRoot,
-                {
-                  ...modalProps,
-                  size: "medium",
-                  className: "voice-hub-modal"
-                },
-                /* @__PURE__ */ BdApi.React.createElement(VoiceChannelList, null)
-              ));
-            }
-          }
-        )
+    ForceUpdateRoot();
+    Patcher.after(Trailing, "cq", (a, b, res) => {
+      res.props.children[2].props.children.unshift(
+        /* @__PURE__ */ BdApi.React.createElement(VoiceHubButton, null)
       );
     });
   }

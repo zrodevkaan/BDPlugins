@@ -1,10 +1,11 @@
 /**
  * @name InAppNotifications
  * @author kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
  */
 import type {Message} from "discord-types/general";
+import {getKey} from "../Helpers";
 
 const {Webpack, Utils, Patcher, Hooks, React, Data, Components} = new BdApi("InAppNotifications");
 
@@ -23,16 +24,17 @@ const {
 const [
     MessageComponent,
     MessageConstructor,
-    MessageWrapper,
     Dispatcher,
     MessageActions,
 ] = Webpack.getBulk(
     {filter: Webpack.Filters.byStrings(".mention_everyone??!1"), searchExports: true},
     {filter: Webpack.Filters.byPrototypeKeys("receivePushNotification")},
-    {filter: (x: any) => String(x?.type).includes('Message must not be a thread starter message')},
     {filter: (x: any) => x?._dispatch, searchExports: true},
     {filter: Webpack.Filters.byKeys("fetchMessage", "deleteMessage")},
 );
+
+const MessageWrapperG = getKey(Webpack.getBySource("Message must not be a thread starter message",{raw:true}).declarations, x => String(x?.type).includes('Message must not be a thread starter message'))
+const MessageWrapper = MessageWrapperG.module[MessageWrapperG.key]
 
 const NavigationUtils = Webpack.getMangled("transitionTo - Transitioning to", {
     transitionTo: Webpack.Filters.byStrings("transitionTo - Transitioning to"),
@@ -684,8 +686,6 @@ export default class InAppNotifications {
         if (!message?.channel_id) return false;
         if (message?.channel_id == SelectedChannelStore.getChannelId()) return false;
         if (message.author?.id === currentUser?.id) return false;
-        if (!guildId) return true;
-
 
         if (UserGuildSettingsStore.isChannelMuted(guildId ? guildId : null, message.channel_id)) return false;
         if (UserGuildSettingsStore.isMuted(guildId)) return false;
@@ -710,6 +710,7 @@ export default class InAppNotifications {
         }
 
         if (SettingsStore.hasKeywordMatch(message)) return true;
+        if (!guildId) return true;
 
         return true;
     }
@@ -755,18 +756,20 @@ export default class InAppNotifications {
     }
 
     start() {
+        const AppMount = getKey(Webpack.getBySource('DispatcherBridge',{raw:true}).declarations, x => String(x?.type).includes('Shakeable'))
+
         BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
-        Patcher.after(Webpack.getModule(Webpack.Filters.bySource("Shakeable")).A, "type", (_: any, __: any, res: any) => {
+        Patcher.after(AppMount.module[AppMount.key], "type", (_: any, __: any, res: any) => {
             res.props.children.push(<ErrorBoundary><NotificationContainer/></ErrorBoundary>);
         });
-        Patcher.after(MessageWrapper, 'type', (a, [b], c) => {
-            const loc = Utils.findInTree(c, x => x.childrenAccessories, {walkable: ['props', 'children']})
-            if (b.__ian) loc.childrenButtons = undefined // Prevents the child buttons from the minipopover from showing on notification messages.
-            return c
-        })
+        // Patcher.after(MessageWrapper, 'type', (a, [b], c) => {
+        //     const loc = Utils.findInTree(c, x => x.childrenAccessories, {walkable: ['props', 'children']})
+        //     if (b.__ian) loc.childrenButtons = undefined // Prevents the child buttons from the minipopover from showing on notification messages.
+        //     return c
+        // })
         Dispatcher.subscribe("MESSAGE_CREATE", this.#messageHandler);
 
         ForceUpdateRoot();

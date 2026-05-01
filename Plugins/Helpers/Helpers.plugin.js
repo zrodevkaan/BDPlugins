@@ -28,6 +28,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var index_exports = {};
 __export(index_exports, {
   ContextMenuHelper: () => ContextMenuHelper,
+  getKey: () => getKey,
   styled: () => styled,
   styledBase: () => styledBase,
   variants: () => variants
@@ -72,3 +73,10 @@ var ContextMenuHelper = (patches) => {
     unpatches.forEach((unpatch) => unpatch());
   };
 };
+function getKey(module2, fn) {
+  for (var key in module2) {
+    if (fn(module2[key])) {
+      return { key, module: module2 };
+    }
+  }
+}

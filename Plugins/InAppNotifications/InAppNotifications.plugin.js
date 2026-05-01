@@ -1,7 +1,7 @@
 /**
  * @name InAppNotifications
  * @author kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/InAppNotifications/InAppNotifications.plugin.js 
  * @invite t3zMgv7Nvb
@@ -31,7 +31,31 @@ __export(index_exports, {
   default: () => InAppNotifications
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Utils, Patcher, Hooks, React, Data, Components } = new BdApi("InAppNotifications");
+
+// src/Helpers/index.tsx
+var { React, ContextMenu } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p, receiver) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+function getKey(module2, fn) {
+  for (var key in module2) {
+    if (fn(module2[key])) {
+      return { key, module: module2 };
+    }
+  }
+}
+
+// src/InAppNotifications/index.tsx
+var { Webpack, Utils, Patcher, Hooks, React: React2, Data, Components } = new BdApi("InAppNotifications");
 var {
   MessageStore,
   ChannelStore,
@@ -46,16 +70,16 @@ var {
 var [
   MessageComponent,
   MessageConstructor,
-  MessageWrapper,
   Dispatcher,
   MessageActions
 ] = Webpack.getBulk(
   { filter: Webpack.Filters.byStrings(".mention_everyone??!1"), searchExports: true },
   { filter: Webpack.Filters.byPrototypeKeys("receivePushNotification") },
-  { filter: (x) => String(x?.type).includes("Message must not be a thread starter message") },
   { filter: (x) => x?._dispatch, searchExports: true },
   { filter: Webpack.Filters.byKeys("fetchMessage", "deleteMessage") }
 );
+var MessageWrapperG = getKey(Webpack.getBySource("Message must not be a thread starter message", { raw: true }).declarations, (x) => String(x?.type).includes("Message must not be a thread starter message"));
+var MessageWrapper = MessageWrapperG.module[MessageWrapperG.key];
 var NavigationUtils = Webpack.getMangled("transitionTo - Transitioning to", {
   transitionTo: Webpack.Filters.byStrings("transitionTo - Transitioning to"),
   replace: Webpack.Filters.byStrings("Replacing route with"),
@@ -145,7 +169,7 @@ var NotificationStore = new class extends Utils.Store {
     this.emitChange();
   }
 }();
-var ErrorBoundary = class extends React.Component {
+var ErrorBoundary = class extends React2.Component {
   constructor(props) {
     super(props);
     this.state = { error: null };
@@ -273,16 +297,16 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     [MessageStore],
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
   );
-  const [getText, setText] = React.useState("");
+  const [getText, setText] = React2.useState("");
   const channel = ChannelStore.getChannel(message.channel_id);
-  const [progress, setProgress] = React.useState(100);
-  const isHoveredRef = React.useRef(false);
-  const elapsedRef = React.useRef(0);
+  const [progress, setProgress] = React2.useState(100);
+  const isHoveredRef = React2.useRef(false);
+  const elapsedRef = React2.useRef(0);
   const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId());
   if (selectedChannel == initialMessage.channel_id) {
     NotificationStore.removeMessage(message.id);
   }
-  React.useEffect(() => {
+  React2.useEffect(() => {
     const interval = setInterval(() => {
       if (isHoveredRef.current) return;
       elapsedRef.current += 50;
@@ -441,7 +465,6 @@ var InAppNotifications = class {
     if (!message?.channel_id) return false;
     if (message?.channel_id == SelectedChannelStore.getChannelId()) return false;
     if (message.author?.id === currentUser?.id) return false;
-    if (!guildId) return true;
     if (UserGuildSettingsStore.isChannelMuted(guildId ? guildId : null, message.channel_id)) return false;
     if (UserGuildSettingsStore.isMuted(guildId)) return false;
     const channelNotifLevel = UserGuildSettingsStore.getChannelMessageNotifications(guildId, message.channel_id);
@@ -458,6 +481,7 @@ var InAppNotifications = class {
       if (!mentionsMe && !mentionsEveryone && !mentionsMyRole) return false;
     }
     if (SettingsStore.hasKeywordMatch(message)) return true;
+    if (!guildId) return true;
     return true;
   }
   #messageHandler = async ({ message, guildId }) => {
@@ -489,17 +513,13 @@ var InAppNotifications = class {
     });
   }
   start() {
+    const AppMount = getKey(Webpack.getBySource("DispatcherBridge", { raw: true }).declarations, (x) => String(x?.type).includes("Shakeable"));
     BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
-    Patcher.after(Webpack.getModule(Webpack.Filters.bySource("Shakeable")).A, "type", (_, __, res) => {
+    Patcher.after(AppMount.module[AppMount.key], "type", (_, __, res) => {
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement(NotificationContainer, null)));
-    });
-    Patcher.after(MessageWrapper, "type", (a, [b], c) => {
-      const loc = Utils.findInTree(c, (x) => x.childrenAccessories, { walkable: ["props", "children"] });
-      if (b.__ian) loc.childrenButtons = void 0;
-      return c;
     });
     Dispatcher.subscribe("MESSAGE_CREATE", this.#messageHandler);
     ForceUpdateRoot();
@@ -512,7 +532,7 @@ var InAppNotifications = class {
   }
   getSettingsPanel() {
     return () => {
-      const [value, setValue] = React.useState(
+      const [value, setValue] = React2.useState(
         SettingsStore.getKeywords().join(";")
       );
       const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15e3);

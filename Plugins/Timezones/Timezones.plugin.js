@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.6
+ * @version 2.0.7
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
  * @invite t3zMgv7Nvb
@@ -62,7 +62,7 @@ var { Patcher, Webpack, Data, Utils, Hooks, ContextMenu: ContextMenu2, Component
 var Banner_3 = Webpack.getBySource(".unsafe_rawColors.PRIMARY_800).hex(),");
 var ModalUtils = Webpack.getByKeys("openModal");
 var Modal = Webpack.getByKeys("Modal").Modal;
-var SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings("SearchableSelect", "fieldProps"), { searchExports: true });
+var SearchableSelect = Webpack.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
 var MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
 var Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true });
 function getTimezones() {

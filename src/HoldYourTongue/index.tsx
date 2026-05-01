@@ -1,14 +1,14 @@
 /**
  * @name HoldYourTongue
  * @description Stop yourself from saying things in chat!
- * @version 2.0.0
+ * @version 2.0.1
  * @author Kaan
- */
+ */ import {getKey} from "../Helpers";
 
 const {Webpack, Hooks, Utils, Data, Components, React} = new BdApi("HoldYourTongue")
 const {useStateFromStores} = Hooks
 
-const CheckFilters = Webpack.getBySource("Everyone Warning")
+const CheckFilters = Object.values(Webpack.getBySource("Everyone Warning",{raw:true}).declarations).find(Array.isArray) // getKey(BdApi.Webpack.getBySource("Everyone Warning",{raw:true}).declarations, x => x.constructor.name == "Array");
 const InteractiveButton = Webpack.getByKeys("Icon").Icon
 const TextArea= Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
 
@@ -129,12 +129,12 @@ function KeywordDisplayer({data}) {
 export default class HoldYourTongue {
     start() {
         const boundCheck = KeywordStore.startChecking.bind(KeywordStore);
-        const existingFilter = Object.values(CheckFilters.m).find(x => x.analyticsType?.includes('nacho'));
+        const existingFilter = Object.values(CheckFilters).find(x => x.analyticsType?.includes('nacho'));
 
         if (existingFilter) {
             existingFilter.check = boundCheck;
         } else {
-            CheckFilters.m.push({
+            CheckFilters.push({
                 analyticsType: "nacho-businezz",
                 check: boundCheck,
             });
@@ -192,9 +192,9 @@ export default class HoldYourTongue {
     }
 
     stop() {
-        const index = CheckFilters.m.findIndex(x => x.analyticsType === "nacho-businezz");
+        const index = CheckFilters.findIndex(x => x.analyticsType === "nacho-businezz");
         if (index !== -1) {
-            CheckFilters.m.splice(index, 1);
+            CheckFilters.splice(index, 1);
         }
     }
 }

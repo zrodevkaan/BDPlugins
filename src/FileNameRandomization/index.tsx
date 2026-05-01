@@ -1,7 +1,7 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 2.0.0
+ * @version 2.0.1
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
 import {styled} from "../Helpers";
@@ -17,7 +17,7 @@ const FormItem = styled.div({
 
 const FormSwitch = Webpack.getModule(Webpack.Filters.byStrings(`return"tooltipText"`))
 const TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountFullPadding"), {searchExports: true})
-const SearchableSelect = Webpack.getModule(Webpack.Filters.byStrings('SearchableSelect','fieldProps'), {searchExports: true})
+const SearchableSelect = Webpack.getByStrings('horizontalControlColumnWidth:`min($',{searchExports:true})
 
 const {useState} = React;
 

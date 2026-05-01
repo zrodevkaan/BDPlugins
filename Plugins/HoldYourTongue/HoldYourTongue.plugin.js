@@ -1,7 +1,7 @@
 /**
  * @name HoldYourTongue
  * @description Stop yourself from saying things in chat!
- * @version 2.0.0
+ * @version 2.0.1
  * @author Kaan
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/HoldYourTongue/HoldYourTongue.plugin.js 
  * @invite t3zMgv7Nvb
@@ -31,9 +31,26 @@ __export(index_exports, {
   default: () => HoldYourTongue
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Hooks, Utils, Data, Components, React } = new BdApi("HoldYourTongue");
+
+// src/Helpers/index.tsx
+var { React, ContextMenu } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p, receiver) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+
+// src/HoldYourTongue/index.tsx
+var { Webpack, Hooks, Utils, Data, Components, React: React2 } = new BdApi("HoldYourTongue");
 var { useStateFromStores } = Hooks;
-var CheckFilters = Webpack.getBySource("Everyone Warning");
+var CheckFilters = Object.values(Webpack.getBySource("Everyone Warning", { raw: true }).declarations).find(Array.isArray);
 var InteractiveButton = Webpack.getByKeys("Icon").Icon;
 var TextArea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
 var DataStore = new Proxy(
@@ -124,8 +141,8 @@ var DeleteIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns:
   }
 ));
 function KeywordDisplayer({ data }) {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [newKeyword, setNewKeyword] = React.useState(data.keyword);
+  const [isEditing, setIsEditing] = React2.useState(false);
+  const [newKeyword, setNewKeyword] = React2.useState(data.keyword);
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", alignItems: "center", alignContent: "center" } }, isEditing ? /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement(Components.TextInput, { onChange: setNewKeyword, value: newKeyword }), /* @__PURE__ */ BdApi.React.createElement(Components.Button, { onClick: () => {
     setIsEditing(false);
     KeywordStore.editKeyword(data.id, newKeyword);
@@ -141,11 +158,11 @@ function KeywordDisplayer({ data }) {
 var HoldYourTongue = class {
   start() {
     const boundCheck = KeywordStore.startChecking.bind(KeywordStore);
-    const existingFilter = Object.values(CheckFilters.m).find((x) => x.analyticsType?.includes("nacho"));
+    const existingFilter = Object.values(CheckFilters).find((x) => x.analyticsType?.includes("nacho"));
     if (existingFilter) {
       existingFilter.check = boundCheck;
     } else {
-      CheckFilters.m.push({
+      CheckFilters.push({
         analyticsType: "nacho-businezz",
         check: boundCheck
       });
@@ -154,8 +171,8 @@ var HoldYourTongue = class {
   getSettingsPanel() {
     return () => {
       const keywords = useStateFromStores([KeywordStore], () => KeywordStore.getKeywords());
-      const [isAdding, setIsAdding] = React.useState(false);
-      const [newKeyword, setNewKeyword] = React.useState("");
+      const [isAdding, setIsAdding] = React2.useState(false);
+      const [newKeyword, setNewKeyword] = React2.useState("");
       const bodyMessage = useStateFromStores([KeywordStore], () => KeywordStore.getBodyMessage());
       const handleAdd = () => {
         if (newKeyword.trim()) {
@@ -180,9 +197,9 @@ var HoldYourTongue = class {
     };
   }
   stop() {
-    const index = CheckFilters.m.findIndex((x) => x.analyticsType === "nacho-businezz");
+    const index = CheckFilters.findIndex((x) => x.analyticsType === "nacho-businezz");
     if (index !== -1) {
-      CheckFilters.m.splice(index, 1);
+      CheckFilters.splice(index, 1);
     }
   }
 };
