@@ -28,11 +28,10 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/MoreDoubleClicks/index.tsx
 var index_exports = {};
 __export(index_exports, {
-  MoreDoubleClicks: () => MoreDoubleClicks
+  default: () => MoreDoubleClicks
 });
 module.exports = __toCommonJS(index_exports);
 var { Webpack, Utils, Patcher, Data, React, Hooks, Components } = new BdApi("MoreDoubleClicks");
-var MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""');
 var EditUtils = Webpack.getModule((x) => x.startEditMessageRecord);
 var ReplyAction = Webpack.getByStrings("showMentionToggle", "FOCUS_CHANNEL_TEXT_AREA", { searchExports: true });
 var EmojiPack = () => {
@@ -287,6 +286,7 @@ var MoreDoubleClicks = class {
     };
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
+    const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""');
     Patcher.after(MessageContent.Ay, "type", (_, args, ret) => {
       const originalOnDoubleClick = ret.props.onDoubleClick;
       Object.defineProperty(ret.props, "onDoubleClick", {

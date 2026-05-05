@@ -2,10 +2,9 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.1
+ * @version 3.0.2
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
-const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
 const EditUtils = Webpack.getModule(x => x.startEditMessageRecord)
 const ReplyAction = Webpack.getByStrings('showMentionToggle', 'FOCUS_CHANNEL_TEXT_AREA', {searchExports: true})
 const EmojiPack = () => {
@@ -275,7 +274,7 @@ function SettingsPanel() {
     </div>
 }
 
-export class MoreDoubleClicks {
+export default class MoreDoubleClicks {
     load() {
         DataStore.settings = {
             normalDoubleClickAction: "REPLY",
@@ -309,6 +308,7 @@ export class MoreDoubleClicks {
 
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('keyup', this.handleKeyUp);
+        const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
 
         Patcher.after(MessageContent.Ay, 'type', (_, args, ret) => {
             const originalOnDoubleClick = ret.props.onDoubleClick;
