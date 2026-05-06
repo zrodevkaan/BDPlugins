@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkConverter/LinkConverter.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -85,7 +85,10 @@ var defaultLinks = [
   },
   {
     type: "instagram",
-    replacements: ["https://vxinstagram.com"],
+    replacements: [
+      "https://kkinstagram.com",
+      "https://eeinstagram.com",
+    ],
     selected: 0,
     enabled: true
   },
@@ -113,7 +116,15 @@ var defaultLinks = [
     ],
     selected: 0,
     enabled: true
-  }
+  },
+  {
+    type: "blacksky",
+    replacements: [
+      "https://bsyy.app"
+    ],
+    selected: 0,
+    enabled: true
+  },
 ];
 var replacementsToSelectable = (linkObject) => (linkObject?.replacements || []).map((x) => ({ label: x, value: x }));
 var getReplacementsByDomain = (domain) => DataStore.settings.find((x) => x.type == domain);
