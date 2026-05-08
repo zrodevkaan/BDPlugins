@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.7
+ * @version 2.0.8
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
  * @invite t3zMgv7Nvb
@@ -33,7 +33,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+var { React, ContextMenu, Webpack } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -56,15 +56,18 @@ var ContextMenuHelper = (patches) => {
     unpatches.forEach((unpatch) => unpatch());
   };
 };
+function waitAndPatch(Patcher2, filter, key, callback) {
+  Webpack.waitForModule(filter).then((mod) => {
+    Patcher2.after(mod, key, callback);
+  });
+}
 
 // src/Timezones/index.tsx
-var { Patcher, Webpack, Data, Utils, Hooks, ContextMenu: ContextMenu2, Components, React: React2 } = new BdApi("Timezones");
-var Banner_3 = Webpack.getBySource(".unsafe_rawColors.PRIMARY_800).hex(),");
-var ModalUtils = Webpack.getByKeys("openModal");
-var Modal = Webpack.getByKeys("Modal").Modal;
-var SearchableSelect = Webpack.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
-var MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
-var Selectable = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true });
+var { Patcher, Webpack: Webpack2, Data, Utils, Hooks, ContextMenu: ContextMenu2, Components, React: React2 } = new BdApi("Timezones");
+var ModalUtils = Webpack2.getByKeys("openModal");
+var Modal = Webpack2.getByKeys("Modal").Modal;
+var SearchableSelect = Webpack2.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
+var Selectable = Webpack2.getModule(Webpack2.Filters.byStrings('data-mana-component":"select'), { searchExports: true });
 function getTimezones() {
   const now = /* @__PURE__ */ new Date();
   return Intl.supportedValuesOf("timeZone").map((tz) => ({
@@ -305,14 +308,22 @@ function TimezoneContextMenu({ user }) {
 }
 var Timezones = class {
   unpatchAll;
-  start() {
-    Patcher.after(Banner_3, "A", (a, b, res) => {
-      return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
+  async start() {
+    const Banner_3 = Webpack2.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/);
+    Patcher.after(Banner_3.A, "render", (a, b, res) => {
+      return [res, /* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user })];
     });
-    Patcher.after(MessageHeader, "A", (a, args, res) => {
-      const timestamp = new Date(args[0].message.timestamp);
-      !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author, timestamp }));
-    });
+    waitAndPatch(
+      Patcher,
+      (x) => String(x.A).includes(".colorRoleId?nul"),
+      "A",
+      (a, args, res) => {
+        const timestamp = new Date(args[0].message.timestamp);
+        !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(
+          /* @__PURE__ */ BdApi.React.createElement(ChatClock, { user: args[0].message.author, timestamp })
+        );
+      }
+    );
     this.unpatchAll = ContextMenuHelper([
       {
         navId: "user-context",
