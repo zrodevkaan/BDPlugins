@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.9
+ * @version 2.0.10
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
@@ -405,7 +405,7 @@ export default class Timezones {
                         </HeaderDescription>
                     </SettingsHeaderGroup>
                     <Components.SwitchInput
-                        checked={settings.showSeconds}
+                        value={settings.showSeconds}
                         onChange={(value) => UserTimezoneStore.setTimezoneSettings({ showSeconds: value })}
                     />
                 </SettingsSection>
@@ -418,7 +418,7 @@ export default class Timezones {
                         </HeaderDescription>
                     </SettingsHeaderGroup>
                     <Components.SwitchInput
-                        checked={settings.showTimezoneAbbreviation}
+                        value={settings.showTimezoneAbbreviation}
                         onChange={(value) => UserTimezoneStore.setTimezoneSettings({ showTimezoneAbbreviation: value })}
                     />
                 </SettingsSection>

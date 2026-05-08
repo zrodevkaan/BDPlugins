@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.9
+ * @version 2.0.10
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
  * @invite t3zMgv7Nvb
@@ -369,13 +369,13 @@ var Timezones = class {
       )), /* @__PURE__ */ BdApi.React.createElement(SettingsSection, { displayType: "flex" }, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Show seconds"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Include seconds in time display (e.g., 2:30:45 PM).")), /* @__PURE__ */ BdApi.React.createElement(
         Components.SwitchInput,
         {
-          checked: settings.showSeconds,
+          value: settings.showSeconds,
           onChange: (value) => UserTimezoneStore.setTimezoneSettings({ showSeconds: value })
         }
       )), /* @__PURE__ */ BdApi.React.createElement(SettingsSection, { displayType: "flex" }, /* @__PURE__ */ BdApi.React.createElement(SettingsHeaderGroup, null, /* @__PURE__ */ BdApi.React.createElement(Header, null, "Show timezone abbreviation"), /* @__PURE__ */ BdApi.React.createElement(HeaderDescription, null, "Show timezone abbreviation after time (e.g., 2:30 PM EST).")), /* @__PURE__ */ BdApi.React.createElement(
         Components.SwitchInput,
         {
-          checked: settings.showTimezoneAbbreviation,
+          value: settings.showTimezoneAbbreviation,
           onChange: (value) => UserTimezoneStore.setTimezoneSettings({ showTimezoneAbbreviation: value })
         }
       )));
