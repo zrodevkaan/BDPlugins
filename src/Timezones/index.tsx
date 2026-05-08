@@ -1,19 +1,17 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.7
+ * @version 2.0.8
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
-import { ContextMenuHelper, styled } from "../Helpers";
+import {ContextMenuHelper, styled, waitAndPatch} from "../Helpers";
 
 const { Patcher, Webpack, Data, Utils, Hooks, ContextMenu, Components, React } = new BdApi("Timezones")
 
-const Banner_3 = Webpack.getBySource(".unsafe_rawColors.PRIMARY_800).hex(),") // displayProfile, canAnimate: pendingBanner
 const ModalUtils = Webpack.getByKeys("openModal")
 const Modal = Webpack.getByKeys("Modal").Modal
 const SearchableSelect = Webpack.getByStrings('horizontalControlColumnWidth:`min($',{searchExports:true})
-const MessageHeader = Webpack.getModule((x) => String(x.A).includes(".colorRoleId?nul"));
 const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true })
 
 function getTimezones() {
@@ -318,15 +316,25 @@ function TimezoneContextMenu({ user }: { user: User }) {
 export default class Timezones {
     private unpatchAll;
 
-    start() {
-        Patcher.after(Banner_3, "A", (a, b, res) => {
-            return [<Timezone user={b[0].user} />, res]
+    async start() {
+
+        const Banner_3 = Webpack.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/) // displayProfile, canAnimate: pendingBanner
+        Patcher.after(Banner_3.A, "render", (a, b, res) => {
+            return [res, <Timezone user={b[0].user} />];
         })
 
-        Patcher.after(MessageHeader, "A", (a, args: any, res: any) => {
-            const timestamp = new Date(args[0].message.timestamp);
-            !!UserTimezoneStore.getTimezone(args[0].message.author.id) && res.props.children.push(<ChatClock user={args[0].message.author} timestamp={timestamp} />)
-        })
+        waitAndPatch(
+            Patcher,
+            (x) => String(x.A).includes(".colorRoleId?nul"),
+            "A",
+            (a, args: any, res: any) => {
+                const timestamp = new Date(args[0].message.timestamp);
+                !!UserTimezoneStore.getTimezone(args[0].message.author.id) &&
+                res.props.children.push(
+                    <ChatClock user={args[0].message.author} timestamp={timestamp} />
+                );
+            }
+        );
 
         this.unpatchAll = ContextMenuHelper([
             {

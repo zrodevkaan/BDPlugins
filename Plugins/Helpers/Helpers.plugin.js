@@ -29,12 +29,14 @@ var index_exports = {};
 __export(index_exports, {
   ContextMenuHelper: () => ContextMenuHelper,
   getKey: () => getKey,
+  proxyRecache: () => proxyRecache,
   styled: () => styled,
   styledBase: () => styledBase,
-  variants: () => variants
+  variants: () => variants,
+  waitAndPatch: () => waitAndPatch
 });
 module.exports = __toCommonJS(index_exports);
-var { React, ContextMenu } = BdApi;
+var { React, ContextMenu, Webpack } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -79,4 +81,29 @@ function getKey(module2, fn) {
       return { key, module: module2 };
     }
   }
+}
+function proxyRecache(module2, filter, interval) {
+  const target = { module: void 0 };
+  const returnProxy = new Proxy(target, {
+    get(t, key) {
+      return Reflect.get(t, key, t);
+    },
+    set(t, key, value) {
+      t[key] = value;
+      return true;
+    }
+  });
+  const timer = setInterval(() => {
+    const result = filter(module2);
+    if (result !== void 0) {
+      returnProxy.module = result;
+      clearInterval(timer);
+    }
+  }, interval);
+  return returnProxy;
+}
+function waitAndPatch(Patcher, filter, key, callback) {
+  Webpack.waitForModule(filter).then((mod) => {
+    Patcher.after(mod, key, callback);
+  });
 }

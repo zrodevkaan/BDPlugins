@@ -6,7 +6,7 @@
 
 import type {CSSProperties} from "react";
 
-const {React, ContextMenu} = BdApi
+const {React, ContextMenu, Webpack} = BdApi
 const {createElement, forwardRef} = React;
 
 export function styledBase<T extends keyof React.JSX.IntrinsicElements>(
@@ -94,4 +94,40 @@ export function getKey(module2, fn) {
             return { key, module: module2 };
         }
     }
+}
+
+// dont even look at this, this was a really 5am test
+export function proxyRecache<T>(module: any, filter: (m: any) => any, interval: number): { module: T | undefined } {
+    const target: { module: T | undefined } = { module: undefined };
+
+    const returnProxy = new Proxy(target, {
+        get(t, key) {
+            return Reflect.get(t, key, t);
+        },
+        set(t, key, value) {
+            t[key as keyof typeof t] = value;
+            return true;
+        }
+    });
+
+    const timer = setInterval(() => {
+        const result = filter(module);
+        if (result !== undefined) {
+            returnProxy.module = result;
+            clearInterval(timer);
+        }
+    }, interval);
+
+    return returnProxy;
+}
+
+export function waitAndPatch(
+    Patcher: PatcherAPI,
+    filter: (m: any) => boolean,
+    key: string,
+    callback: Parameters<typeof BdApi.Patcher.after>[2]
+) {
+    Webpack.waitForModule(filter).then(mod => {
+        Patcher.after(mod, key, callback);
+    });
 }
