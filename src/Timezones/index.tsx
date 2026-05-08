@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.8
+ * @version 2.0.9
  * @description Allows you to display a local timezone you set for a user.
  */
 import type { User } from "discord-types/general";
@@ -11,8 +11,8 @@ const { Patcher, Webpack, Data, Utils, Hooks, ContextMenu, Components, React } =
 
 const ModalUtils = Webpack.getByKeys("openModal")
 const Modal = Webpack.getByKeys("Modal").Modal
-const SearchableSelect = Webpack.getByStrings('horizontalControlColumnWidth:`min($',{searchExports:true})
-const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings('data-mana-component":"select'), { searchExports: true })
+const SearchableSelect = Webpack.getByStrings('renderOptionLabel:','matchSorterOptions:',{searchExports:true})
+const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings(`\"data-mana-component\":\"select\"`), { searchExports: true })
 
 function getTimezones() {
     const now = new Date();
