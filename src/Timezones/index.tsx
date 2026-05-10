@@ -1,18 +1,18 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.10
+ * @version 2.1.0
  * @description Allows you to display a local timezone you set for a user.
  */
-import type { User } from "discord-types/general";
+import type {User} from "discord-types/general";
 import {ContextMenuHelper, styled, waitAndPatch} from "../Helpers";
 
-const { Patcher, Webpack, Data, Utils, Hooks, ContextMenu, Components, React } = new BdApi("Timezones")
+const {Patcher, Webpack, Data, Utils, Hooks, ContextMenu, Components, React} = new BdApi("Timezones")
 
 const ModalUtils = Webpack.getByKeys("openModal")
 const Modal = Webpack.getByKeys("Modal").Modal
-const SearchableSelect = Webpack.getByStrings('renderOptionLabel:','matchSorterOptions:',{searchExports:true})
-const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings(`\"data-mana-component\":\"select\"`), { searchExports: true })
+const SearchableSelect = Webpack.getByStrings('renderOptionLabel:', 'matchSorterOptions:', {searchExports: true})
+const Selectable: React.Component = Webpack.getModule(Webpack.Filters.byStrings(`\"data-mana-component\":\"select\"`), {searchExports: true})
 
 function getTimezones() {
     const now = new Date();
@@ -47,8 +47,29 @@ interface TimezoneSettings {
     showTimezoneAbbreviation: boolean;
 }
 
+interface TimezoneEntry {
+    timezoneId: string;
+    external: boolean;
+}
+
+type TimezoneDB = Record<string, TimezoneEntry>;
+
 const UserTimezoneStore = new class UTS extends Utils.Store {
-    private timezones: Record<string, string> = Data.load('timezones') || {};
+    private timezones: TimezoneDB = (() => {
+        const raw = Data.load('timezones') || {};
+        const migrated: TimezoneDB = {};
+        for (const id of Object.keys(raw)) {
+            const entry = raw[id];
+            if (typeof entry === 'string') {
+                migrated[id] = {timezoneId: entry, external: false};
+            } else {
+                migrated[id] = entry;
+            }
+        }
+        Data.save('timezones', migrated);
+        return migrated;
+    })();
+
     private settings: TimezoneSettings = {
         chatTimezoneDisplay: "CLOCK",
         bannerTimezoneDisplay: "ENABLED",
@@ -58,13 +79,17 @@ const UserTimezoneStore = new class UTS extends Utils.Store {
         ...(Data.load('settings') || {})
     };
 
-    addTimezone(id: string, timezoneName: string) {
-        this.timezones[id] = timezoneName;
+    addTimezone(id: string, timezoneName: string, isExternal: boolean = false) {
+        this.timezones[id] = {timezoneId: timezoneName, external: isExternal};
         Data.save('timezones', this.timezones);
         this.emitChange();
     }
 
-    getTimezone(id: string) {
+    getTimezone(id: string): string | undefined {
+        return this.timezones[id]?.timezoneId;
+    }
+
+    getTimezoneEntry(id: string): TimezoneEntry | undefined {
         return this.timezones[id];
     }
 
@@ -75,9 +100,25 @@ const UserTimezoneStore = new class UTS extends Utils.Store {
     }
 
     setTimezoneSettings(settings: Partial<TimezoneSettings>) {
-        this.settings = { ...this.settings, ...settings };
+        this.settings = {...this.settings, ...settings};
         Data.save('settings', this.settings);
         this.emitChange();
+    }
+
+    async startBadAPI() {
+        const ids = BdApi.Webpack.Stores.RelationshipStore.getFriendIDs();
+        const res = await BdApi.Net.fetch("https://timezonedb.catvibers.me/api/user/bulk", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(ids)
+        });
+        const allIds = await res.json();
+
+        for (const id of ids) {
+            const existing = this.getTimezoneEntry(id);
+            if (existing && !existing.external) continue;
+            if (allIds[id]?.timezoneId != null) this.addTimezone(id, allIds[id].timezoneId, true);
+        }
     }
 
     getTimezoneSettings(): TimezoneSettings {
@@ -120,8 +161,8 @@ const TimezoneText = styled.div(() => {
         padding: '5px',
         borderRadius: '5px',
         backgroundColor: 'var(--background-base-low)',
-        left: '10px',
-        top: '10px',
+        //left: '10px',
+        //top: '10px',
         zIndex: '999',
         textAlign: 'center',
         fontWeight: 'lighter'
@@ -139,7 +180,7 @@ const SettingsHeaderGroup = styled.div(() => ({
     marginBottom: '8px'
 }))
 
-const SettingsSection = styled.div(({ displayType }) => {
+const SettingsSection = styled.div(({displayType}) => {
     return {
         marginTop: '20px',
         alignItems: 'center',
@@ -166,8 +207,8 @@ const HeaderDescription = styled.span({
 
 function getUTCOffset(timezone) {
     const date = new Date();
-    const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-    const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+    const utcDate = new Date(date.toLocaleString('en-US', {timeZone: 'UTC'}));
+    const tzDate = new Date(date.toLocaleString('en-US', {timeZone: timezone}));
     return (tzDate - utcDate) / (1000 * 60 * 60);
 }
 
@@ -193,15 +234,13 @@ function getCurrentTime(timezone: string, date = new Date()) {
     const use24h = settings.timezoneFormat === "24H";
     const includeSeconds = settings.showSeconds;
 
-    const timeString = date.toLocaleString('en-US', {
+    let formattedTime = date.toLocaleString('en-US', {
         timeZone: timezone,
         hour: '2-digit',
         minute: '2-digit',
-        ...(includeSeconds && { second: '2-digit' }),
+        ...(includeSeconds && {second: '2-digit'}),
         hour12: !use24h
     });
-
-    let formattedTime = timeString;
 
     if (!use24h) {
         formattedTime = formattedTime.replace(/^0/, '');
@@ -218,24 +257,31 @@ function getCurrentTime(timezone: string, date = new Date()) {
     return formattedTime;
 }
 
-function Timezone({ user }: { user: User }) {
+function Timezone({user}: { user: User }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
 
     const time = getCurrentTime(timezone);
 
-    return (timezone && settings.bannerTimezoneDisplay === "ENABLED") ? <TimezoneText className={"tz-banner"}>{time}</TimezoneText> : null
+    return (timezone && settings.bannerTimezoneDisplay === "ENABLED") ?
+        <TimezoneText className={"tz-banner"}>{time}</TimezoneText> : null
 }
 
 function returnSpoof(timezone: string, offset: string, time: string) {
     return {
-        trim() { return `${timezone} ${offset} ${time}` },
-        getTime() { return timezone },
-        toString() { return this.getTime() + " " + offset } // this is what discord is searching for, so to allow timezone and utc offset we need to add both.
+        trim() {
+            return `${timezone} ${offset} ${time}`
+        },
+        getTime() {
+            return timezone
+        },
+        toString() {
+            return this.getTime() + " " + offset
+        }
     }
 }
 
-function TimezoneModal({ user }: { user: User }) {
+function TimezoneModal({user}: { user: User }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const timezones = React.useMemo(() => getTimezones(), []);
 
@@ -257,7 +303,7 @@ function TimezoneModal({ user }: { user: User }) {
         <div>
             <SearchableSelect
                 value={timezone || "Unknown"}
-                onChange={(e) => UserTimezoneStore.addTimezone(user.id, e)}
+                onChange={(e) => UserTimezoneStore.addTimezone(user.id, e, false)}
                 options={timezones.map((x) => {
                     return {
                         label: renderTimezone(x.timezone, x.offset, x.currentTime),
@@ -271,11 +317,10 @@ function TimezoneModal({ user }: { user: User }) {
 
 const Clock = () => <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24">
     <path fill="var(--interactive-icon-default)"
-        d="M13 12.175V9q0-.425-.288-.712T12 8t-.712.288T11 9v3.575q0 .2.075.388t.225.337l2.525 2.525q.3.3.713.3t.712-.3q.275-.3.275-.712t-.275-.688zM12 6q.425 0 .713-.288T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6m6 6q0 .425.288.713T19 13t.713-.288T20 12t-.288-.712T19 11t-.712.288T18 12m-6 6q-.425 0-.712.288T11 19t.288.713T12 20t.713-.288T13 19t-.288-.712T12 18m-6-6q0-.425-.288-.712T5 11t-.712.288T4 12t.288.713T5 13t.713-.288T6 12m6 10q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"></path>
+          d="M13 12.175V9q0-.425-.288-.712T12 8t-.712.288T11 9v3.575q0 .2.075.388t.225.337l2.525 2.525q.3.3.713.3t.712-.3q.275-.3.275-.712t-.275-.688zM12 6q.425 0 .713-.288T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6m6 6q0 .425.288.713T19 13t.713-.288T20 12t-.288-.712T19 11t-.712.288T18 12m-6 6q-.425 0-.712.288T11 19t.288.713T12 20t.713-.288T13 19t-.288-.712T12 18m-6-6q0-.425-.288-.712T5 11t-.712.288T4 12t.288.713T5 13t.713-.288T6 12m6 10q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"></path>
 </svg>
 
-
-function ChatClock({ user, timestamp }: { user: User, timestamp: Date }) {
+function ChatClock({user, timestamp}: { user: User, timestamp: Date }) {
     const timezone = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
     const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
     const displayMode: ChatTimezoneDisplay = settings?.chatTimezoneDisplay ?? "CLOCK";
@@ -284,8 +329,9 @@ function ChatClock({ user, timestamp }: { user: User, timestamp: Date }) {
     if (displayMode === "CLOCK") {
         return <Components.Tooltip text={time}>
             {(props) => {
-                return <div className="tz-svg" {...props} style={{ display: 'inline-flex', marginLeft: '5px', marginTop: '4px', verticalAlign: 'top' }}>
-                    <Clock />
+                return <div className="tz-svg" {...props}
+                            style={{display: 'inline-flex', marginLeft: '5px', marginTop: '4px', verticalAlign: 'top'}}>
+                    <Clock/>
                 </div>
             }}
         </Components.Tooltip>
@@ -298,18 +344,19 @@ function ChatClock({ user, timestamp }: { user: User, timestamp: Date }) {
     return null;
 }
 
-function TimezoneContextMenu({ user }: { user: User }) {
-    const isDisabled = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
+function TimezoneContextMenu({user}: { user: User }) {
+    const entry = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneEntry(user.id));
 
     return <ContextMenu.Item id={"bwah"} label={"Timezones"}>
         <ContextMenu.Item action={() => {
             ModalUtils.openModal((props) => <Modal title={`Set Timezone for ${user.username}`} {...props}>
-                <TimezoneModal user={user} />
+                <TimezoneModal user={user}/>
             </Modal>)
         }} id={"bwah-1"} label={"Set Timezone"}></ContextMenu.Item>
         <ContextMenu.Item action={() => {
             UserTimezoneStore.removeTimezone(user.id);
-        }} id={"bwah-2"} disabled={!isDisabled} color={"danger"} label={"Clear Timezone"}></ContextMenu.Item>
+        }} id={"bwah-2"} disabled={!entry} color={"danger"}
+                          label={entry?.external ? "Clear Timezone (External)" : "Clear Timezone"}></ContextMenu.Item>
     </ContextMenu.Item>
 }
 
@@ -317,10 +364,11 @@ export default class Timezones {
     private unpatchAll;
 
     async start() {
+        UserTimezoneStore.startBadAPI()
 
-        const Banner_3 = Webpack.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/) // displayProfile, canAnimate: pendingBanner
+        const Banner_3 = Webpack.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/)
         Patcher.after(Banner_3.A, "render", (a, b, res) => {
-            return [res, <Timezone user={b[0].user} />];
+            return [<Timezone user={b[0].user}/>, res];
         })
 
         waitAndPatch(
@@ -331,7 +379,7 @@ export default class Timezones {
                 const timestamp = new Date(args[0].message.timestamp);
                 !!UserTimezoneStore.getTimezone(args[0].message.author.id) &&
                 res.props.children.push(
-                    <ChatClock user={args[0].message.author} timestamp={timestamp} />
+                    <ChatClock user={args[0].message.author} timestamp={timestamp}/>
                 );
             }
         );
@@ -340,7 +388,7 @@ export default class Timezones {
             {
                 navId: 'user-context',
                 patch: (res, props) => {
-                    return res.props.children.push(TimezoneContextMenu({ user: props.user }))
+                    return res.props.children.push(TimezoneContextMenu({user: props.user}))
                 }
             }
         ])
@@ -359,11 +407,11 @@ export default class Timezones {
                 </SettingsHeaderGroup>
                 <Selectable
                     value={settings.chatTimezoneDisplay}
-                    onSelectionChange={(value: ChatTimezoneDisplay) => UserTimezoneStore.setTimezoneSettings({ chatTimezoneDisplay: value })}
+                    onSelectionChange={(value: ChatTimezoneDisplay) => UserTimezoneStore.setTimezoneSettings({chatTimezoneDisplay: value})}
                     options={["CLOCK", "TEXT", "NONE"].map(x => ({
                         label: x.toLowerCase(),
                         value: x
-                    }))} />
+                    }))}/>
 
                 <SettingsSection>
                     <SettingsHeaderGroup>
@@ -374,11 +422,11 @@ export default class Timezones {
                     </SettingsHeaderGroup>
                     <Selectable
                         value={settings.bannerTimezoneDisplay}
-                        onSelectionChange={(value: BannerTimezoneDisplay) => UserTimezoneStore.setTimezoneSettings({ bannerTimezoneDisplay: value })}
+                        onSelectionChange={(value: BannerTimezoneDisplay) => UserTimezoneStore.setTimezoneSettings({bannerTimezoneDisplay: value})}
                         options={["ENABLED", "DISABLED"].map(x => ({
                             label: x.toLowerCase(),
                             value: x
-                        }))} />
+                        }))}/>
                 </SettingsSection>
 
                 <SettingsSection>
@@ -390,11 +438,11 @@ export default class Timezones {
                     </SettingsHeaderGroup>
                     <Selectable
                         value={settings.timezoneFormat}
-                        onSelectionChange={(value: TimezoneFormat) => UserTimezoneStore.setTimezoneSettings({ timezoneFormat: value })}
+                        onSelectionChange={(value: TimezoneFormat) => UserTimezoneStore.setTimezoneSettings({timezoneFormat: value})}
                         options={[
-                            { label: "12-hour (2:30 PM)", value: "12H" },
-                            { label: "24-hour (14:30)", value: "24H" }
-                        ]} />
+                            {label: "12-hour (2:30 PM)", value: "12H"},
+                            {label: "24-hour (14:30)", value: "24H"}
+                        ]}/>
                 </SettingsSection>
 
                 <SettingsSection displayType={"flex"}>
@@ -406,7 +454,7 @@ export default class Timezones {
                     </SettingsHeaderGroup>
                     <Components.SwitchInput
                         value={settings.showSeconds}
-                        onChange={(value) => UserTimezoneStore.setTimezoneSettings({ showSeconds: value })}
+                        onChange={(value) => UserTimezoneStore.setTimezoneSettings({showSeconds: value})}
                     />
                 </SettingsSection>
 
@@ -419,7 +467,7 @@ export default class Timezones {
                     </SettingsHeaderGroup>
                     <Components.SwitchInput
                         value={settings.showTimezoneAbbreviation}
-                        onChange={(value) => UserTimezoneStore.setTimezoneSettings({ showTimezoneAbbreviation: value })}
+                        onChange={(value) => UserTimezoneStore.setTimezoneSettings({showTimezoneAbbreviation: value})}
                     />
                 </SettingsSection>
             </SettingsPanelContainer>

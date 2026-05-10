@@ -89,7 +89,20 @@ function getTimezones() {
   }));
 }
 var UserTimezoneStore = new class UTS extends Utils.Store {
-  timezones = Data.load("timezones") || {};
+  timezones = (() => {
+    const raw = Data.load("timezones") || {};
+    const migrated = {};
+    for (const id of Object.keys(raw)) {
+      const entry = raw[id];
+      if (typeof entry === "string") {
+        migrated[id] = { timezoneId: entry, external: false };
+      } else {
+        migrated[id] = entry;
+      }
+    }
+    Data.save("timezones", migrated);
+    return migrated;
+  })();
   settings = {
     chatTimezoneDisplay: "CLOCK",
     bannerTimezoneDisplay: "ENABLED",
@@ -98,12 +111,15 @@ var UserTimezoneStore = new class UTS extends Utils.Store {
     showTimezoneAbbreviation: false,
     ...Data.load("settings") || {}
   };
-  addTimezone(id, timezoneName) {
-    this.timezones[id] = timezoneName;
+  addTimezone(id, timezoneName, isExternal = false) {
+    this.timezones[id] = { timezoneId: timezoneName, external: isExternal };
     Data.save("timezones", this.timezones);
     this.emitChange();
   }
   getTimezone(id) {
+    return this.timezones[id]?.timezoneId;
+  }
+  getTimezoneEntry(id) {
     return this.timezones[id];
   }
   removeTimezone(id) {
@@ -115,6 +131,20 @@ var UserTimezoneStore = new class UTS extends Utils.Store {
     this.settings = { ...this.settings, ...settings };
     Data.save("settings", this.settings);
     this.emitChange();
+  }
+  async startBadAPI() {
+    const ids = BdApi.Webpack.Stores.RelationshipStore.getFriendIDs();
+    const res = await BdApi.Net.fetch("https://timezonedb.catvibers.me/api/user/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ids)
+    });
+    const allIds = await res.json();
+    for (const id of ids) {
+      const existing = this.getTimezoneEntry(id);
+      if (existing && !existing.external) continue;
+      if (allIds[id]?.timezoneId != null) this.addTimezone(id, allIds[id].timezoneId, true);
+    }
   }
   getTimezoneSettings() {
     return this.settings;
@@ -151,8 +181,8 @@ var TimezoneText = styled.div(() => {
     padding: "5px",
     borderRadius: "5px",
     backgroundColor: "var(--background-base-low)",
-    left: "10px",
-    top: "10px",
+    //left: '10px',
+    //top: '10px',
     zIndex: "999",
     textAlign: "center",
     fontWeight: "lighter"
@@ -249,7 +279,6 @@ function returnSpoof(timezone, offset, time) {
     toString() {
       return this.getTime() + " " + offset;
     }
-    // this is what discord is searching for, so to allow timezone and utc offset we need to add both.
   };
 }
 function TimezoneModal({ user }) {
@@ -266,7 +295,7 @@ function TimezoneModal({ user }) {
     SearchableSelect,
     {
       value: timezone || "Unknown",
-      onChange: (e) => UserTimezoneStore.addTimezone(user.id, e),
+      onChange: (e) => UserTimezoneStore.addTimezone(user.id, e, false),
       options: timezones.map((x) => {
         return {
           label: renderTimezone(x.timezone, x.offset, x.currentTime),
@@ -290,7 +319,15 @@ function ChatClock({ user, timestamp }) {
   const time = getCurrentTime(timezone, timestamp);
   if (displayMode === "CLOCK") {
     return /* @__PURE__ */ BdApi.React.createElement(Components.Tooltip, { text: time }, (props) => {
-      return /* @__PURE__ */ BdApi.React.createElement("div", { className: "tz-svg", ...props, style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" } }, /* @__PURE__ */ BdApi.React.createElement(Clock, null));
+      return /* @__PURE__ */ BdApi.React.createElement(
+        "div",
+        {
+          className: "tz-svg",
+          ...props,
+          style: { display: "inline-flex", marginLeft: "5px", marginTop: "4px", verticalAlign: "top" }
+        },
+        /* @__PURE__ */ BdApi.React.createElement(Clock, null)
+      );
     });
   }
   if (displayMode === "TEXT") {
@@ -299,19 +336,29 @@ function ChatClock({ user, timestamp }) {
   return null;
 }
 function TimezoneContextMenu({ user }) {
-  const isDisabled = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezone(user.id));
+  const entry = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneEntry(user.id));
   return /* @__PURE__ */ BdApi.React.createElement(ContextMenu2.Item, { id: "bwah", label: "Timezones" }, /* @__PURE__ */ BdApi.React.createElement(ContextMenu2.Item, { action: () => {
     ModalUtils.openModal((props) => /* @__PURE__ */ BdApi.React.createElement(Modal, { title: `Set Timezone for ${user.username}`, ...props }, /* @__PURE__ */ BdApi.React.createElement(TimezoneModal, { user })));
-  }, id: "bwah-1", label: "Set Timezone" }), /* @__PURE__ */ BdApi.React.createElement(ContextMenu2.Item, { action: () => {
-    UserTimezoneStore.removeTimezone(user.id);
-  }, id: "bwah-2", disabled: !isDisabled, color: "danger", label: "Clear Timezone" }));
+  }, id: "bwah-1", label: "Set Timezone" }), /* @__PURE__ */ BdApi.React.createElement(
+    ContextMenu2.Item,
+    {
+      action: () => {
+        UserTimezoneStore.removeTimezone(user.id);
+      },
+      id: "bwah-2",
+      disabled: !entry,
+      color: "danger",
+      label: entry?.external ? "Clear Timezone (External)" : "Clear Timezone"
+    }
+  ));
 }
 var Timezones = class {
   unpatchAll;
   async start() {
+    UserTimezoneStore.startBadAPI();
     const Banner_3 = Webpack2.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/);
     Patcher.after(Banner_3.A, "render", (a, b, res) => {
-      return [res, /* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user })];
+      return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
     waitAndPatch(
       Patcher,
