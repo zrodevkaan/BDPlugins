@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.0.10
+ * @version 2.1.1
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
  * @invite t3zMgv7Nvb
@@ -134,6 +134,7 @@ var UserTimezoneStore = new class UTS extends Utils.Store {
   }
   async startBadAPI() {
     const ids = BdApi.Webpack.Stores.RelationshipStore.getFriendIDs();
+    ids.push(BdApi.Webpack.Stores.UserStore.getCurrentUser().id);
     const res = await BdApi.Net.fetch("https://timezonedb.catvibers.me/api/user/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -181,8 +182,8 @@ var TimezoneText = styled.div(() => {
     padding: "5px",
     borderRadius: "5px",
     backgroundColor: "var(--background-base-low)",
-    //left: '10px',
-    //top: '10px',
+    left: "10px",
+    top: "10px",
     zIndex: "999",
     textAlign: "center",
     fontWeight: "lighter"
@@ -242,14 +243,13 @@ function getCurrentTime(timezone, date = /* @__PURE__ */ new Date()) {
   const settings = Hooks.useStateFromStores([UserTimezoneStore], () => UserTimezoneStore.getTimezoneSettings());
   const use24h = settings.timezoneFormat === "24H";
   const includeSeconds = settings.showSeconds;
-  const timeString = date.toLocaleString("en-US", {
+  let formattedTime = date.toLocaleString("en-US", {
     timeZone: timezone,
     hour: "2-digit",
     minute: "2-digit",
     ...includeSeconds && { second: "2-digit" },
     hour12: !use24h
   });
-  let formattedTime = timeString;
   if (!use24h) {
     formattedTime = formattedTime.replace(/^0/, "");
   }
@@ -356,8 +356,8 @@ var Timezones = class {
   unpatchAll;
   async start() {
     UserTimezoneStore.startBadAPI();
-    const Banner_3 = Webpack2.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/);
-    Patcher.after(Banner_3.A, "render", (a, b, res) => {
+    const Banner_3 = Webpack2.getBySource('backgroundColor:"COMPLETE"===');
+    Patcher.after(Banner_3, "A", (a, b, res) => {
       return [/* @__PURE__ */ BdApi.React.createElement(Timezone, { user: b[0].user }), res];
     });
     waitAndPatch(

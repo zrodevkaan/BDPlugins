@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.1.0
+ * @version 2.1.1
  * @description Allows you to display a local timezone you set for a user.
  */
 import type {User} from "discord-types/general";
@@ -107,6 +107,7 @@ const UserTimezoneStore = new class UTS extends Utils.Store {
 
     async startBadAPI() {
         const ids = BdApi.Webpack.Stores.RelationshipStore.getFriendIDs();
+        ids.push(BdApi.Webpack.Stores.UserStore.getCurrentUser().id) // should work Zacam.
         const res = await BdApi.Net.fetch("https://timezonedb.catvibers.me/api/user/bulk", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -161,8 +162,8 @@ const TimezoneText = styled.div(() => {
         padding: '5px',
         borderRadius: '5px',
         backgroundColor: 'var(--background-base-low)',
-        //left: '10px',
-        //top: '10px',
+        left: '10px',
+        top: '10px',
         zIndex: '999',
         textAlign: 'center',
         fontWeight: 'lighter'
@@ -366,8 +367,8 @@ export default class Timezones {
     async start() {
         UserTimezoneStore.startBadAPI()
 
-        const Banner_3 = Webpack.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/)
-        Patcher.after(Banner_3.A, "render", (a, b, res) => {
+        const Banner_3 = Webpack.getBySource("backgroundColor:\"COMPLETE\"===") // n(915614) // Webpack.getBySource(/.banner\);return\(0,.{1}.jsx\)\("div",{/)
+        Patcher.after(Banner_3, "A", (a, b, res) => {
             return [<Timezone user={b[0].user}/>, res];
         })
 
