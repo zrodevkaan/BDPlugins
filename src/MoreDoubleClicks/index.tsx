@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.2
+ * @version 3.0.3
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const EditUtils = Webpack.getModule(x => x.startEditMessageRecord)
@@ -293,7 +293,7 @@ export default class MoreDoubleClicks {
         }
     }
 
-    start() {
+    async start() {
         this.handleKeyDown = (e) => {
             if (e.key === 'Delete') {
                 MoreDoubleClickStore.setDeleteKeyPressed(true);
@@ -308,9 +308,10 @@ export default class MoreDoubleClicks {
 
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('keyup', this.handleKeyUp);
-        const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""')
+        const MessageContentA = Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'))
+        const AwaitedModule = await MessageContentA
 
-        Patcher.after(MessageContent.Ay, 'type', (_, args, ret) => {
+        Patcher.after(AwaitedModule.Ay, 'type', (_, args, ret) => {
             const originalOnDoubleClick = ret.props.onDoubleClick;
 
             Object.defineProperty(ret.props, 'onDoubleClick', {

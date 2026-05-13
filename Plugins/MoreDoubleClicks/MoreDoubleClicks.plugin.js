@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.2
+ * @version 3.0.3
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MoreDoubleClicks/MoreDoubleClicks.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -273,7 +273,7 @@ var MoreDoubleClicks = class {
       ...DataStore.settings || {}
     };
   }
-  start() {
+  async start() {
     this.handleKeyDown = (e) => {
       if (e.key === "Delete") {
         MoreDoubleClickStore.setDeleteKeyPressed(true);
@@ -286,8 +286,9 @@ var MoreDoubleClicks = class {
     };
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
-    const MessageContent = Webpack.getBySource('VOICE_HANGOUT_INVITE?""');
-    Patcher.after(MessageContent.Ay, "type", (_, args, ret) => {
+    const MessageContentA = Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'));
+    const AwaitedModule = await MessageContentA;
+    Patcher.after(AwaitedModule.Ay, "type", (_, args, ret) => {
       const originalOnDoubleClick = ret.props.onDoubleClick;
       Object.defineProperty(ret.props, "onDoubleClick", {
         value: (event) => {
