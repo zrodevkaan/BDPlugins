@@ -33,9 +33,6 @@ const [
     {filter: Webpack.Filters.byKeys("fetchMessage", "deleteMessage")},
 );
 
-const MessageWrapperG = getKey(Webpack.getBySource("Message must not be a thread starter message",{raw:true}).declarations, x => String(x?.type).includes('Message must not be a thread starter message'))
-const MessageWrapper = MessageWrapperG.module[MessageWrapperG.key]
-
 const NavigationUtils = Webpack.getMangled("transitionTo - Transitioning to", {
     transitionTo: Webpack.Filters.byStrings("transitionTo - Transitioning to"),
     replace: Webpack.Filters.byStrings("Replacing route with"),
@@ -338,7 +335,7 @@ function KeywordBadges({keywords}: { keywords: string[] }) {
     );
 }
 
-function NotificationCard({message: initialMessage, matchedKeywords}: { message: Message, matchedKeywords: string[] }) {
+function NotificationCard({message: initialMessage, matchedKeywords, Wrapper}: { message: Message, matchedKeywords: string[], Wrapper: any }) {
     const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? (15 * 1000));
     const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
 
@@ -419,7 +416,7 @@ function NotificationCard({message: initialMessage, matchedKeywords}: { message:
                         <div style={{
                             maxHeight: '500px',
                         }}>
-                            <MessageWrapper
+                            <Wrapper
                                 id={`${message.id}-${message.id}`}
                                 groupId={message.id}
                                 message={message}
@@ -581,7 +578,7 @@ function ReactionCard({entry}: { entry: { emoji: any, message: Message, userId: 
     );
 }
 
-function NotificationContainer() {
+function NotificationContainer({wrapper}) {
     const entries = Hooks.useStateFromStores(
         [NotificationStore],
         () => NotificationStore.getMessages()
@@ -628,7 +625,7 @@ function NotificationContainer() {
             } as React.CSSProperties}
         >
             {entries.map(({message, matchedKeywords}) => (
-                <NotificationCard key={message.id} message={message} matchedKeywords={matchedKeywords}/>
+                <NotificationCard Wrapper={wrapper} key={message.id} message={message} matchedKeywords={matchedKeywords}/>
             ))}
             {/*reactions.map(r => <ReactionCard key={`${r.messageId}-${r.userId}`} entry={r}/>)*/}
         </div>
@@ -756,14 +753,17 @@ export default class InAppNotifications {
     }
 
     start() {
+        const MessageWrapperG = getKey(Webpack.getBySource("Message must not be a thread starter message",{raw:true}).declarations, x => String(x?.type).includes('Message must not be a thread starter message'))
+        const MessageWrapper = MessageWrapperG.module[MessageWrapperG.key]
         const AppMount = getKey(Webpack.getBySource('DispatcherBridge',{raw:true}).declarations, x => String(x?.type).includes('Shakeable'))
 
         BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
+
         Patcher.after(AppMount.module[AppMount.key], "type", (_: any, __: any, res: any) => {
-            res.props.children.push(<ErrorBoundary><NotificationContainer/></ErrorBoundary>);
+            res.props.children.push(<ErrorBoundary><NotificationContainer wrapper={MessageWrapper}/></ErrorBoundary>);
         });
         // Patcher.after(MessageWrapper, 'type', (a, [b], c) => {
         //     const loc = Utils.findInTree(c, x => x.childrenAccessories, {walkable: ['props', 'children']})

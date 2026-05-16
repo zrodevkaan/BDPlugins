@@ -33,7 +33,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+var { React, ContextMenu, Webpack } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -55,7 +55,7 @@ function getKey(module2, fn) {
 }
 
 // src/InAppNotifications/index.tsx
-var { Webpack, Utils, Patcher, Hooks, React: React2, Data, Components } = new BdApi("InAppNotifications");
+var { Webpack: Webpack2, Utils, Patcher, Hooks, React: React2, Data, Components } = new BdApi("InAppNotifications");
 var {
   MessageStore,
   ChannelStore,
@@ -66,26 +66,24 @@ var {
   ReferencedMessageStore,
   PendingReplyStore,
   SelectedChannelStore
-} = Webpack.Stores;
+} = Webpack2.Stores;
 var [
   MessageComponent,
   MessageConstructor,
   Dispatcher,
   MessageActions
-] = Webpack.getBulk(
-  { filter: Webpack.Filters.byStrings(".mention_everyone??!1"), searchExports: true },
-  { filter: Webpack.Filters.byPrototypeKeys("receivePushNotification") },
+] = Webpack2.getBulk(
+  { filter: Webpack2.Filters.byStrings(".mention_everyone??!1"), searchExports: true },
+  { filter: Webpack2.Filters.byPrototypeKeys("receivePushNotification") },
   { filter: (x) => x?._dispatch, searchExports: true },
-  { filter: Webpack.Filters.byKeys("fetchMessage", "deleteMessage") }
+  { filter: Webpack2.Filters.byKeys("fetchMessage", "deleteMessage") }
 );
-var MessageWrapperG = getKey(Webpack.getBySource("Message must not be a thread starter message", { raw: true }).declarations, (x) => String(x?.type).includes("Message must not be a thread starter message"));
-var MessageWrapper = MessageWrapperG.module[MessageWrapperG.key];
-var NavigationUtils = Webpack.getMangled("transitionTo - Transitioning to", {
-  transitionTo: Webpack.Filters.byStrings("transitionTo - Transitioning to"),
-  replace: Webpack.Filters.byStrings("Replacing route with"),
-  goBack: Webpack.Filters.byStrings(".goBack()"),
-  goForward: Webpack.Filters.byStrings(".goForward()"),
-  transitionToGuild: Webpack.Filters.byStrings("transitionToGuild - Transitioning to")
+var NavigationUtils = Webpack2.getMangled("transitionTo - Transitioning to", {
+  transitionTo: Webpack2.Filters.byStrings("transitionTo - Transitioning to"),
+  replace: Webpack2.Filters.byStrings("Replacing route with"),
+  goBack: Webpack2.Filters.byStrings(".goBack()"),
+  goForward: Webpack2.Filters.byStrings(".goForward()"),
+  transitionToGuild: Webpack2.Filters.byStrings("transitionToGuild - Transitioning to")
 });
 function injectMessage(rawMessage) {
   let message = MessageStore.getMessage(rawMessage.channel_id, rawMessage.id);
@@ -290,7 +288,7 @@ function KeywordBadges({ keywords }) {
     padding: "1px 6px"
   } }, k)));
 }
-function NotificationCard({ message: initialMessage, matchedKeywords }) {
+function NotificationCard({ message: initialMessage, matchedKeywords, Wrapper }) {
   const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15 * 1e3);
   const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
   const message = Hooks.useStateFromStores(
@@ -351,7 +349,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(CardHeader, { channel, onRemove: () => NotificationStore.removeMessage(message.id) }), /* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement("ul", { style: { listStyle: "none", margin: 0, padding: 0 } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: {
       maxHeight: "500px"
     } }, /* @__PURE__ */ BdApi.React.createElement(
-      MessageWrapper,
+      Wrapper,
       {
         id: `${message.id}-${message.id}`,
         groupId: message.id,
@@ -393,7 +391,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords }) {
     /* @__PURE__ */ BdApi.React.createElement(KeywordBadges, { keywords: matchedKeywords })
   );
 }
-function NotificationContainer() {
+function NotificationContainer({ wrapper }) {
   const entries = Hooks.useStateFromStores(
     [NotificationStore],
     () => NotificationStore.getMessages()
@@ -426,7 +424,7 @@ function NotificationContainer() {
         scrollbarWidth: "none"
       }
     },
-    entries.map(({ message, matchedKeywords }) => /* @__PURE__ */ BdApi.React.createElement(NotificationCard, { key: message.id, message, matchedKeywords }))
+    entries.map(({ message, matchedKeywords }) => /* @__PURE__ */ BdApi.React.createElement(NotificationCard, { Wrapper: wrapper, key: message.id, message, matchedKeywords }))
   );
 }
 var timestampToSnowflake = (timestamp) => {
@@ -513,13 +511,15 @@ var InAppNotifications = class {
     });
   }
   start() {
-    const AppMount = getKey(Webpack.getBySource("DispatcherBridge", { raw: true }).declarations, (x) => String(x?.type).includes("Shakeable"));
+    const MessageWrapperG = getKey(Webpack2.getBySource("Message must not be a thread starter message", { raw: true }).declarations, (x) => String(x?.type).includes("Message must not be a thread starter message"));
+    const MessageWrapper2 = MessageWrapperG.module[MessageWrapperG.key];
+    const AppMount = getKey(Webpack2.getBySource("DispatcherBridge", { raw: true }).declarations, (x) => String(x?.type).includes("Shakeable"));
     BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
     Patcher.after(AppMount.module[AppMount.key], "type", (_, __, res) => {
-      res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement(NotificationContainer, null)));
+      res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement(NotificationContainer, { wrapper: MessageWrapper2 })));
     });
     Dispatcher.subscribe("MESSAGE_CREATE", this.#messageHandler);
     ForceUpdateRoot();
