@@ -5,7 +5,13 @@
  * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
  */
 import type {Message} from "discord-types/general";
-import {getKey} from "../Helpers";
+import {
+    getExportBySource,
+    getExportByStrings,
+    getKey,
+    waitForExportBySource,
+    waitForExportByStrings
+} from "../../helpers";
 
 const {Webpack, Utils, Patcher, Hooks, React, Data, Components} = new BdApi("InAppNotifications");
 
@@ -752,17 +758,23 @@ export default class InAppNotifications {
         });
     }
 
-    start() {
-        const MessageWrapperG = getKey(Webpack.getBySource("Message must not be a thread starter message",{raw:true}).declarations, x => String(x?.type).includes('Message must not be a thread starter message'))
-        const MessageWrapper = MessageWrapperG.module[MessageWrapperG.key]
-        const AppMount = getKey(Webpack.getBySource('DispatcherBridge',{raw:true}).declarations, x => String(x?.type).includes('Shakeable'))
+    async start() {
+        const MessageWrapper = getExportByStrings(
+            ["Message must not be a thread starter message"],
+            { declaration: x => String(x?.type).includes("Message must not be a thread starter message") }
+        );
+
+        const AppMount = await waitForExportBySource(
+            "DispatcherBridge",
+            { declaration: x => String(x?.type).includes("Shakeable") }
+        );
 
         BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
 
-        Patcher.after(AppMount.module[AppMount.key], "type", (_: any, __: any, res: any) => {
+        Patcher.after(AppMount, "type", (_: any, __: any, res: any) => {
             res.props.children.push(<ErrorBoundary><NotificationContainer wrapper={MessageWrapper}/></ErrorBoundary>);
         });
         // Patcher.after(MessageWrapper, 'type', (a, [b], c) => {

@@ -32,8 +32,8 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/Helpers/index.tsx
-var { React, ContextMenu, Webpack } = BdApi;
+// helpers/index.tsx
+var { React, ContextMenu, Webpack, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -46,16 +46,40 @@ var styled = new Proxy(styledBase, {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
-function getKey(module2, fn) {
-  for (var key in module2) {
-    if (fn(module2[key])) {
-      return { key, module: module2 };
+function findDeclaration(declarations, predicate) {
+  for (const key in declarations) {
+    if (predicate(declarations[key])) {
+      return { key, module: declarations };
     }
   }
+  return null;
+}
+async function waitForExportBySource(sourceString, options = {}) {
+  const raw = await Webpack.waitForModule(
+    Webpack.Filters.bySource(sourceString),
+    { raw: true }
+  );
+  if (!raw?.declarations) return null;
+  if (options.declaration) {
+    const found = findDeclaration(raw.declarations, options.declaration);
+    if (!found) return null;
+    return found.module[found.key];
+  }
+  return raw;
+}
+function getExportByStrings(strings, options = {}) {
+  if (options.declaration) {
+    const raw = Webpack.getBySource(strings[0], { raw: true });
+    if (!raw?.declarations) return null;
+    const found = findDeclaration(raw.declarations, options.declaration);
+    if (!found) return null;
+    return found.module[found.key];
+  }
+  return Webpack.getModule(Webpack.Filters.byStrings(...strings)) ?? null;
 }
 
 // src/InAppNotifications/index.tsx
-var { Webpack: Webpack2, Utils, Patcher, Hooks, React: React2, Data, Components } = new BdApi("InAppNotifications");
+var { Webpack: Webpack2, Utils, Patcher, Hooks: Hooks2, React: React2, Data, Components } = new BdApi("InAppNotifications");
 var {
   MessageStore,
   ChannelStore,
@@ -289,9 +313,9 @@ function KeywordBadges({ keywords }) {
   } }, k)));
 }
 function NotificationCard({ message: initialMessage, matchedKeywords, Wrapper }) {
-  const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15 * 1e3);
-  const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
-  const message = Hooks.useStateFromStores(
+  const DURATION = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15 * 1e3);
+  const showTextarea = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
+  const message = Hooks2.useStateFromStores(
     [MessageStore],
     () => MessageStore.getMessage(initialMessage.channel_id, initialMessage.id) ?? initialMessage
   );
@@ -300,7 +324,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords, Wrapper })
   const [progress, setProgress] = React2.useState(100);
   const isHoveredRef = React2.useRef(false);
   const elapsedRef = React2.useRef(0);
-  const selectedChannel = Hooks.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId());
+  const selectedChannel = Hooks2.useStateFromStores(SelectedChannelStore, () => SelectedChannelStore.getChannelId());
   if (selectedChannel == initialMessage.channel_id) {
     NotificationStore.removeMessage(message.id);
   }
@@ -392,11 +416,11 @@ function NotificationCard({ message: initialMessage, matchedKeywords, Wrapper })
   );
 }
 function NotificationContainer({ wrapper }) {
-  const entries = Hooks.useStateFromStores(
+  const entries = Hooks2.useStateFromStores(
     [NotificationStore],
     () => NotificationStore.getMessages()
   );
-  const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
+  const position = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
   const pos = {
     top: position.startsWith("top") ? "5px" : void 0,
     bottom: position.startsWith("bottom") ? "5px" : void 0,
@@ -510,15 +534,20 @@ var InAppNotifications = class {
       }, {})
     });
   }
-  start() {
-    const MessageWrapperG = getKey(Webpack2.getBySource("Message must not be a thread starter message", { raw: true }).declarations, (x) => String(x?.type).includes("Message must not be a thread starter message"));
-    const MessageWrapper2 = MessageWrapperG.module[MessageWrapperG.key];
-    const AppMount = getKey(Webpack2.getBySource("DispatcherBridge", { raw: true }).declarations, (x) => String(x?.type).includes("Shakeable"));
+  async start() {
+    const MessageWrapper2 = getExportByStrings(
+      ["Message must not be a thread starter message"],
+      { declaration: (x) => String(x?.type).includes("Message must not be a thread starter message") }
+    );
+    const AppMount = await waitForExportBySource(
+      "DispatcherBridge",
+      { declaration: (x) => String(x?.type).includes("Shakeable") }
+    );
     BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
-    Patcher.after(AppMount.module[AppMount.key], "type", (_, __, res) => {
+    Patcher.after(AppMount, "type", (_, __, res) => {
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement(NotificationContainer, { wrapper: MessageWrapper2 })));
     });
     Dispatcher.subscribe("MESSAGE_CREATE", this.#messageHandler);
@@ -535,10 +564,10 @@ var InAppNotifications = class {
       const [value, setValue] = React2.useState(
         SettingsStore.getKeywords().join(";")
       );
-      const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15e3);
-      const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
-      const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
-      const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
+      const duration = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15e3);
+      const shouldReply = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
+      const showTextarea = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
+      const position = Hooks2.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
       return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {

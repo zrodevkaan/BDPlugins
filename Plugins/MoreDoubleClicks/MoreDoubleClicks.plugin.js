@@ -33,7 +33,6 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 var { Webpack, Utils, Patcher, Data, React, Hooks, Components } = new BdApi("MoreDoubleClicks");
 var EditUtils = Webpack.getModule((x) => x.startEditMessageRecord);
-var ReplyAction = Webpack.getByStrings("showMentionToggle", "FOCUS_CHANNEL_TEXT_AREA", { searchExports: true });
 var EmojiPack = () => {
   let a = Webpack.getModule((m) => m.EMOJI_NAME_RE && m.getCategories);
   return a.getCategories().map((m) => a.getByCategory(m)).flat();
@@ -85,6 +84,7 @@ function hasPermission(userId, permission, channelId) {
   }
   return PermissionStore.can(permission, channelId, userId);
 }
+var ReplyAction = Webpack.getByStrings("showMentionToggle", "FOCUS_CHANNEL_TEXT_AREA", { searchExports: true });
 function StartDoubleClickAction(_, args, ret, event) {
   const message = args[0].message;
   const canEdit = message.author.id == UserStore.getCurrentUser().id;
