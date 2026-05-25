@@ -1,9 +1,10 @@
 /**
  * @name GuildProfile
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.1
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
  */
+import {waitForExportByKeys} from "@helpers";
 
 const {Webpack, Webpack: {Filters}, ContextMenu, DOM, React, Components, UI} = BdApi;
 const {useState, useId, useRef, useLayoutEffect, useMemo, useReducer, useEffect} = React
@@ -16,7 +17,6 @@ const [
     VideoIcon,
     LiveStream,
     ServerOwnerIcon,
-    InviteData
 ] = BdApi.Webpack.getBulk(
     {
         filter: BdApi.Webpack.Filters.byStrings('"M15.16 16.51c-.57.28-1.16-.2-1.16-.83v-.14c0-.43.28-.8.63-1.02a3 3 0 0 0 0-5.04c-.35-.23-.63-.6-.63-1.02v-.14c0-.63.59-1.1 1.16-.83a5 5 0 0 1 0 9.02Z'),
@@ -40,7 +40,6 @@ const [
         filter: BdApi.Webpack.Filters.byStrings('"M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04'),
         searchExports: true
     },
-    {filter: BdApi.Webpack.Filters.byKeys('GuildTemplateName', 'Info', 'Data')}
 );
 
 const ServerOwnerIconClasses = Webpack.getMangled(Webpack.Filters.combine(Webpack.Filters.bySource('ownerIcon__'), Webpack.Filters.bySource('placeholder__')), {
@@ -49,7 +48,6 @@ const ServerOwnerIconClasses = Webpack.getMangled(Webpack.Filters.combine(Webpac
 
 const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve")})
 const getGuildIconURL = BdApi.Webpack.getByKeys('getGuildIconURL').getGuildIconURL
-const ModalClass = Webpack.getModule(m => m.modal && Object.keys(m).length === 1);
 const Section = Webpack.getByStrings('headingColor:', 'heading:', 'section', {searchExports: true})
 const snowflakeUtils = Webpack.getByKeys('extractTimestamp')
 const quantize = Webpack.getMangled('[[0,0,0]]', {
@@ -1522,7 +1520,7 @@ function BlockedTab({guild}) {
     );
 }
 
-function GuildProfile({guildId, transitionState}) {
+function GuildProfile({guildId, transitionState, InviteData}) {
     const id = useId();
     const [tab, setTab] = useState(Tabs.ABOUT);
     const ref = useRef(null);
@@ -1804,9 +1802,11 @@ function GuildProfile({guildId, transitionState}) {
     );
 }
 
-function openGuildProfileModal(guildId) {
+async function openGuildProfileModal(guildId) {
+    const InviteData = await waitForExportByKeys(["Data"])
+
     openModal((props) =>
-            React.createElement(GuildProfile, {guildId: guildId, ...props}),
+            React.createElement(GuildProfile, {guildId: guildId, ...props, InviteData}),
         {modalKey: `bd-guild-profile-${guildId}`}
     );
 }
