@@ -2,9 +2,9 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  */
-const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter")
+const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components
 const SelectableSearch = Webpack.getByStrings('horizontalControlColumnWidth:`min($',{searchExports:true})
@@ -254,7 +254,7 @@ function DomainCard({ domainObj, onChange }: { domainObj: { type: string; replac
                 <div style={{ width: '100%' }}>
                     <SelectableSearch
                         placeholder={replacements.length ? 'Select default replacement' : 'No replacements yet'}
-                        onChange={(e) => {
+                        onSelectionChange={(e) => {
                             const index = replacements.findIndex((r: string) => r === e)
                             if (index !== -1) setDefault(index)
                         }}

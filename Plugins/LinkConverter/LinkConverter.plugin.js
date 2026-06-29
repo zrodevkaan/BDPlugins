@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.3
+ * @version 2.0.4
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkConverter/LinkConverter.plugin.js 
  * @invite t3zMgv7Nvb
  */
@@ -31,7 +31,7 @@ __export(index_exports, {
   default: () => LinkConverter
 });
 module.exports = __toCommonJS(index_exports);
-var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu, Utils } = new BdApi("LinkConverter");
+var { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter");
 var { useState } = React;
 var { Button, ColorInput, SwitchInput } = Components;
 var SelectableSearch = Webpack.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
@@ -259,7 +259,7 @@ function DomainCard({ domainObj, onChange }) {
     SelectableSearch,
     {
       placeholder: replacements.length ? "Select default replacement" : "No replacements yet",
-      onChange: (e) => {
+      onSelectionChange: (e) => {
         const index = replacements.findIndex((r) => r === e);
         if (index !== -1) setDefault(index);
       },

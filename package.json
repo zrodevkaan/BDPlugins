@@ -22,8 +22,7 @@
     "react-dom": "^19.1.0"
   },
   "scripts": {
-    "run": "node esbuild.config.js",
-    "build": "node esbuild.config.js --bdist",
+    "build": "node esbuild.config.js",
     "prod": "node esbuild.config.js && node esbuild.config.js --bdist",
     "proddni": "node esbuild.config.js && node esbuild.config.js --dni"
   },
