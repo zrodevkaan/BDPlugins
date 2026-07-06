@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.1.2
+ * @version 2.1.3
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
  * @invite t3zMgv7Nvb
@@ -56,6 +56,11 @@ var ContextMenuHelper = (patches) => {
   });
   return () => unpatches.forEach((unpatch) => unpatch());
 };
+function getKey(module2, fn) {
+  for (const key in module2) {
+    if (fn(module2[key])) return { key, module: module2 };
+  }
+}
 function waitAndPatch(Patcher2, filter, key, callback) {
   Webpack2.waitForModule(filter).then((mod) => Patcher2.after(mod, key, callback));
 }
@@ -64,7 +69,8 @@ function waitAndPatch(Patcher2, filter, key, callback) {
 var { Patcher, Webpack: Webpack3, Data, Utils, Hooks: Hooks2, ContextMenu: ContextMenu2, Components, React: React2 } = new BdApi("Timezones");
 var ModalUtils = Webpack3.getByKeys("openModal");
 var Modal = Webpack3.getByKeys("Modal").Modal;
-var SearchableSelect = Webpack3.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
+var SearchableSelectModule = getKey(Webpack3.getBySource("Node.DOCUMENT_POSITION_CONTAINED_BY|Node.DOCUMENT_POSITION_FOLLOWING;", { raw: true }).declarations, (x) => String(x).includes("matchSorterOptions"));
+var SearchableSelect = SearchableSelectModule?.module[SearchableSelectModule?.key];
 var Selectable = Webpack3.getModule(Webpack3.Filters.byStrings(`"data-mana-component":"select"`), { searchExports: true });
 function getTimezones() {
   const now = /* @__PURE__ */ new Date();
