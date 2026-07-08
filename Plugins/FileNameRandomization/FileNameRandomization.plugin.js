@@ -1,107 +1,111 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 2.0.1
+ * @version 2.1.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/FileNameRandomization/FileNameRandomization.plugin.js 
  * @invite t3zMgv7Nvb
  */
 "use strict";
 
-// src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
-var { createElement, forwardRef } = React;
-function styledBase(tag, cssOrFn) {
-  return (props) => {
-    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
-  };
-}
-var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
-});
-
 // src/FileNameRandomization/index.tsx
 var characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-var { React: React2, Webpack, Patcher, Data } = new BdApi("FileNameRandomization");
-var FormItem = styled.div({
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px"
-});
-var FormSwitch = Webpack.getModule(Webpack.Filters.byStrings(`return"tooltipText"`));
-var TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountFullPadding"), { searchExports: true });
-var SearchableSelect = Webpack.getByStrings("horizontalControlColumnWidth:`min($", { searchExports: true });
-var { useState } = React2;
+var { React, Webpack, Patcher, Components, Data } = new BdApi("FileNameRandomization");
+var { SettingGroup, SettingItem, SwitchInput, RadioInput, TextInput } = Components;
+var { useState, useEffect } = React;
 var Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/);
-var Margins = Webpack.getMangled("marginBottom40_", {
-  marginBottom40: (x) => String(x).startsWith("marginBottom40"),
-  marginTop4: (x) => String(x).startsWith("marginTop4")
-});
 var ToolbarButton = Webpack.getByStrings("stopPropagation(),", "onClick:", "dangerous");
 var FoodIcon = ({ size = 24, color = "var(--interactive-icon-default)", ...props }) => {
-  return React2.createElement("svg", {
+  return React.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg",
     width: size,
     height: size,
     viewBox: "0 0 24 24",
     ...props
-  }, React2.createElement("path", {
+  }, React.createElement("path", {
     fill: color,
     fillRule: "evenodd",
     d: "m4.614 8.545l-.426 1.705H2a.75.75 0 0 0 0 1.5h20a.75.75 0 0 0 0-1.5h-2.187l-.427-1.705c-.546-2.183-.818-3.274-1.632-3.91C16.94 4 15.815 4 13.565 4h-3.13c-2.25 0-3.375 0-4.189.635c-.814.636-1.087 1.727-1.632 3.91M6.5 21a3.5 3.5 0 0 0 3.384-2.604l1.11-.555a2.25 2.25 0 0 1 2.012 0l1.11.555A3.501 3.501 0 0 0 21 17.5a3.5 3.5 0 0 0-6.91-.794l-.413-.206a3.75 3.75 0 0 0-3.354 0l-.413.206A3.501 3.501 0 0 0 3 17.5A3.5 3.5 0 0 0 6.5 21",
     clipRule: "evenodd"
   }));
 };
-var DataStore = new Proxy(
-  {},
-  {
-    get: (_, key) => {
-      return Data.load(key);
-    },
-    set: (_, key, value) => {
-      Data.save(key, value);
-      return true;
-    },
-    deleteProperty: (_, key) => {
-      Data.delete(key);
-      return true;
-    }
+var defaultSettings = {
+  useTimestamp: false,
+  prefix: "",
+  suffix: "",
+  randomLength: 10,
+  customFormat: "{prefix}{random}{suffix}",
+  preserveOriginalName: false,
+  caseOption: "mixed",
+  shouldIncognito: false
+};
+var SettingsStore = class extends BdApi.Utils.Store {
+  constructor(defaults) {
+    super();
+    this.defaults = defaults;
+    this.state = Object.keys(defaults).reduce((acc, key) => {
+      acc[key] = Data.load(key) ?? defaults[key];
+      return acc;
+    }, {});
   }
-);
+  getAll() {
+    return this.state;
+  }
+  get(key) {
+    return this.state[key];
+  }
+  set(key, value) {
+    this.state = { ...this.state, [key]: value };
+    Data.save(key, value);
+    this.emitChange();
+  }
+};
+var settingsStore = new SettingsStore(defaultSettings);
+function useSettingsStore() {
+  const [state, setState] = useState(settingsStore.getAll());
+  useEffect(() => {
+    const onChange = () => setState(settingsStore.getAll());
+    settingsStore.addChangeListener(onChange);
+    return () => settingsStore.removeChangeListener(onChange);
+  }, []);
+  return state;
+}
 var IncognitoButton = () => {
-  const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
-  const color = enabled ? "var(--interactive-icon-default)" : "var(--status-danger)";
-  return React2.createElement(ToolbarButton, {
-    tooltip: enabled ? "Randomization (Enabled)" : "Randomization (Disabled)",
-    color: enabled,
+  const { shouldIncognito } = useSettingsStore();
+  const color = shouldIncognito ? "var(--interactive-icon-default)" : "var(--status-danger)";
+  return React.createElement(ToolbarButton, {
+    tooltip: shouldIncognito ? "Randomization (Enabled)" : "Randomization (Disabled)",
+    color: shouldIncognito,
     onClick: () => {
-      setEnabled(!enabled);
-      DataStore.shouldIncognito = !enabled;
+      settingsStore.set("shouldIncognito", !shouldIncognito);
     }
-  }, React2.createElement(FoodIcon, {
+  }, React.createElement(FoodIcon, {
     color
   }));
 };
+var caseOptions = [
+  { name: "Mixed Case", value: "mixed", desc: "Leave character case as generated." },
+  { name: "Lowercase", value: "lowercase", desc: "Force the generated name to lowercase." },
+  { name: "Uppercase", value: "uppercase", desc: "Force the generated name to uppercase." }
+];
+var SettingsPanel = () => {
+  const { useTimestamp, prefix, suffix, randomLength, customFormat, preserveOriginalName, caseOption } = useSettingsStore();
+  const onFieldChange = (key, value) => settingsStore.set(key, value);
+  return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(SettingGroup, { name: "General", collapsible: false, shown: true }, /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Use Unix Timestamp", note: "Use a Unix timestamp instead of random characters.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(SwitchInput, { value: useTimestamp, onChange: (e) => onFieldChange("useTimestamp", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Preserve Original Filename", note: "Include the original filename in the new name.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(SwitchInput, { value: preserveOriginalName, onChange: (e) => onFieldChange("preserveOriginalName", e) }))), /* @__PURE__ */ BdApi.React.createElement(SettingGroup, { name: "Formatting", collapsible: false, shown: true }, /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Case Option", note: "Choose how the generated filename casing is applied." }, /* @__PURE__ */ BdApi.React.createElement(
+    RadioInput,
+    {
+      options: caseOptions,
+      value: caseOption,
+      onChange: (e) => onFieldChange("caseOption", e)
+    }
+  )), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Prefix", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { value: prefix, onChange: (e) => onFieldChange("prefix", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Suffix", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { value: suffix, onChange: (e) => onFieldChange("suffix", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Random String Length", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { type: "number", value: randomLength, onChange: (e) => onFieldChange("randomLength", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Custom Format", note: "Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders." }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { value: customFormat, onChange: (e) => onFieldChange("customFormat", e) }))));
+};
 var FileNameRandomization = class {
-  constructor() {
-    this.defaultSettings = {
-      useTimestamp: false,
-      prefix: "",
-      suffix: "",
-      randomLength: 10,
-      customFormat: "{prefix}{random}{suffix}",
-      preserveOriginalName: false,
-      caseOption: "mixed"
-    };
-  }
   start() {
     this.Main = Patcher.before(Webpack.getByKeys("_sendMessage"), "_sendMessage", this.handleFileUpload.bind(this));
     Patcher.after(Toolbar, "A", (_, __, returnValue) => {
       if (returnValue?.props?.actions?.props?.children) {
-        const incognitoButtonElement = React2.createElement(IncognitoButton);
+        const incognitoButtonElement = React.createElement(IncognitoButton);
         returnValue.props.actions.props.children.unshift(incognitoButtonElement);
       }
     });
@@ -110,23 +114,14 @@ var FileNameRandomization = class {
     Patcher.unpatchAll();
   }
   handleFileUpload(_, args) {
-    if (!DataStore.shouldIncognito) return;
+    if (!settingsStore.get("shouldIncognito")) return;
     if (args[2]?.attachmentsToUpload?.length == 0) return;
     for (const file of args[2]?.attachmentsToUpload) {
       file.filename = this.generateFilename(file.filename);
     }
   }
-  getSetting(key) {
-    return Data.load(key) ?? this.defaultSettings[key];
-  }
-  setSetting(key, value) {
-    return Data.save(key, value);
-  }
   generateFilename(originalFilename) {
-    const settings = Object.keys(this.defaultSettings).reduce((acc, key) => {
-      acc[key] = this.getSetting(key) ?? this.defaultSettings[key];
-      return acc;
-    }, {});
+    const settings = settingsStore.getAll();
     const fileNameParts = originalFilename.split(".");
     let ext = "";
     let originalNameWithoutExt = originalFilename;
@@ -160,93 +155,7 @@ var FileNameRandomization = class {
     }
   }
   getSettingsPanel() {
-    return () => {
-      const [useTimestamp, setUseTimestamp] = useState(this.getSetting("useTimestamp") || false);
-      const [prefix, setPrefix] = useState(this.getSetting("prefix") || "");
-      const [suffix, setSuffix] = useState(this.getSetting("suffix") || "");
-      const [randomLength, setRandomLength] = useState(this.getSetting("randomLength") || 10);
-      const [customFormat, setCustomFormat] = useState(this.getSetting("customFormat") || "{prefix}{random}{suffix}");
-      const [preserveOriginalName, setPreserveOriginalName] = useState(this.getSetting("preserveOriginalName"));
-      const [caseOption, setCaseOption] = useState(this.getSetting("caseOption") || "mixed");
-      const onSwitch = (id, value) => {
-        this.setSetting(id, value);
-        if (id === "useTimestamp") setUseTimestamp(value);
-        if (id === "preserveOriginalName") setPreserveOriginalName(value);
-      };
-      const onChange = (id, value) => {
-        this.setSetting(id, value);
-        if (id === "prefix") setPrefix(value);
-        if (id === "suffix") setSuffix(value);
-        if (id === "customFormat") setCustomFormat(value);
-      };
-      const onLengthChange = (value) => {
-        setRandomLength(value);
-        this.setSetting("randomLength", value);
-      };
-      const onCaseOptionChange = (value) => {
-        setCaseOption(value);
-        this.setSetting("caseOption", value);
-      };
-      return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
-        FormSwitch,
-        {
-          note: "Use a Unix timestamp instead of random characters.",
-          value: useTimestamp,
-          onChange: (e) => onSwitch("useTimestamp", e)
-        },
-        "Use Unix Timestamp"
-      ), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Case Option"), /* @__PURE__ */ BdApi.React.createElement(
-        SearchableSelect,
-        {
-          options: [
-            { label: "Mixed Case", value: "mixed" },
-            { label: "Lowercase", value: "lowercase" },
-            { label: "Uppercase", value: "uppercase" }
-          ],
-          value: caseOption,
-          onChange: (value) => onCaseOptionChange(value)
-        }
-      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Prefix"), /* @__PURE__ */ BdApi.React.createElement(
-        TextInput,
-        {
-          value: prefix,
-          onChange: (e) => onChange("prefix", e)
-        }
-      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Suffix"), /* @__PURE__ */ BdApi.React.createElement(
-        TextInput,
-        {
-          value: suffix,
-          onChange: (e) => onChange("suffix", e)
-        }
-      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Random String Length"), /* @__PURE__ */ BdApi.React.createElement(
-        TextInput,
-        {
-          type: "number",
-          value: randomLength,
-          onChange: (e) => onLengthChange(e)
-        }
-      )), /* @__PURE__ */ BdApi.React.createElement(FormItem, { className: Margins.marginBottom40 }, /* @__PURE__ */ BdApi.React.createElement("label", null, "Custom Format"), /* @__PURE__ */ BdApi.React.createElement("div", { style: {
-        color: "var(--text-normal)",
-        fontSize: "14px",
-        fontWeight: "var(--font-weight-normal)",
-        lineHeight: "20px"
-      } }, "Use ", "{prefix}", ", ", "{suffix}", ", ", "{timestamp}", ", ", "{random}", ", and ", "{original}", " as placeholders."), /* @__PURE__ */ BdApi.React.createElement(
-        TextInput,
-        {
-          value: customFormat,
-          onChange: (e) => onChange("customFormat", e)
-        }
-      )), /* @__PURE__ */ BdApi.React.createElement(
-        FormSwitch,
-        {
-          title: "Preserve Original Filename",
-          note: "Include the original filename in the new name.",
-          value: preserveOriginalName,
-          onChange: (e) => onSwitch("preserveOriginalName", e)
-        },
-        "Preserve Original Filename"
-      ));
-    };
+    return () => /* @__PURE__ */ BdApi.React.createElement(SettingsPanel, null);
   }
 };
 module.exports = FileNameRandomization;

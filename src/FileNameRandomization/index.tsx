@@ -1,32 +1,16 @@
 /**
  * @name FileNameRandomization
  * @author kaan
- * @version 2.0.1
+ * @version 2.1.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  */
-import {styled} from "../Helpers";
-
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-const {React, Webpack, Patcher, Data} = new BdApi('FileNameRandomization');
-const FormItem = styled.div({
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px"
-})
-
-const FormSwitch = Webpack.getModule(Webpack.Filters.byStrings(`return"tooltipText"`))
-const TextInput = Webpack.getModule(Webpack.Filters.byStrings("showCharacterCountFullPadding"), {searchExports: true})
-const SearchableSelect = Webpack.getByStrings('horizontalControlColumnWidth:`min($',{searchExports:true})
-
-const {useState} = React;
+const {React, Webpack, Patcher, Components, Data} = new BdApi('FileNameRandomization');
+const {SettingGroup, SettingItem, SwitchInput, RadioInput, TextInput} = Components;
+const {useState, useEffect} = React;
 
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
-const Margins = Webpack.getMangled('marginBottom40_', {
-    marginBottom40: x=>String(x).startsWith('marginBottom40'),
-    marginTop4: x=>String(x).startsWith('marginTop4')
-}) //Webpack.getByKeys('marginBottom40', 'marginTop4');
-
 const ToolbarButton = Webpack.getByStrings('stopPropagation(),','onClick:','dangerous')
 
 const FoodIcon = ({size = 24, color = "var(--interactive-icon-default)", ...props}) => {
@@ -40,51 +24,123 @@ const FoodIcon = ({size = 24, color = "var(--interactive-icon-default)", ...prop
     }));
 };
 
-const DataStore = new Proxy(
-    {},
-    {
-        get: (_, key) => {
-            return Data.load(key);
-        },
-        set: (_, key, value) => {
-            Data.save(key, value);
-            return true;
-        },
-        deleteProperty: (_, key) => {
-            Data.delete(key);
-            return true;
-        },
+const defaultSettings = {
+    useTimestamp: false,
+    prefix: '',
+    suffix: '',
+    randomLength: 10,
+    customFormat: '{prefix}{random}{suffix}',
+    preserveOriginalName: false,
+    caseOption: 'mixed',
+    shouldIncognito: false,
+};
+
+class SettingsStore extends BdApi.Utils.Store {
+    constructor(defaults) {
+        super();
+        this.defaults = defaults;
+        this.state = Object.keys(defaults).reduce((acc, key) => {
+            acc[key] = Data.load(key) ?? defaults[key];
+            return acc;
+        }, {});
     }
-);
+
+    getAll() {
+        return this.state;
+    }
+
+    get(key) {
+        return this.state[key];
+    }
+
+    set(key, value) {
+        this.state = {...this.state, [key]: value};
+        Data.save(key, value);
+        this.emitChange();
+    }
+}
+
+const settingsStore = new SettingsStore(defaultSettings);
+
+function useSettingsStore() {
+    const [state, setState] = useState(settingsStore.getAll());
+
+    useEffect(() => {
+        const onChange = () => setState(settingsStore.getAll());
+        settingsStore.addChangeListener(onChange);
+        return () => settingsStore.removeChangeListener(onChange);
+    }, []);
+
+    return state;
+}
 
 const IncognitoButton = () => {
-    const [enabled, setEnabled] = useState(DataStore.shouldIncognito);
+    const {shouldIncognito} = useSettingsStore();
 
-    const color = enabled ? "var(--interactive-icon-default)" : 'var(--status-danger)'
+    const color = shouldIncognito ? "var(--interactive-icon-default)" : 'var(--status-danger)'
 
     return React.createElement(ToolbarButton, {
-        tooltip: enabled ? 'Randomization (Enabled)' : 'Randomization (Disabled)', color: enabled, onClick: () => {
-            setEnabled(!enabled);
-            DataStore.shouldIncognito = !enabled
+        tooltip: shouldIncognito ? 'Randomization (Enabled)' : 'Randomization (Disabled)', color: shouldIncognito, onClick: () => {
+            settingsStore.set('shouldIncognito', !shouldIncognito);
         }
     }, React.createElement(FoodIcon, {
         color
     }));
 };
 
-class FileNameRandomization {
+const caseOptions = [
+    {name: 'Mixed Case', value: 'mixed', desc: 'Leave character case as generated.'},
+    {name: 'Lowercase', value: 'lowercase', desc: 'Force the generated name to lowercase.'},
+    {name: 'Uppercase', value: 'uppercase', desc: 'Force the generated name to uppercase.'}
+];
 
-    constructor() {
-        this.defaultSettings = {
-            useTimestamp: false,
-            prefix: '',
-            suffix: '',
-            randomLength: 10,
-            customFormat: '{prefix}{random}{suffix}',
-            preserveOriginalName: false,
-            caseOption: 'mixed',
-        };
-    }
+const SettingsPanel = () => {
+    const {useTimestamp, prefix, suffix, randomLength, customFormat, preserveOriginalName, caseOption} = useSettingsStore();
+
+    const onFieldChange = (key, value) => settingsStore.set(key, value);
+
+    return (
+        <div>
+            <SettingGroup name="General" collapsible={false} shown={true}>
+                <SettingItem name="Use Unix Timestamp" note="Use a Unix timestamp instead of random characters." inline={true}>
+                    <SwitchInput value={useTimestamp} onChange={(e) => onFieldChange('useTimestamp', e)} />
+                </SettingItem>
+
+                <SettingItem name="Preserve Original Filename" note="Include the original filename in the new name." inline={true}>
+                    <SwitchInput value={preserveOriginalName} onChange={(e) => onFieldChange('preserveOriginalName', e)} />
+                </SettingItem>
+            </SettingGroup>
+
+            <SettingGroup name="Formatting" collapsible={false} shown={true}>
+                <SettingItem name="Case Option" note="Choose how the generated filename casing is applied.">
+                    <RadioInput
+                        options={caseOptions}
+                        value={caseOption}
+                        onChange={(e) => onFieldChange('caseOption', e)}
+                    />
+                </SettingItem>
+
+                <SettingItem name="Prefix" inline={true}>
+                    <TextInput value={prefix} onChange={(e) => onFieldChange('prefix', e)} />
+                </SettingItem>
+
+                <SettingItem name="Suffix" inline={true}>
+                    <TextInput value={suffix} onChange={(e) => onFieldChange('suffix', e)} />
+                </SettingItem>
+
+                <SettingItem name="Random String Length" inline={true}>
+                    <TextInput type="number" value={randomLength} onChange={(e) => onFieldChange('randomLength', e)} />
+                </SettingItem>
+
+                <SettingItem name="Custom Format" note="Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders.">
+                    <TextInput value={customFormat} onChange={(e) => onFieldChange('customFormat', e)} />
+                </SettingItem>
+            </SettingGroup>
+        </div>
+    );
+};
+
+class FileNameRandomization {
 
     start() {
         this.Main = Patcher.before(Webpack.getByKeys('_sendMessage'), "_sendMessage", this.handleFileUpload.bind(this));
@@ -102,7 +158,7 @@ class FileNameRandomization {
     }
 
     handleFileUpload(_, args) {
-        if (!DataStore.shouldIncognito) return;
+        if (!settingsStore.get('shouldIncognito')) return;
 
         if (args[2]?.attachmentsToUpload?.length == 0) return;
 
@@ -111,19 +167,8 @@ class FileNameRandomization {
         }
     }
 
-    getSetting(key) {
-        return Data.load(key) ?? this.defaultSettings[key];
-    }
-
-    setSetting(key, value) {
-        return Data.save(key, value);
-    }
-
     generateFilename(originalFilename) {
-        const settings = Object.keys(this.defaultSettings).reduce((acc, key) => {
-            acc[key] = this.getSetting(key) ?? this.defaultSettings[key];
-            return acc;
-        }, {});
+        const settings = settingsStore.getAll();
 
         const fileNameParts = originalFilename.split('.');
 
@@ -172,114 +217,7 @@ class FileNameRandomization {
     }
 
     getSettingsPanel() {
-        return () => {
-            const [useTimestamp, setUseTimestamp] = useState(this.getSetting('useTimestamp') || false);
-            const [prefix, setPrefix] = useState(this.getSetting('prefix') || '');
-            const [suffix, setSuffix] = useState(this.getSetting('suffix') || '');
-            const [randomLength, setRandomLength] = useState(this.getSetting('randomLength') || 10);
-            const [customFormat, setCustomFormat] = useState(this.getSetting('customFormat') || '{prefix}{random}{suffix}');
-            const [preserveOriginalName, setPreserveOriginalName] = useState(this.getSetting('preserveOriginalName'));
-            const [caseOption, setCaseOption] = useState(this.getSetting('caseOption') || 'mixed');
-
-            const onSwitch = (id, value) => {
-                this.setSetting(id, value);
-                if (id === 'useTimestamp') setUseTimestamp(value);
-                if (id === 'preserveOriginalName') setPreserveOriginalName(value);
-            };
-
-            const onChange = (id, value) => {
-                this.setSetting(id, value);
-                if (id === 'prefix') setPrefix(value);
-                if (id === 'suffix') setSuffix(value);
-                if (id === 'customFormat') setCustomFormat(value);
-            };
-
-            const onLengthChange = (value) => {
-                setRandomLength(value);
-                this.setSetting('randomLength', value);
-            };
-
-            const onCaseOptionChange = (value) => {
-                setCaseOption(value);
-                this.setSetting('caseOption', value);
-            };
-
-            return (
-                <div>
-                    <FormSwitch
-                        note="Use a Unix timestamp instead of random characters."
-                        value={useTimestamp}
-                        onChange={(e) => onSwitch('useTimestamp', e)}
-                    >
-                        Use Unix Timestamp
-                    </FormSwitch>
-
-                    <FormItem className={Margins.marginBottom40}>
-                        <label>Case Option</label>
-                        <SearchableSelect
-                            options={[
-                                {label: 'Mixed Case', value: 'mixed'},
-                                {label: 'Lowercase', value: 'lowercase'},
-                                {label: 'Uppercase', value: 'uppercase'}
-                            ]}
-                            value={caseOption}
-                            onChange={(value) => onCaseOptionChange(value)}
-                        />
-                    </FormItem>
-
-                    <FormItem className={Margins.marginBottom40}>
-                        <label>Prefix</label>
-                        <TextInput
-                            value={prefix}
-                            onChange={(e) => onChange('prefix', e)}
-                        />
-                    </FormItem>
-
-                    <FormItem className={Margins.marginBottom40}>
-                        <label>Suffix</label>
-                        <TextInput
-                            value={suffix}
-                            onChange={(e) => onChange('suffix', e)}
-                        />
-                    </FormItem>
-
-                    <FormItem className={Margins.marginBottom40}>
-                        <label>Random String Length</label>
-                        <TextInput
-                            type="number"
-                            value={randomLength}
-                            onChange={(e) => onLengthChange(e)}
-                        />
-                    </FormItem>
-
-                    <FormItem className={Margins.marginBottom40}>
-                        <label>Custom Format</label>
-                        <div style={{
-                            color: "var(--text-normal)",
-                            fontSize: "14px",
-                            fontWeight: "var(--font-weight-normal)",
-                            lineHeight: "20px"
-                        }}>
-                            Use {"{prefix}"}, {"{suffix}"}, {"{timestamp}"}, {"{random}"}, and {"{original}"} as
-                            placeholders.
-                        </div>
-                        <TextInput
-                            value={customFormat}
-                            onChange={(e) => onChange('customFormat', e)}
-                        />
-                    </FormItem>
-
-                    <FormSwitch
-                        title="Preserve Original Filename"
-                        note="Include the original filename in the new name."
-                        value={preserveOriginalName}
-                        onChange={(e) => onSwitch('preserveOriginalName', e)}
-                    >
-                        Preserve Original Filename
-                    </FormSwitch>
-                </div>
-            );
-        };
+        return () => <SettingsPanel />;
     }
 }
 
