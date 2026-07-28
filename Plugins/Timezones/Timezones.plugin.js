@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.1.4
+ * @version 2.1.5
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js 
  * @invite t3zMgv7Nvb
@@ -394,6 +394,9 @@ var Timezones = class {
         }
       }
     ]);
+  }
+  getTimezoneComp({ user }) {
+    return /* @__PURE__ */ BdApi.React.createElement(Timezone, { user });
   }
   getSettingsPanel() {
     return () => {

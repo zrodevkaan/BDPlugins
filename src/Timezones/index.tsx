@@ -1,7 +1,7 @@
 /**
  * @name Timezones
  * @author Kaan
- * @version 2.1.4
+ * @version 2.1.5
  * @description Allows you to display a local timezone you set for a user.
  */
 import type {User} from "discord-types/general";
@@ -394,6 +394,11 @@ export default class Timezones {
                 }
             }
         ])
+    }
+
+    getTimezoneComp({user}: { user: User })
+    {
+        return <Timezone user={user}/>
     }
 
     getSettingsPanel() {
