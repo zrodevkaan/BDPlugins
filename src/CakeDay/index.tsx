@@ -135,7 +135,7 @@ function CakeWithConfetti({data, type, size}): React.JSX.Element {
 
         Methods.createMultipleConfettiAt(centerX, centerY, {
             velocity: velocityConfigs.find(x => x.type === currentType) ?? velocityConfigs[3],
-        });
+        }, Settings.get("confettiAmount") ?? 20);
     };
 
     return (
@@ -205,6 +205,7 @@ const Settings = new class SettingsStore extends Utils.Store {
     set(key: string, value: string) {
         this.settings = {...this.settings, [key]: value};
         Data.save("settings", this.settings)
+        this.emitChange();
     }
 
     del(key: string) {
@@ -385,16 +386,29 @@ export default class CakeDay {
     getSettingsPanel() {
         return () => {
             const confettiType = Hooks.useStateFromStores([Settings], () => Settings.get("confettiType")) || "linear-random";
+            const confettiAmount = Hooks.useStateFromStores([Settings], () => Settings.get("confettiAmount")) || 20;
 
-            return <Components.SettingGroup name={"Extra"}>
+            const bypassAmount = Hooks.useStateFromStores([Settings], () => Settings.get("bypassAmount")) || false;
+
+            return <Components.SettingGroup name={"Confetti Settings"}>
                 <Components.SettingItem name={"Confetti Type"}
                                         note={"Changes the behaviour of the confetti when hovering."}>
                     <Components.DropdownInput value={confettiType}
-                                              onChange={(type: string) => Settings.set("confettiType", type)}
+                                              onChange={(amt: string) => Settings.set("confettiType", amt)}
                                               options={velocityConfigs.map((config) => ({
                                                   label: config.type,
                                                   value: config.type
                                               }))}></Components.DropdownInput>
+                </Components.SettingItem>
+
+                <Components.SettingItem name={"Confetti Amount"}
+                                        note={"how much bifday you want....."}>
+                    <Components.SliderInput min={0} max={bypassAmount ? 1000 : 100} step={[20]} value={confettiAmount}
+                                              onChange={(type: string) => Settings.set("confettiAmount", type)}></Components.SliderInput>
+                </Components.SettingItem>
+
+                <Components.SettingItem name={"More confett~~~~!!@@!~#@#"} note={"Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."}>
+                    <Components.SwitchInput value={bypassAmount} onChange={(val:boolean) => Settings.set("bypassAmount", val)}/>
                 </Components.SettingItem>
             </Components.SettingGroup>
         }

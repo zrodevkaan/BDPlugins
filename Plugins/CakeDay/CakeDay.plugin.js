@@ -169,7 +169,7 @@ function CakeWithConfetti({ data, type, size }) {
     const centerY = t.top + t.height / 2;
     Methods.createMultipleConfettiAt(centerX, centerY, {
       velocity: velocityConfigs.find((x) => x.type === currentType) ?? velocityConfigs[3]
-    });
+    }, Settings.get("confettiAmount") ?? 20);
   };
   return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: handleMouseOver }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { size, ...data }));
 }
@@ -256,6 +256,7 @@ var Settings = new class SettingsStore extends Utils.Store {
   set(key, value) {
     this.settings = { ...this.settings, [key]: value };
     Data.save("settings", this.settings);
+    this.emitChange();
   }
   del(key) {
     delete this.settings[key];
@@ -373,7 +374,9 @@ var CakeDay = class {
   getSettingsPanel() {
     return () => {
       const confettiType = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiType")) || "linear-random";
-      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Extra" }, /* @__PURE__ */ BdApi.React.createElement(
+      const confettiAmount = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiAmount")) || 20;
+      const bypassAmount = Hooks2.useStateFromStores([Settings], () => Settings.get("bypassAmount")) || false;
+      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Confetti Settings" }, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
           name: "Confetti Type",
@@ -383,14 +386,30 @@ var CakeDay = class {
           Components.DropdownInput,
           {
             value: confettiType,
-            onChange: (type) => Settings.set("confettiType", type),
+            onChange: (amt) => Settings.set("confettiType", amt),
             options: velocityConfigs.map((config) => ({
               label: config.type,
               value: config.type
             }))
           }
         )
-      ));
+      ), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          name: "Confetti Amount",
+          note: "how much bifday you want....."
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.SliderInput,
+          {
+            min: 0,
+            max: bypassAmount ? 1e3 : 100,
+            step: [20],
+            value: confettiAmount,
+            onChange: (type) => Settings.set("confettiAmount", type)
+          }
+        )
+      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "More confett~~~~!!@@!~#@#", note: "Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues." }, /* @__PURE__ */ BdApi.React.createElement(Components.SwitchInput, { value: bypassAmount, onChange: (val) => Settings.set("bypassAmount", val) })));
     };
   }
   patchUserContextMenu = (res, args) => {
