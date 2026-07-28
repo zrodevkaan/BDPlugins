@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.0.0
+ * @version 1.1.0
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js 
  * @invite t3zMgv7Nvb
@@ -31,155 +31,127 @@ __export(index_exports, {
   default: () => CakeDay
 });
 module.exports = __toCommonJS(index_exports);
-var { Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components } = new BdApi("CakeDay");
-var Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
+
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+function resolveModule(filter, options) {
+  const opts = options ?? {};
+  if (opts.declaration) {
+    const { declaration, key, raw, ...rest } = opts;
+    const result = Webpack.getMangled(filter, { __value: declaration }, {
+      ...rest,
+      mapDeclarations: true
+    });
+    return result?.__value ?? null;
+  }
+  const mod = Webpack.getModule(filter, opts);
+  if (mod == null) return null;
+  return opts.key ? mod[opts.key] : mod;
+}
+function wpGetByKeys(keys, options) {
+  return resolveModule(Webpack.Filters.byKeys(...keys), options);
+}
+function wpGetBySource(source, options) {
+  return resolveModule(Webpack.Filters.bySource(...source), options);
+}
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+function getKey(module2, fn) {
+  for (const key in module2) {
+    if (fn(module2[key])) return { key, module: module2 };
+  }
+}
+function findInTree(tree, predicate, { walkable = [], ignore = [], maxDepth = 100 } = {}) {
+  function walk(node, depth) {
+    if (!node || typeof node !== "object" || depth > maxDepth) return null;
+    if (predicate(node)) return node;
+    const keys = walkable.length ? walkable.filter((k) => k in node) : Object.keys(node).filter((k) => !ignore.includes(k));
+    for (const key of keys) {
+      const child = node[key];
+      if (Array.isArray(child)) {
+        for (const item of child) {
+          const result = walk(item, depth + 1);
+          if (result !== null) return result;
+        }
+      } else {
+        const result = walk(child, depth + 1);
+        if (result !== null) return result;
+      }
+    }
+    return null;
+  }
+  return walk(tree, 0);
+}
+
+// src/CakeDay/index.tsx
+var ModalModule = wpGetByKeys(["openModal"]);
+var Modal = wpGetByKeys(["Modal"]).Modal;
+var { Patcher, Webpack: Webpack3, React: React2, Data, DOM, ContextMenu: ContextMenu2, UI, Net, Utils, Components, Hooks: Hooks2 } = new BdApi("CakeDay");
+var Confetti = Webpack3.getBySource("createMultipleConfettiAt:()=>[]");
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
-var Badges = Webpack.getBySource('action:"PRESS_BADGE"');
-var UsernameLocation = Webpack.getBySource("isGDMFacepileEnabled", "avatarDecorationSrc");
+var Badges = Webpack3.getBySource('action:"PRESS_BADGE"');
+var PrivateChannelActions = Webpack3.getByKeys("openPrivateChannel");
 var velocityConfigs = [
   {
     type: "static",
-    value: {
-      x: 100,
-      y: -50,
-      z: 0
-    },
+    value: { x: 120, y: -180, z: 0 },
     uniformVectorValues: false
   },
   {
     type: "static-random",
-    minValue: {
-      x: -180,
-      y: -180,
-      z: 0
-    },
-    maxValue: {
-      x: 180,
-      y: 180,
-      z: 0
-    },
+    minValue: { x: -220, y: -260, z: 0 },
+    maxValue: { x: 220, y: -60, z: 0 },
     uniformVectorValues: false
   },
   {
     type: "linear",
-    value: {
-      x: 100,
-      y: -50,
-      z: 0
-    },
-    addValue: {
-      x: 10,
-      y: 5,
-      z: 0
-    },
+    value: { x: 100, y: -150, z: 0 },
+    addValue: { x: 0, y: 8, z: 0 },
     uniformVectorValues: false
   },
   {
     type: "linear-random",
-    minValue: {
-      x: 50,
-      y: -100,
-      z: 0
-    },
-    maxValue: {
-      x: 150,
-      y: 0,
-      z: 0
-    },
-    minAddValue: {
-      x: 5,
-      y: 2,
-      z: 0
-    },
-    maxAddValue: {
-      x: 15,
-      y: 8,
-      z: 0
-    },
+    minValue: { x: -150, y: -220, z: 0 },
+    maxValue: { x: 150, y: -80, z: 0 },
+    minAddValue: { x: -5, y: 6, z: 0 },
+    maxAddValue: { x: 5, y: 14, z: 0 },
     uniformVectorValues: false
   },
   {
     type: "oscillating",
-    value: {
-      x: 0,
-      y: 0,
-      z: 0
-    },
-    start: {
-      x: -100,
-      y: -100,
-      z: 0
-    },
-    final: {
-      x: 100,
-      y: 100,
-      z: 0
-    },
-    duration: {
-      x: 2e3,
-      y: 2e3,
-      z: 2e3
-    },
-    direction: {
-      x: 1,
-      y: 10,
-      z: 1
-    },
-    easingFunction: (t) => t * t,
+    value: { x: 0, y: 0, z: 0 },
+    start: { x: -140, y: -140, z: 0 },
+    final: { x: 140, y: 140, z: 0 },
+    duration: { x: 1400, y: 1400, z: 1400 },
+    direction: { x: 1, y: -1, z: 1 },
+    easingFunction: (t) => t * (2 - t),
     uniformVectorValues: false
   },
   {
     type: "oscillating-random",
-    minValue: {
-      x: 0.2,
-      y: 0.2,
-      z: 0
-    },
-    maxValue: {
-      x: -1.2,
-      y: -1.2,
-      z: 0
-    },
-    minStart: {
-      x: 1,
-      y: -6,
-      z: 0
-    },
-    maxStart: {
-      x: -10,
-      y: 10,
-      z: 0
-    },
-    minFinal: {
-      x: -10,
-      y: 10,
-      z: 0
-    },
-    maxFinal: {
-      x: 10,
-      y: -10,
-      z: 0
-    },
-    minDuration: {
-      x: 3e3,
-      y: 3e3,
-      z: 3e3
-    },
-    maxDuration: {
-      x: 6e3,
-      y: 6e3,
-      z: 6e3
-    },
-    minDirection: {
-      x: -0.5,
-      y: -0.5,
-      z: -0.5
-    },
-    maxDirection: {
-      x: 0.5,
-      y: 0.5,
-      z: 0.5
-    },
+    minValue: { x: -0.4, y: -0.4, z: 0 },
+    maxValue: { x: 0.4, y: 0.4, z: 0 },
+    minStart: { x: -240, y: -240, z: 0 },
+    maxStart: { x: 240, y: 240, z: 0 },
+    minFinal: { x: -240, y: -240, z: 0 },
+    maxFinal: { x: 240, y: 240, z: 0 },
+    minDuration: { x: 900, y: 1400, z: 900 },
+    maxDuration: { x: 1800, y: 2600, z: 1800 },
+    minDirection: { x: -1, y: -1, z: -1 },
+    maxDirection: { x: 1, y: 1, z: 1 },
     easingFunctions: [
       (t) => Math.sin(t * Math.PI * 4) * 0.7 + 0.3,
       (t) => t * t * (3 - 2 * t),
@@ -188,26 +160,26 @@ var velocityConfigs = [
     uniformVectorValues: false
   }
 ];
-function CakeWithConfetti({ data, type }) {
-  const Methods = React.use(ConfettiContext);
+function CakeWithConfetti({ data, type, size }) {
+  const Methods = React2.use(ConfettiContext);
   const handleMouseOver = (e) => {
     const t = e.currentTarget.getBoundingClientRect();
-    const currentType = DataStore?.confettiType || type || "static-random";
+    const currentType = Settings.get("confettiType") || type || "static-random";
     const centerX = t.left + t.width / 2;
     const centerY = t.top + t.height / 2;
     Methods.createMultipleConfettiAt(centerX, centerY, {
-      velocity: velocityConfigs.find((x) => x.type === currentType)
+      velocity: velocityConfigs.find((x) => x.type === currentType) ?? velocityConfigs[3]
     });
   };
-  return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: handleMouseOver }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { ...data }));
+  return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: handleMouseOver }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { size, ...data }));
 }
-var CakeSVG = () => {
+var CakeSVG = ({ size }) => {
   return /* @__PURE__ */ BdApi.React.createElement(
     "svg",
     {
       xmlns: "http://www.w3.org/2000/svg",
-      width: "16px",
-      height: "16px",
+      width: size || "16px",
+      height: size || "16px",
       viewBox: "0 0 1024 1024",
       className: "icon",
       version: "1.1"
@@ -257,31 +229,50 @@ var CakeSVG = () => {
     )
   );
 };
-var DataStore = new Proxy({}, {
-  get: (target, key) => {
-    return Data.load(key);
-  },
-  set: (_, key, value) => {
-    Data.save(key, value);
-    return true;
-  },
-  deleteProperty: (_, key) => {
-    Data.delete(key);
-    return true;
+var DataStore = new class CakeStore extends Utils.Store {
+  birthdays = Data.load("Birthdays") ?? {};
+  get(id) {
+    return this.birthdays[id] || {};
   }
-});
+  set(id, date) {
+    this.birthdays = { ...this.birthdays, [id]: date };
+    Data.save("Birthdays", this.birthdays);
+    this.emitChange();
+  }
+  del(id) {
+    delete this.birthdays[id];
+    Data.save("Birthdays", this.birthdays);
+    this.emitChange();
+  }
+  getAll() {
+    return this.birthdays;
+  }
+}();
+var Settings = new class SettingsStore extends Utils.Store {
+  settings = Data.load("settings") || {};
+  get(key) {
+    return this.settings[key];
+  }
+  set(key, value) {
+    this.settings = { ...this.settings, [key]: value };
+    Data.save("settings", this.settings);
+  }
+  del(key) {
+    delete this.settings[key];
+    Data.save("settings", this.settings);
+  }
+}();
 var TextInput = ({ user, birthday }) => {
   return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
     Components.TextInput,
     {
-      placeholder: "Date",
+      style: { width: "100%" },
+      placeholder: "MM/DD or DD/MM \u2014 e.g. 07/28",
       value: birthday?.date,
       onChange: (e) => {
         birthday.date = e;
         birthday.shouldShow = true;
-        const births = DataStore.Birthdays;
-        births[user.id] = birthday;
-        DataStore.Birthdays = births;
+        DataStore.set(user.id, birthday);
       }
     }
   ));
@@ -304,11 +295,37 @@ var checkDate = (date) => {
   const isMMDD = firstPart <= 12 && secondPart <= 31 && today.getDate() === secondPart && today.getMonth() === firstPart - 1;
   return isDDMM || isMMDD;
 };
+var BirthdayListNotification = ({ users }) => {
+  return /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } }, users.map((user) => /* @__PURE__ */ BdApi.React.createElement(
+    "div",
+    {
+      key: user.id,
+      style: { display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" },
+      onClick: (e) => {
+        e.stopPropagation();
+        PrivateChannelActions.getDMChannel(user.id).then((_) => {
+          PrivateChannelActions?.openPrivateChannel?.({ recipientIds: user.id });
+        });
+      }
+    },
+    /* @__PURE__ */ BdApi.React.createElement(
+      "img",
+      {
+        src: user.getAvatarURL?.(void 0, 40, true),
+        width: 28,
+        height: 28,
+        style: { borderRadius: "50%", flexShrink: 0 }
+      }
+    ),
+    /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "14px" } }, user.globalName || user.username)
+  )));
+};
 var CakeDay = class {
+  interval;
   start() {
-    Patcher.after(Badges, "Z", (that, [args], res) => {
+    Patcher.after(Badges, "A", (that, [args], res) => {
       const userData = args.displayProfile;
-      const birthday = DataStore.Birthdays[userData?.userId] || {};
+      const birthday = DataStore.get(userData?.userId) || {};
       const isBirthday = checkDate(birthday.date);
       if (isBirthday) {
         res.props.children.unshift(
@@ -316,40 +333,70 @@ var CakeDay = class {
         );
       }
     });
-    Patcher.after(UsernameLocation, "ZP", (_, __, res) => {
-      Patcher.after(res, "type", (_2, __2, res2) => {
-        const orig = res2.props.children.props?.children;
-        if (!orig) return;
-        res2.props.children.props.children = new Proxy(orig, {
-          apply(target, thisArg, args) {
-            const ret = Reflect.apply(target, thisArg, args);
-            const found = Utils.findInTree(ret?.props?.children?.[1]?.props?.children?.[1], (x) => x?.to, { walkable: ["props", "children"] });
-            const channel = Webpack.Stores.ChannelStore.getChannel(found.to.split("/").pop());
-            const user = Webpack.Stores.UserStore.getUser(channel.recipients[0]);
-            const nameProps = found?.children?.props?.name?.props;
-            if (checkDate(DataStore.Birthdays[user.id]?.date)) {
-              nameProps.children = [/* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", gap: "5px" } }, /* @__PURE__ */ BdApi.React.createElement(
-                CakeWithConfetti,
-                {
-                  type: DataStore?.confettiType || "static-random"
-                }
-              ), " ", nameProps.children)];
-            }
-            return [ret];
-          }
-        });
-      });
+    const NameAndDecorators = wpGetBySource([":null,withDisplayNameStyles:"], { raw: true });
+    const ModuleWithKey = getKey(NameAndDecorators.declarations, (x) => String(x).includes(".FRIEND_REQUEST_ACCEPTED})"));
+    Patcher.after(ModuleWithKey?.module, ModuleWithKey?.key, (a, b, res) => {
+      const BeforeChildren = res.props.children({ role: {} });
+      const userData = b[0].user;
+      const birthday = DataStore.get(userData?.id) || {};
+      if (checkDate(birthday.date)) {
+        const location = findInTree(BeforeChildren, (x) => x?.name, { walkable: ["props", "children", "name"] });
+        const decor = /* @__PURE__ */ BdApi.React.createElement("span", { style: { paddingLeft: "10px" } }, /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, null));
+        location.decorators = !Array.isArray(location.decorators) ? [decor] : location.decorators.push(decor);
+      }
+      Patcher.after(res.props, "children", () => BeforeChildren);
+      return res;
     });
-    ContextMenu.patch("user-context", this.patchUserContextMenu);
+    Webpack3.Stores.UserStore._dispatcher.subscribe("HOUR", this.updateUserThatSomePersonBirthdayIsTodayLmao);
+    ContextMenu2.patch("user-context", this.patchUserContextMenu);
+    this.interval = setInterval(() => Webpack3.Stores.A._dispatcher.dispatch({ type: "HOUR" }), 60 * 60 * 1e3);
+  }
+  updateUserThatSomePersonBirthdayIsTodayLmao() {
+    const allBirthdays = Object.entries(DataStore.getAll()).filter(([id, data]) => checkDate(data.date));
+    if (!allBirthdays.length) return;
+    const users = allBirthdays.map(([id]) => Webpack3.Stores.UserStore.getUser(id)).filter(Boolean);
+    UI.showNotification({
+      id: "cakeday-batch",
+      title: users.length > 1 ? `${users.length} Birthdays Today` : "Birthday",
+      icon: () => /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { size: "20px" }),
+      content: /* @__PURE__ */ BdApi.React.createElement(BirthdayListNotification, { users }),
+      type: "success",
+      duration: Infinity
+    });
   }
   stop() {
     Patcher.unpatchAll();
-    ContextMenu.unpatch("user-context", this.patchUserContextMenu);
+    Webpack3.Stores.UserStore._dispatcher.unsubscribe("HOUR", this.updateUserThatSomePersonBirthdayIsTodayLmao);
+    ContextMenu2.unpatch("user-context", this.patchUserContextMenu);
+    clearInterval(this.interval);
+  }
+  getSettingsPanel() {
+    return () => {
+      const confettiType = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiType")) || "linear-random";
+      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Extra" }, /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          name: "Confetti Type",
+          note: "Changes the behaviour of the confetti when hovering."
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.DropdownInput,
+          {
+            value: confettiType,
+            onChange: (type) => Settings.set("confettiType", type),
+            options: velocityConfigs.map((config) => ({
+              label: config.type,
+              value: config.type
+            }))
+          }
+        )
+      ));
+    };
   }
   patchUserContextMenu = (res, args) => {
     const user = args.user;
-    const birthday = DataStore.Birthdays[user.id] || {};
-    const ButtonGroup = ContextMenu.buildItem({
+    const birthday = DataStore.get(user.id) || {};
+    const ButtonGroup = ContextMenu2.buildItem({
       type: "submenu",
       label: "Cake Day",
       iconLeft: CakeSVG,
@@ -358,12 +405,19 @@ var CakeDay = class {
           type: "button",
           label: "Set Date",
           action: () => {
-            UI.showConfirmationModal(`Set ${user.username}'s Birthday`, /* @__PURE__ */ BdApi.React.createElement(
-              TextInput,
+            ModalModule.openModal((props) => /* @__PURE__ */ BdApi.React.createElement(
+              Modal,
               {
-                user,
-                birthday
-              }
+                ...props,
+                title: `Set ${user.globalName ?? user.username}'s birthday`
+              },
+              /* @__PURE__ */ BdApi.React.createElement(
+                TextInput,
+                {
+                  user,
+                  birthday
+                }
+              )
             ));
           }
         },
@@ -373,7 +427,7 @@ var CakeDay = class {
           color: "danger",
           disabled: !birthday?.date,
           action: () => {
-            delete DataStore.Birthdays[user.id];
+            DataStore.del(user.id);
           }
         }
       ]
