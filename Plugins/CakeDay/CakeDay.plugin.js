@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.0
+ * @version 1.1.1
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js 
  * @invite t3zMgv7Nvb
@@ -104,6 +104,7 @@ var Confetti = Webpack3.getBySource("createMultipleConfettiAt:()=>[]");
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
 var Badges = Webpack3.getBySource('action:"PRESS_BADGE"');
 var PrivateChannelActions = Webpack3.getByKeys("openPrivateChannel");
+var FetchModule = Webpack3.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Webpack3.Filters.byStrings("USER_UPDATE", "Promise.resolve") });
 var velocityConfigs = [
   {
     type: "static",
@@ -296,30 +297,45 @@ var checkDate = (date) => {
   const isMMDD = firstPart <= 12 && secondPart <= 31 && today.getDate() === secondPart && today.getMonth() === firstPart - 1;
   return isDDMM || isMMDD;
 };
-var BirthdayListNotification = ({ users }) => {
-  return /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } }, users.map((user) => /* @__PURE__ */ BdApi.React.createElement(
+var BirthdayListNotification = ({ extraUsers, showDate }) => {
+  const allBirthdays = Hooks2.useStateFromStores([DataStore], () => Object.entries(DataStore.getAll()));
+  const users = extraUsers ? extraUsers.map((user) => ({ user, id: user.id, date: "" })) : allBirthdays.map(([id, data]) => ({ user: Webpack3.Stores.UserStore.getUser(id), date: data.date, id })).filter(Boolean);
+  const [fetching, setFetching] = React2.useState(() => /* @__PURE__ */ new Set());
+  return /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: "8px" } }, users.map((data) => data?.user ? /* @__PURE__ */ BdApi.React.createElement(
     "div",
     {
-      key: user.id,
+      key: data.user.id,
       style: { display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" },
       onClick: (e) => {
         e.stopPropagation();
-        PrivateChannelActions.getDMChannel(user.id).then((_) => {
-          PrivateChannelActions?.openPrivateChannel?.({ recipientIds: user.id });
+        PrivateChannelActions.getDMChannel(data.user.id).then((_) => {
+          PrivateChannelActions?.openPrivateChannel?.({ recipientIds: data.user.id });
         });
       }
     },
     /* @__PURE__ */ BdApi.React.createElement(
       "img",
       {
-        src: user.getAvatarURL?.(void 0, 40, true),
+        src: data.user.getAvatarURL?.(void 0, 40, true),
         width: 28,
         height: 28,
         style: { borderRadius: "50%", flexShrink: 0 }
       }
     ),
-    /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "14px" } }, user.globalName || user.username)
-  )));
+    /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "14px" } }, data.user.globalName || data.user.username),
+    showDate && data.date
+  ) : /* @__PURE__ */ BdApi.React.createElement("div", { onClick: () => {
+    if (fetching.has(data.id)) return;
+    setFetching((prev) => new Set(prev).add(data.id));
+    FetchModule.fetchUser(data.id).then(() => {
+      DataStore.updateStore();
+      setFetching((prev) => {
+        const next = new Set(prev);
+        next.delete(data.id);
+        return next;
+      });
+    });
+  } }, fetching.has(data.id) ? /* @__PURE__ */ BdApi.React.createElement(Components.Spinner, null) : /* @__PURE__ */ BdApi.React.createElement("div", null, "Empty user ", data.id))));
 };
 var CakeDay = class {
   interval;
@@ -336,6 +352,14 @@ var CakeDay = class {
     });
     const NameAndDecorators = wpGetBySource([":null,withDisplayNameStyles:"], { raw: true });
     const ModuleWithKey = getKey(NameAndDecorators.declarations, (x) => String(x).includes(".FRIEND_REQUEST_ACCEPTED})"));
+    const MemberList = wpGetBySource(["placement:c.u.MEMBER_LIST"]);
+    Patcher.after(MemberList, "A", (that, [args], res) => {
+      const Data2 = findInTree(args, (x) => x.user, { walkable: ["props", "children", "avatar"] });
+      const user = Data2.user;
+      const birthday = DataStore.get(user.id);
+      const Location = res.props.children.props.children[1].props.children;
+      checkDate(birthday.date) && Location.push(/* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, null));
+    });
     Patcher.after(ModuleWithKey?.module, ModuleWithKey?.key, (a, b, res) => {
       const BeforeChildren = res.props.children({ role: {} });
       const userData = b[0].user;
@@ -360,7 +384,7 @@ var CakeDay = class {
       id: "cakeday-batch",
       title: users.length > 1 ? `${users.length} Birthdays Today` : "Birthday",
       icon: () => /* @__PURE__ */ BdApi.React.createElement(CakeWithConfetti, { size: "20px" }),
-      content: /* @__PURE__ */ BdApi.React.createElement(BirthdayListNotification, { users }),
+      content: /* @__PURE__ */ BdApi.React.createElement(BirthdayListNotification, { extraUsers: users }),
       type: "success",
       duration: Infinity
     });
@@ -376,7 +400,7 @@ var CakeDay = class {
       const confettiType = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiType")) || "linear-random";
       const confettiAmount = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiAmount")) || 20;
       const bypassAmount = Hooks2.useStateFromStores([Settings], () => Settings.get("bypassAmount")) || false;
-      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Confetti Settings" }, /* @__PURE__ */ BdApi.React.createElement(
+      return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Confetti Settings" }, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
           name: "Confetti Type",
@@ -409,7 +433,7 @@ var CakeDay = class {
             onChange: (type) => Settings.set("confettiAmount", type)
           }
         )
-      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "More confett~~~~!!@@!~#@#", note: "Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues." }, /* @__PURE__ */ BdApi.React.createElement(Components.SwitchInput, { value: bypassAmount, onChange: (val) => Settings.set("bypassAmount", val) })));
+      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "More confett~~~~!!@@!~#@#", note: "Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues." }, /* @__PURE__ */ BdApi.React.createElement(Components.SwitchInput, { value: bypassAmount, onChange: (val) => Settings.set("bypassAmount", val) }))), /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Birthdays" }, /* @__PURE__ */ BdApi.React.createElement(BirthdayListNotification, { showDate: true })));
     };
   }
   patchUserContextMenu = (res, args) => {

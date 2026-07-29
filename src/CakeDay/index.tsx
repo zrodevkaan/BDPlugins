@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.0
+ * @version 1.1.1
  * @description Birfdays in discord
  */
 import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
@@ -64,6 +64,7 @@ const Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
 const ConfettiContext = Object.values(Confetti).find((m: any) => typeof m === "object");
 const Badges = Webpack.getBySource('action:"PRESS_BADGE"');
 const PrivateChannelActions = Webpack.getByKeys("openPrivateChannel")
+const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', {fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve")})
 
 const velocityConfigs = [
     {
@@ -260,29 +261,50 @@ const checkDate = (date?: string): boolean => {
     return isDDMM || isMMDD;
 };
 
-const BirthdayListNotification = ({users}: { users: User[] }): React.JSX.Element => {
+const BirthdayListNotification = ({extraUsers, showDate}: { extraUsers?: User[]; showDate: boolean }): React.JSX.Element => {
+    const allBirthdays = Hooks.useStateFromStores([DataStore], () => Object.entries(DataStore.getAll()))
+    const users = extraUsers ? extraUsers.map((user) => ({user: user, id: user.id, date: ""})) : allBirthdays
+        .map(([id, data]) => ({user: Webpack.Stores.UserStore.getUser(id), date: data.date, id: id}))
+        .filter(Boolean);
+
+    const [fetching, setFetching] = React.useState(() => new Set());
+
     return (
         <div style={{display: "flex", flexDirection: "column", gap: "8px"}}>
-            {users.map(user => (
-                <div
-                    key={user.id}
+            {users.map(data => (
+                data?.user ? <div
+                    key={data.user.id}
                     style={{display: "flex", alignItems: "center", gap: "10px", cursor: "pointer"}}
                     onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
-                        PrivateChannelActions.getDMChannel(user.id).then(_ => {
-                            PrivateChannelActions?.openPrivateChannel?.({recipientIds: user.id});
+                        PrivateChannelActions.getDMChannel(data.user.id).then(_ => {
+                            PrivateChannelActions?.openPrivateChannel?.({recipientIds: data.user.id});
                         })
                     }}
                 >
                     <img
-                        src={user.getAvatarURL?.(undefined, 40, true)}
+                        src={data.user.getAvatarURL?.(undefined, 40, true)}
                         width={28}
                         height={28}
                         style={{borderRadius: "50%", flexShrink: 0}}
                     />
                     <span style={{fontSize: "14px"}}>
-                        {user.globalName || user.username}
+                        {data.user.globalName || data.user.username}
                     </span>
+                    {showDate && data.date}
+                </div> : <div onClick={() => {
+                    if (fetching.has(data.id)) return;
+                    setFetching(prev => new Set(prev).add(data.id));
+                    FetchModule.fetchUser(data.id).then(() => {
+                        DataStore.updateStore();
+                        setFetching(prev => {
+                            const next = new Set(prev);
+                            next.delete(data.id);
+                            return next;
+                        });
+                    });
+                }}>
+                    {fetching.has(data.id) ? <Components.Spinner/> : <div>Empty user {data.id}</div>}
                 </div>
             ))}
         </div>
@@ -313,6 +335,16 @@ export default class CakeDay {
 
         const NameAndDecorators = wpGetBySource([":null,withDisplayNameStyles:"], {raw: true})
         const ModuleWithKey = getKey(NameAndDecorators.declarations, x => String(x).includes(".FRIEND_REQUEST_ACCEPTED})"))
+
+        const MemberList = wpGetBySource(["placement:c.u.MEMBER_LIST"])
+
+        Patcher.after(MemberList, 'A', (that: any, [args], res: any) => {
+            const Data = findInTree(args, x => x.user, {walkable: ['props','children','avatar']});
+            const user = Data.user;
+            const birthday = DataStore.get(user.id)
+            const Location = res.props.children.props.children[1].props.children
+            checkDate(birthday.date) && Location.push(<CakeWithConfetti/>)
+        })
 
         Patcher.after(ModuleWithKey?.module, ModuleWithKey?.key, (a, b, res) => {
             const BeforeChildren = res.props.children({role: {}});
@@ -370,7 +402,7 @@ export default class CakeDay {
             id: "cakeday-batch",
             title: users.length > 1 ? `${users.length} Birthdays Today` : "Birthday",
             icon: () => <CakeWithConfetti size={"20px"}/>,
-            content: <BirthdayListNotification users={users}/>,
+            content: <BirthdayListNotification extraUsers={users}/>,
             type: "success",
             duration: Infinity,
         });
@@ -390,27 +422,33 @@ export default class CakeDay {
 
             const bypassAmount = Hooks.useStateFromStores([Settings], () => Settings.get("bypassAmount")) || false;
 
-            return <Components.SettingGroup name={"Confetti Settings"}>
-                <Components.SettingItem name={"Confetti Type"}
-                                        note={"Changes the behaviour of the confetti when hovering."}>
-                    <Components.DropdownInput value={confettiType}
-                                              onChange={(amt: string) => Settings.set("confettiType", amt)}
-                                              options={velocityConfigs.map((config) => ({
-                                                  label: config.type,
-                                                  value: config.type
-                                              }))}></Components.DropdownInput>
-                </Components.SettingItem>
 
-                <Components.SettingItem name={"Confetti Amount"}
-                                        note={"how much bifday you want....."}>
-                    <Components.SliderInput min={0} max={bypassAmount ? 1000 : 100} step={[20]} value={confettiAmount}
-                                              onChange={(type: string) => Settings.set("confettiAmount", type)}></Components.SliderInput>
-                </Components.SettingItem>
+            return <div>
+                <Components.SettingGroup name={"Confetti Settings"}>
+                    <Components.SettingItem name={"Confetti Type"}
+                                            note={"Changes the behaviour of the confetti when hovering."}>
+                        <Components.DropdownInput value={confettiType}
+                                                  onChange={(amt: string) => Settings.set("confettiType", amt)}
+                                                  options={velocityConfigs.map((config) => ({
+                                                      label: config.type,
+                                                      value: config.type
+                                                  }))}></Components.DropdownInput>
+                    </Components.SettingItem>
 
-                <Components.SettingItem name={"More confett~~~~!!@@!~#@#"} note={"Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."}>
-                    <Components.SwitchInput value={bypassAmount} onChange={(val:boolean) => Settings.set("bypassAmount", val)}/>
-                </Components.SettingItem>
-            </Components.SettingGroup>
+                    <Components.SettingItem name={"Confetti Amount"}
+                                            note={"how much bifday you want....."}>
+                        <Components.SliderInput min={0} max={bypassAmount ? 1000 : 100} step={[20]} value={confettiAmount}
+                                                onChange={(type: string) => Settings.set("confettiAmount", type)}></Components.SliderInput>
+                    </Components.SettingItem>
+
+                    <Components.SettingItem name={"More confett~~~~!!@@!~#@#"} note={"Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."}>
+                        <Components.SwitchInput value={bypassAmount} onChange={(val:boolean) => Settings.set("bypassAmount", val)}/>
+                    </Components.SettingItem>
+                </Components.SettingGroup>
+                <Components.SettingGroup name={"Birthdays"}>
+                    <BirthdayListNotification showDate={true}/>
+                </Components.SettingGroup>
+            </div>
         }
     }
 
