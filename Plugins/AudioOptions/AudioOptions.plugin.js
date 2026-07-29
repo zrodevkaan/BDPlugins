@@ -1,15 +1,20 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 2.0.0
+ * @version 2.0.1
  * @description Adds an option button next to voice messages.
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/AudioOptions/AudioOptions.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/AudioOptions/AudioOptions.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 
-// src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -18,22 +23,20 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
 function getKey(module2, fn) {
-  for (var key in module2) {
-    if (fn(module2[key])) {
-      return { key, module: module2 };
-    }
+  for (const key in module2) {
+    if (fn(module2[key])) return { key, module: module2 };
   }
 }
 
 // src/AudioOptions/index.tsx
-var { Patcher, React: React2, Webpack, DOM, ContextMenu: ContextMenu2, UI, Net, Utils } = new BdApi("AudioOptions");
-var IconBase = Webpack.getModule((x) => x.Icon);
-var VoiceMessagePlayer = getKey(Webpack.getBySource("MEDIA_PLAYBACK_POSITION_UPDATE", { raw: true }).declarations, (x) => String(x.type).includes(".Ay.getPlaybackRate("));
+var { Patcher, React: React2, Webpack: Webpack3, DOM, ContextMenu: ContextMenu2, UI, Net, Utils } = new BdApi("AudioOptions");
+var IconBase = Webpack3.getModule((x) => x.Icon);
+var VoiceMessagePlayer = getKey(Webpack3.getBySource("MEDIA_PLAYBACK_POSITION_UPDATE", { raw: true }).declarations, (x) => String(x.type).includes(".Ay.getPlaybackRate("));
 console.log(VoiceMessagePlayer);
 var PathIcon = () => {
   return React2.createElement(
@@ -84,7 +87,6 @@ var AudioOptions = class {
   }
   patchAudioPlayer() {
     Patcher.after(VoiceMessagePlayer.module[VoiceMessagePlayer.key], "type", (_, [props], res) => {
-      console.log(res);
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(AudioButton, { showOptionsMenu: this.showOptionsMenu.bind(this, props) }));
     });
   }

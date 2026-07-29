@@ -3,8 +3,10 @@
  * @author Kaan
  * @version 1.0.0
  * @description Recreation of the popout on mobile for voice messages.
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/VoiceMessagePlayer/VoiceMessagePlayer.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/VoiceMessagePlayer/VoiceMessagePlayer.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -35,8 +37,11 @@ module.exports = __toCommonJS(index_exports);
 // src/VoiceMessagePlayer/index.css
 var index_default = ".audioBackground {\n  border-radius: var(--radius-sm);\n}\n.audio-base {\n  display: flex;\n  justify-content: center;\n  justify-items: center;\n  align-items: center;\n}\n.audio-base-controls {\n  display: grid;\n  grid-template-columns: auto 10px auto;\n  align-self: center;\n}\n.audio-base-controls .play-button {\n  background-color: var(--bg-brand);\n  color: var(--text-primary);\n  width: 50px;\n  height: 50px;\n  margin-top: 16px;\n  border-radius: 50%;\n  grid-column: 1 / -1;\n  justify-self: center;\n}\n.audio-base-controls span {\n  color: var(--text-primary);\n  margin-top: 8px;\n  grid-row: 2;\n  justify-self: center;\n  &:first-of-type {\n    justify-self: start;\n  }\n  &:last-of-type {\n    justify-self: end;\n  }\n}\n.audioCloseButton {\n  position: absolute;\n  top: 6px;\n  right: 6px;\n  color: var(--text-primary);\n  border-radius: 50%;\n}\n";
 
-// src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -45,23 +50,23 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
 
 // src/VoiceMessagePlayer/index.tsx
-var { Patcher, React: React2, Webpack, DOM, ContextMenu: ContextMenu2, UI, Net, Utils, Data, Hooks } = new BdApi(
+var { Patcher, React: React2, Webpack: Webpack3, DOM, ContextMenu: ContextMenu2, UI, Net, Utils, Data, Hooks: Hooks2 } = new BdApi(
   "VoiceMessagePlayer"
 );
-var { Stores } = Webpack;
+var { Stores } = Webpack3;
 var { Store, className } = Utils;
-var { useStateFromStores } = Hooks;
-var Module = Webpack.getByKeys("create");
-var [Dispatch, AppRoot, AudioComponent] = Webpack.getBulk(
+var { useStateFromStores } = Hooks2;
+var Module = Webpack3.getByKeys("create");
+var [Dispatch, AppRoot, AudioComponent] = Webpack3.getBulk(
   { filter: (x) => x._dispatch },
-  { filter: Webpack.Filters.bySource("Shakeable") },
-  { filter: Webpack.Filters.bySource("playbackCacheKey", '"metadata"') }
+  { filter: Webpack3.Filters.bySource("Shakeable") },
+  { filter: Webpack3.Filters.bySource("playbackCacheKey", '"metadata"') }
 );
 function ForceUpdateRoot() {
   Dispatch.dispatch({ type: "DOMAIN_MIGRATION_START" });

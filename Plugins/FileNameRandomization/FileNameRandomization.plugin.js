@@ -3,8 +3,10 @@
  * @author kaan
  * @version 2.1.0
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/FileNameRandomization/FileNameRandomization.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/FileNameRandomization/FileNameRandomization.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 

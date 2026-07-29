@@ -3,8 +3,10 @@
  * @author Kaan
  * @version 1.1.1
  * @description Birfdays in discord
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -328,7 +330,6 @@ var BirthdayListNotification = ({ extraUsers, showDate }) => {
     if (fetching.has(data.id)) return;
     setFetching((prev) => new Set(prev).add(data.id));
     FetchModule.fetchUser(data.id).then(() => {
-      DataStore.updateStore();
       setFetching((prev) => {
         const next = new Set(prev);
         next.delete(data.id);

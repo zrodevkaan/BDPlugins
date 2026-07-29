@@ -3,8 +3,10 @@
  * @description Stop yourself from saying things in chat!
  * @version 2.0.1
  * @author Kaan
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/HoldYourTongue/HoldYourTongue.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/HoldYourTongue/HoldYourTongue.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -32,8 +34,11 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -42,17 +47,17 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
 
 // src/HoldYourTongue/index.tsx
-var { Webpack, Hooks, Utils, Data, Components, React: React2 } = new BdApi("HoldYourTongue");
-var { useStateFromStores } = Hooks;
-var CheckFilters = Object.values(Webpack.getBySource("Everyone Warning", { raw: true }).declarations).find(Array.isArray);
-var InteractiveButton = Webpack.getByKeys("Icon").Icon;
-var TextArea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
+var { Webpack: Webpack3, Hooks: Hooks2, Utils, Data, Components, React: React2 } = new BdApi("HoldYourTongue");
+var { useStateFromStores } = Hooks2;
+var CheckFilters = Object.values(Webpack3.getBySource("Everyone Warning", { raw: true }).declarations).find(Array.isArray);
+var InteractiveButton = Webpack3.getByKeys("Icon").Icon;
+var TextArea = Webpack3.getByStrings(`"text-input"`, { searchExports: true });
 var DataStore = new Proxy(
   {},
   {

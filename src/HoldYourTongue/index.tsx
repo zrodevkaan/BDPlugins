@@ -3,7 +3,7 @@
  * @description Stop yourself from saying things in chat!
  * @version 2.0.1
  * @author Kaan
- */ import {getKey} from "../Helpers";
+ */ import {getKey} from "@helpers";
 
 const {Webpack, Hooks, Utils, Data, Components, React} = new BdApi("HoldYourTongue")
 const {useStateFromStores} = Hooks

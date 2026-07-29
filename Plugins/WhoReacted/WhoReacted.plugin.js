@@ -1,8 +1,8 @@
 /**
- * @name CMPT
- * @description * @author Kaan
+ * @name WhoReacted
+ * @author Kaan
  * @version 1.0.0
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CMPT/CMPT.plugin.js
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/WhoReacted/WhoReacted.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 585344
  * @canary 585560
@@ -26,15 +26,32 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/CMPT/index.tsx
+// src/WhoReacted/index.tsx
 var index_exports = {};
 __export(index_exports, {
-  default: () => CMPT
+  default: () => WhoReacted
 });
 module.exports = __toCommonJS(index_exports);
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;
+function resolveModule(filter, options) {
+  const opts = options ?? {};
+  if (opts.declaration) {
+    const { declaration, key, raw, ...rest } = opts;
+    const result = Webpack.getMangled(filter, { __value: declaration }, {
+      ...rest,
+      mapDeclarations: true
+    });
+    return result?.__value ?? null;
+  }
+  const mod = Webpack.getModule(filter, opts);
+  if (mod == null) return null;
+  return opts.key ? mod[opts.key] : mod;
+}
+function wpGetBySource(source, options) {
+  return resolveModule(Webpack.Filters.bySource(...source), options);
+}
 
 // helpers/index.tsx
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
@@ -50,29 +67,28 @@ var styled = new Proxy(styledBase, {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
-var ContextMenuHelper = (patches) => {
-  const unpatches = [];
-  patches.forEach((patch) => {
-    unpatches.push(ContextMenu.patch(patch.navId, patch.patch));
-  });
-  return () => unpatches.forEach((unpatch) => unpatch());
-};
 
-// src/CMPT/index.tsx
-var CMPT = class {
-  unpatchAll = () => {
-  };
+// src/WhoReacted/index.tsx
+var { Webpack: Webpack3, Patcher } = new BdApi("WhoReacted");
+var WhoReacted = class {
   start() {
-    this.unpatchAll = ContextMenuHelper([
-      {
-        navId: "message",
-        patch: (res, props) => {
-          console.log(res, props);
-        }
-      }
-    ]);
+    const ReactionType = wpGetBySource(["getReactionPickerAnimation"], {
+      searchDefault: false,
+      declarationFilter: (x) => String(x.type).includes("getReactionPickerAnimation")
+    });
+    Patcher.after(ReactionType, "type", (a, b, c) => {
+      console.log(a, b, c);
+      return;
+      const data = b[0];
+      const message = data.message;
+      const emoji = data.emoji;
+      console.log(c.props.children);
+      c.props.children[1].push(
+        /* @__PURE__ */ BdApi.React.createElement("div", null, "hi owo")
+      );
+    });
   }
   stop() {
-    this.unpatchAll();
+    Patcher.unpatchAll();
   }
 };

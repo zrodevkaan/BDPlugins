@@ -3,8 +3,10 @@
  * @author Kaan
  * @version 2.0.1
  * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/GuildProfile/GuildProfile.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/GuildProfile/GuildProfile.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -32,8 +34,11 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
 // helpers/index.tsx
-var { React, ContextMenu, Webpack, Hooks } = BdApi;
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -42,31 +47,34 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
 function findDeclaration(declarations, predicate) {
   for (const key in declarations) {
-    if (predicate(declarations[key])) {
-      return { key, module: declarations };
-    }
+    if (predicate(declarations[key])) return { key, module: declarations };
   }
   return null;
 }
-async function waitForExportByKeys(keys, options = {}) {
+function resolveFromRaw(raw, declaration) {
+  if (!raw?.declarations) return null;
+  const found = findDeclaration(raw.declarations, declaration);
+  return found ? found.module[found.key] : null;
+}
+async function waitForExportByFilter(filter, options = {}) {
   if (options.declaration) {
-    const raw = await Webpack.waitForModule(Webpack.Filters.byKeys(keys), { raw: true });
-    if (!raw?.declarations) return null;
-    const found = findDeclaration(raw.declarations, options.declaration);
-    if (!found) return null;
-    return found.module[found.key];
+    const raw = await Webpack2.waitForModule(filter, { raw: true });
+    return resolveFromRaw(raw, options.declaration);
   }
-  return Webpack.waitForModule(Webpack.Filters.byKeys(keys));
+  return Webpack2.waitForModule(filter);
+}
+async function waitForExportByKeys(keys, options = {}) {
+  return waitForExportByFilter(Webpack2.Filters.byKeys(keys), options);
 }
 
 // src/GuildProfile/index.tsx
-var { Webpack: Webpack2, Webpack: { Filters }, ContextMenu: ContextMenu2, DOM, React: React2, Components, UI } = BdApi;
+var { Webpack: Webpack3, Webpack: { Filters }, ContextMenu: ContextMenu2, DOM, React: React2, Components, UI } = BdApi;
 var { useState, useId, useRef, useLayoutEffect, useMemo, useReducer, useEffect } = React2;
 var [
   VoiceIcon,
@@ -100,15 +108,15 @@ var [
     searchExports: true
   }
 );
-var ServerOwnerIconClasses = Webpack2.getMangled(Webpack2.Filters.combine(Webpack2.Filters.bySource("ownerIcon__"), Webpack2.Filters.bySource("placeholder__")), {
+var ServerOwnerIconClasses = Webpack3.getMangled(Webpack3.Filters.combine(Webpack3.Filters.bySource("ownerIcon__"), Webpack3.Filters.bySource("placeholder__")), {
   ownerIcon: (x) => String(x).startsWith("ownerIcon")
 });
-var FetchModule = Webpack2.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve") });
+var FetchModule = Webpack3.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Filters.byStrings("USER_UPDATE", "Promise.resolve") });
 var getGuildIconURL = BdApi.Webpack.getByKeys("getGuildIconURL").getGuildIconURL;
-var Section = Webpack2.getByStrings("headingColor:", "heading:", "section", { searchExports: true });
-var snowflakeUtils = Webpack2.getByKeys("extractTimestamp");
-var quantize = Webpack2.getMangled("[[0,0,0]]", {
-  quantize: Webpack2.Filters.byStrings(".getImageData(0,0,")
+var Section = Webpack3.getByStrings("headingColor:", "heading:", "section", { searchExports: true });
+var snowflakeUtils = Webpack3.getByKeys("extractTimestamp");
+var quantize = Webpack3.getMangled("[[0,0,0]]", {
+  quantize: Webpack3.Filters.byStrings(".getImageData(0,0,")
 });
 var CONFIG = {
   MEDIA: {
@@ -218,26 +226,26 @@ async function openMediaModal(url) {
   });
 }
 var DEFAULT_COLOR = [[0, 0, 0]];
-var OpenImageModal = Webpack2.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true });
-var GuildMemberCountStore = Webpack2.getStore("GuildMemberCountStore");
-var ChannelMemberStore = Webpack2.getStore("ChannelMemberStore");
-var GuildMemberStore = Webpack2.getStore("GuildMemberStore");
-var GuildStore = Webpack2.getStore("GuildStore");
-var PermissionStore = Webpack2.getStore("PermissionStore");
-var RelationshipStore = Webpack2.getStore("RelationshipStore");
-var SelectedChannelStore = Webpack2.getStore("SelectedChannelStore");
-var UserStore = Webpack2.getStore("UserStore");
-var EmojiStore = Webpack2.getStore("EmojiStore");
-var GetAudioCDN = Webpack2.getByStrings(`}=window.GLOBAL_ENV;return`);
-var StickersStore = Webpack2.getStore("StickersStore");
-var Sounds = Webpack2.getStore("SoundboardStore");
-var UserModal = Webpack2.getByKeys("openUserProfileModal");
+var OpenImageModal = Webpack3.getByStrings(".shouldHideMediaOptions", "hasMediaOptions:", "numMediaItems:", { searchExports: true });
+var GuildMemberCountStore = Webpack3.getStore("GuildMemberCountStore");
+var ChannelMemberStore = Webpack3.getStore("ChannelMemberStore");
+var GuildMemberStore = Webpack3.getStore("GuildMemberStore");
+var GuildStore = Webpack3.getStore("GuildStore");
+var PermissionStore = Webpack3.getStore("PermissionStore");
+var RelationshipStore = Webpack3.getStore("RelationshipStore");
+var SelectedChannelStore = Webpack3.getStore("SelectedChannelStore");
+var UserStore = Webpack3.getStore("UserStore");
+var EmojiStore = Webpack3.getStore("EmojiStore");
+var GetAudioCDN = Webpack3.getByStrings(`}=window.GLOBAL_ENV;return`);
+var StickersStore = Webpack3.getStore("StickersStore");
+var Sounds = Webpack3.getStore("SoundboardStore");
+var UserModal = Webpack3.getByKeys("openUserProfileModal");
 var getDefaultAvatar = (id) => Number(BigInt(id) >> 22n) % 6;
-var { copyImage } = Webpack2.getModule((x) => x.copyImage);
-var Endpoints = Webpack2.getModule(Filters.byKeys("GUILD_EMOJI", "GUILD_EMOJIS"), { searchExports: true });
-var PermissionsBits = Webpack2.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
-var HTTP = Webpack2.getModule((m) => typeof m === "object" && m.del && m.put, { searchExports: true });
-var useStateFromStores = Webpack2.getByStrings("useStateFromStores", { searchExports: true });
+var { copyImage } = Webpack3.getModule((x) => x.copyImage);
+var Endpoints = Webpack3.getModule(Filters.byKeys("GUILD_EMOJI", "GUILD_EMOJIS"), { searchExports: true });
+var PermissionsBits = Webpack3.getModule(Filters.byKeys("MANAGE_GUILD_EXPRESSIONS"), { searchExports: true });
+var HTTP = Webpack3.getModule((m) => typeof m === "object" && m.del && m.put, { searchExports: true });
+var useStateFromStores = Webpack3.getByStrings("useStateFromStores", { searchExports: true });
 var copy = (text) => window?.DiscordNative ? DiscordNative.clipboard.copy(text) : navigator.clipboard.writeText(text);
 var MarvinIcons = {
   AUTO_MODERATION: React2.memo((props) => /* @__PURE__ */ React2.createElement("svg", {
@@ -249,7 +257,7 @@ var MarvinIcons = {
       fill: "var(--interactive-icon-default)"
     })
   })),
-  SOUNDBOARD: Webpack2.getByStrings('"M14.24 1.03a1 1 0 0 1 .73 1.21l-1 4a1 1 0 0 1-1.94-.48l1-4a1 1 0 0 1 1.21', { searchExports: true }),
+  SOUNDBOARD: Webpack3.getByStrings('"M14.24 1.03a1 1 0 0 1 .73 1.21l-1 4a1 1 0 0 1-1.94-.48l1-4a1 1 0 0 1 1.21', { searchExports: true }),
   ANIMATED_BANNER: React2.memo((props) => /* @__PURE__ */ React2.createElement("svg", {
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
@@ -888,7 +896,7 @@ var InternalStore = class _InternalStore {
   }
 };
 var InCommonStore = class extends InternalStore {
-  #request = Webpack2.getByKeys("requestMembersById");
+  #request = Webpack3.getByKeys("requestMembersById");
   requestMembersById(guildIds, userIds) {
     this.#request.requestMembersById(guildIds, userIds, false);
   }
@@ -955,7 +963,7 @@ var focusStore = new class FocusStore extends InternalStore {
   }
 }();
 var inCommonStore = new InCommonStore();
-var markdownWrapper = Webpack2.getByKeys("parse", "defaultRules", "parseTopic");
+var markdownWrapper = Webpack3.getByKeys("parse", "defaultRules", "parseTopic");
 function Markdown(props) {
   const parsed = useMemo(() => {
     const state = Object.assign({}, { allowLinks: true }, props.state);

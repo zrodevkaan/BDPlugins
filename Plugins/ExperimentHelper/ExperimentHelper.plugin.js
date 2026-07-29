@@ -1,8 +1,10 @@
 /**
  * @name ExperimentHelper
  * @description A ton of experiment based helpers
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ExperimentHelper/ExperimentHelper.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ExperimentHelper/ExperimentHelper.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -198,22 +200,6 @@ var ExperimentHelper = class {
       });
     }
     Data.save("Experiments", CurrentExperiments);
-    Patcher.after(ExperimentsLocation.exports, "Z", (a, b, res) => {
-      const experiments = res.props.children[1];
-      experiments.forEach((x) => {
-        if (!x.props.originalExperimentId) {
-          x.props.originalExperimentId = x.props.experiment.title;
-        }
-        const rolloutPos = getRolloutPosition(
-          UserStore.getCurrentUser().id,
-          x.props.experimentId
-        );
-        x.props.experiment = {
-          ...x.props.experiment,
-          title: `${x.props.originalExperimentId} - (${rolloutPos})`
-        };
-      });
-    });
     ContextMenu.patch("user-context", this.UECM);
   }
   UECM(res, data) {

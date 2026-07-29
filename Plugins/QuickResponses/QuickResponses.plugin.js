@@ -3,8 +3,10 @@
  * @author Kaan
  * @version 1.0.1
  * @description Allows you to quickly send snippets or complete messages using a slash command like style
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/QuickResponses/QuickResponses.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/QuickResponses/QuickResponses.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;

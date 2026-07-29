@@ -5,7 +5,7 @@
  * @version 1.0.0
  */
 
-import { ContextMenuHelper } from "../Helpers";
+import { ContextMenuHelper } from "@helpers";
 
 export default class CMPT {
     private unpatchAll: () => void = () => { };

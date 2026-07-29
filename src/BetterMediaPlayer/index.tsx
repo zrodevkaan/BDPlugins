@@ -4,7 +4,7 @@
  * @version 1.0.0
  * @author Kaan
  */
-import { styled } from "../Helpers";
+import { styled } from "@helpers";
 
 const { Webpack, Patcher, Utils, Hooks, DOM, React } = new BdApi("BetterMediaPlayer");
 const { useState, useRef, useEffect } = React;
@@ -307,7 +307,7 @@ export default class BetterMediaPlayer {
     start() {
         const module = getKey(VideoComponent, Webpack.Filters.byRegex(/return\(0,.{1}.jsx\)\(.{1},.{1}\({},.{1}\)\)/))
 
-        Patcher.after(module.module, module.key, (a, args, res) => {
+        Patcher.after(window.n(994064).Ay.prototype, "render", (a, args, res) => {
             return <VideoWrapper args={args}>{res}</VideoWrapper>;
         });
 

@@ -4,7 +4,7 @@
  * @version 2.0.1
  * @description Adds an option button next to voice messages.
  */
-import {getKey} from "../Helpers";
+import {getKey} from "@helpers";
 
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils} = new BdApi('AudioOptions')
 

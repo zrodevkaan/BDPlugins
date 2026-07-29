@@ -218,22 +218,22 @@ export default class ExperimentHelper {
 
         Data.save("Experiments", CurrentExperiments)
 
-        Patcher.after(ExperimentsLocation.exports, 'Z', (a, b, res) => {
-            const experiments = res.props.children[1]
-            experiments.forEach(x => {
-                if (!x.props.originalExperimentId) {
-                    x.props.originalExperimentId = x.props.experiment.title;
-                }
-                const rolloutPos = getRolloutPosition(
-                    UserStore.getCurrentUser().id,
-                    x.props.experimentId,
-                );
-                x.props.experiment = {
-                    ...x.props.experiment,
-                    title: `${x.props.originalExperimentId} - (${rolloutPos})`
-                };
-            })
-        })
+        // Patcher.after(ExperimentsLocation.exports, 'Z', (a, b, res) => {
+        //     const experiments = res.props.children[1]
+        //     experiments.forEach(x => {
+        //         if (!x.props.originalExperimentId) {
+        //             x.props.originalExperimentId = x.props.experiment.title;
+        //         }
+        //         const rolloutPos = getRolloutPosition(
+        //             UserStore.getCurrentUser().id,
+        //             x.props.experimentId,
+        //         );
+        //         x.props.experiment = {
+        //             ...x.props.experiment,
+        //             title: `${x.props.originalExperimentId} - (${rolloutPos})`
+        //         };
+        //     })
+        // })
 
         ContextMenu.patch('user-context', this.UECM)
     }

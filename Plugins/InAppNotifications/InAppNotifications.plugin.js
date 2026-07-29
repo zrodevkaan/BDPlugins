@@ -3,8 +3,10 @@
  * @author kaan
  * @version 1.0.1
  * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/InAppNotifications/InAppNotifications.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/InAppNotifications/InAppNotifications.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -32,8 +34,82 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+function queryToFilter(query) {
+  if ("filter" in query) return query.filter;
+  if ("keys" in query) return Webpack.Filters.byKeys(...query.keys);
+  if ("prototypeKeys" in query) return Webpack.Filters.byPrototypeKeys(...query.prototypeKeys);
+  if ("strings" in query) return Webpack.Filters.byStrings(...query.strings);
+  if ("source" in query) return Webpack.Filters.bySource(...query.source);
+  if ("regex" in query) return Webpack.Filters.byRegex(query.regex);
+  if ("displayName" in query) return Webpack.Filters.byDisplayName(query.displayName);
+  return Webpack.Filters.byStoreName(query.storeName);
+}
+function resolveModule(filter, options) {
+  const opts = options ?? {};
+  if (opts.declaration) {
+    const { declaration, key, raw, ...rest } = opts;
+    const result = Webpack.getMangled(filter, { __value: declaration }, {
+      ...rest,
+      mapDeclarations: true
+    });
+    return result?.__value ?? null;
+  }
+  const mod = Webpack.getModule(filter, opts);
+  if (mod == null) return null;
+  return opts.key ? mod[opts.key] : mod;
+}
+function resolveQuery(query) {
+  if ("map" in query) {
+    const q = query;
+    const newModule = {};
+    const foundModule = Webpack.getModule(q.filter);
+    if (foundModule) {
+      const remaining = new Map(Object.entries(q.map));
+      for (const value of Object.values(foundModule)) {
+        for (const [queryKey, queryValue] of remaining) {
+          if (queryValue(value)) {
+            newModule[queryKey] = value;
+            remaining.delete(queryKey);
+            break;
+          }
+        }
+        if (remaining.size === 0) break;
+      }
+    }
+    return newModule;
+  }
+  return resolveModule(queryToFilter(query), query.options);
+}
+var wpFilter = {
+  byKeys: (...keys) => Webpack.Filters.byKeys(...keys),
+  byPrototypeKeys: (...keys) => Webpack.Filters.byPrototypeKeys(...keys),
+  byStrings: (...strings) => Webpack.Filters.byStrings(...strings),
+  bySource: (...source) => Webpack.Filters.bySource(...source),
+  byRegex: (regex) => Webpack.Filters.byRegex(regex),
+  byDisplayName: (name) => Webpack.Filters.byDisplayName(name),
+  byStoreName: (name) => Webpack.Filters.byStoreName(name),
+  combine: (...filters) => Webpack.Filters.combine(...filters),
+  not: (filter) => Webpack.Filters.not(filter)
+};
+function wpGetStore(storeName, options) {
+  return resolveModule(Webpack.Filters.byStoreName(storeName), options);
+}
+function wpGetBulk(...queries) {
+  return queries.map(resolveQuery);
+}
+function wpGetMangled(filter, map, options) {
+  return Webpack.getMangled(filter, map, { ...options ?? {}, mapDeclarations: true });
+}
+async function wpWaitMangled(locator, map, options) {
+  const filter = typeof locator === "function" ? locator : Webpack.Filters.bySource(locator);
+  await Webpack.waitForModule(filter, options ?? {});
+  return Webpack.getMangled(locator, map, { ...options ?? {}, mapDeclarations: true });
+}
+
 // helpers/index.tsx
-var { React, ContextMenu, Webpack, Hooks } = BdApi;
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -42,44 +118,13 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
-function findDeclaration(declarations, predicate) {
-  for (const key in declarations) {
-    if (predicate(declarations[key])) {
-      return { key, module: declarations };
-    }
-  }
-  return null;
-}
-async function waitForExportBySource(sourceString, options = {}) {
-  const raw = await Webpack.waitForModule(
-    Webpack.Filters.bySource(sourceString),
-    { raw: true }
-  );
-  if (!raw?.declarations) return null;
-  if (options.declaration) {
-    const found = findDeclaration(raw.declarations, options.declaration);
-    if (!found) return null;
-    return found.module[found.key];
-  }
-  return raw;
-}
-function getExportByStrings(strings, options = {}) {
-  if (options.declaration) {
-    const raw = Webpack.getBySource(strings[0], { raw: true });
-    if (!raw?.declarations) return null;
-    const found = findDeclaration(raw.declarations, options.declaration);
-    if (!found) return null;
-    return found.module[found.key];
-  }
-  return Webpack.getModule(Webpack.Filters.byStrings(...strings)) ?? null;
-}
 
 // src/InAppNotifications/index.tsx
-var { Webpack: Webpack2, Utils, Patcher, Hooks: Hooks2, React: React2, Data, Components } = new BdApi("InAppNotifications");
+var { Utils, Patcher, Hooks: Hooks2, React: React2, Data, Components } = new BdApi("InAppNotifications");
 var {
   MessageStore,
   ChannelStore,
@@ -90,24 +135,34 @@ var {
   ReferencedMessageStore,
   PendingReplyStore,
   SelectedChannelStore
-} = Webpack2.Stores;
+} = {
+  MessageStore: wpGetStore("MessageStore"),
+  ChannelStore: wpGetStore("ChannelStore"),
+  UserStore: wpGetStore("UserStore"),
+  GuildStore: wpGetStore("GuildStore"),
+  UserGuildSettingsStore: wpGetStore("UserGuildSettingsStore"),
+  GuildMemberStore: wpGetStore("GuildMemberStore"),
+  ReferencedMessageStore: wpGetStore("ReferencedMessageStore"),
+  PendingReplyStore: wpGetStore("PendingReplyStore"),
+  SelectedChannelStore: wpGetStore("SelectedChannelStore")
+};
 var [
   MessageComponent,
   MessageConstructor,
   Dispatcher,
   MessageActions
-] = Webpack2.getBulk(
-  { filter: Webpack2.Filters.byStrings(".mention_everyone??!1"), searchExports: true },
-  { filter: Webpack2.Filters.byPrototypeKeys("receivePushNotification") },
-  { filter: (x) => x?._dispatch, searchExports: true },
-  { filter: Webpack2.Filters.byKeys("fetchMessage", "deleteMessage") }
+] = wpGetBulk(
+  { strings: [".mention_everyone??!1"], options: { searchExports: true } },
+  { prototypeKeys: ["receivePushNotification"] },
+  { filter: (x) => x?._dispatch, options: { searchExports: true } },
+  { keys: ["fetchMessage", "deleteMessage"] }
 );
-var NavigationUtils = Webpack2.getMangled("transitionTo - Transitioning to", {
-  transitionTo: Webpack2.Filters.byStrings("transitionTo - Transitioning to"),
-  replace: Webpack2.Filters.byStrings("Replacing route with"),
-  goBack: Webpack2.Filters.byStrings(".goBack()"),
-  goForward: Webpack2.Filters.byStrings(".goForward()"),
-  transitionToGuild: Webpack2.Filters.byStrings("transitionToGuild - Transitioning to")
+var NavigationUtils = wpGetMangled("transitionTo - Transitioning to", {
+  transitionTo: wpFilter.byStrings("transitionTo - Transitioning to"),
+  replace: wpFilter.byStrings("Replacing route with"),
+  goBack: wpFilter.byStrings(".goBack()"),
+  goForward: wpFilter.byStrings(".goForward()"),
+  transitionToGuild: wpFilter.byStrings("transitionToGuild - Transitioning to")
 });
 function injectMessage(rawMessage) {
   let message = MessageStore.getMessage(rawMessage.channel_id, rawMessage.id);
@@ -448,7 +503,15 @@ function NotificationContainer({ wrapper }) {
         scrollbarWidth: "none"
       }
     },
-    entries.map(({ message, matchedKeywords }) => /* @__PURE__ */ BdApi.React.createElement(NotificationCard, { Wrapper: wrapper, key: message.id, message, matchedKeywords }))
+    entries.map(({ message, matchedKeywords }) => /* @__PURE__ */ BdApi.React.createElement(
+      NotificationCard,
+      {
+        Wrapper: wrapper,
+        key: message.id,
+        message,
+        matchedKeywords
+      }
+    ))
   );
 }
 var timestampToSnowflake = (timestamp) => {
@@ -535,20 +598,25 @@ var InAppNotifications = class {
     });
   }
   async start() {
-    const MessageWrapper2 = getExportByStrings(
-      ["Message must not be a thread starter message"],
-      { declaration: (x) => String(x?.type).includes("Message must not be a thread starter message") }
-    );
-    const AppMount = await waitForExportBySource(
-      "DispatcherBridge",
-      { declaration: (x) => String(x?.type).includes("Shakeable") }
-    );
+    const [{ MessageWrapper: MessageWrapper2 }, { AppMount }] = await Promise.all([
+      wpWaitMangled("Message must not be a thread starter message", {
+        MessageWrapper: (x) => String(x?.type).includes("Message must not be a thread starter message")
+      }),
+      wpWaitMangled("DispatcherBridge", {
+        AppMount: (x) => String(x?.type).includes("Shakeable")
+      })
+    ]);
     BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
             #ian-container input[type="text"] { width: 100% !important; box-sizing: border-box !important; }
         `);
     Patcher.after(AppMount, "type", (_, __, res) => {
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(ErrorBoundary, null, /* @__PURE__ */ BdApi.React.createElement(NotificationContainer, { wrapper: MessageWrapper2 })));
+    });
+    Patcher.after(MessageWrapper2, "type", (a, [b], c) => {
+      const loc = Utils.findInTree(c, (x) => x.childrenAccessories, { walkable: ["props", "children"] });
+      if (b.__ian) loc.childrenButtons = void 0;
+      return c;
     });
     Dispatcher.subscribe("MESSAGE_CREATE", this.#messageHandler);
     ForceUpdateRoot();

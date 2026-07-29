@@ -55,8 +55,6 @@ interface TextInputProps {
     birthday: Birthday;
 }
 
-declare const BdApi: new (pluginName: string) => BdApi;
-
 const {Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components, Hooks} = new BdApi('CakeDay');
 
 const Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
@@ -296,7 +294,6 @@ const BirthdayListNotification = ({extraUsers, showDate}: { extraUsers?: User[];
                     if (fetching.has(data.id)) return;
                     setFetching(prev => new Set(prev).add(data.id));
                     FetchModule.fetchUser(data.id).then(() => {
-                        DataStore.updateStore();
                         setFetching(prev => {
                             const next = new Set(prev);
                             next.delete(data.id);

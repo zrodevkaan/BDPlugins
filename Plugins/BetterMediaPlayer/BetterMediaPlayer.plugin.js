@@ -3,8 +3,10 @@
  * @description Tries to improve the video player with more information.
  * @version 1.0.0
  * @author Kaan
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterMediaPlayer/BetterMediaPlayer.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterMediaPlayer/BetterMediaPlayer.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -32,8 +34,11 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -42,24 +47,24 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
 
 // src/BetterMediaPlayer/index.tsx
-var { Webpack, Patcher, Utils, Hooks, DOM, React: React2 } = new BdApi("BetterMediaPlayer");
+var { Webpack: Webpack3, Patcher, Utils, Hooks: Hooks2, DOM, React: React2 } = new BdApi("BetterMediaPlayer");
 var { useState, useRef, useEffect } = React2;
-var VideoComponent = Webpack.getBySource(`["onVolumeChange","onMute",`);
-var MediaClasses = Webpack.getByKeys("isInAppComponentsV2");
-var Clickable = Webpack.getModule((x) => String(x.render).includes("secondaryColorClass:"), { searchExports: true });
-var ProgressBar = Webpack.getByStrings("percent:", "foregroundColor:", { searchExports: true });
-var Slider = Webpack.getModule(Webpack.Filters.byStrings("stickToMarkers", "fillStyles"), { searchExports: true });
-var Mediabar = Webpack.getByStrings("sliderWrapperClassName");
-var FileUtils = Webpack.getMangled(".showDecimalForGB?", {
-  FileSizeIntl: Webpack.Filters.byStrings("kEk9pr")
+var VideoComponent = Webpack3.getBySource(`["onVolumeChange","onMute",`);
+var MediaClasses = Webpack3.getByKeys("isInAppComponentsV2");
+var Clickable = Webpack3.getModule((x) => String(x.render).includes("secondaryColorClass:"), { searchExports: true });
+var ProgressBar = Webpack3.getByStrings("percent:", "foregroundColor:", { searchExports: true });
+var Slider = Webpack3.getModule(Webpack3.Filters.byStrings("stickToMarkers", "fillStyles"), { searchExports: true });
+var Mediabar = Webpack3.getByStrings("sliderWrapperClassName");
+var FileUtils = Webpack3.getMangled(".showDecimalForGB?", {
+  FileSizeIntl: Webpack3.Filters.byStrings("kEk9pr")
 });
-var { useStateFromStores } = Hooks;
+var { useStateFromStores } = Hooks2;
 var Container = styled.div({
   display: "flex",
   flexDirection: "column",
@@ -128,8 +133,8 @@ var ExitFullscreenIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", 
     d: "m10 15.4l-5.9 5.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7L8.6 14H5q-.425 0-.712-.288T4 13t.288-.712T5 12h6q.425 0 .713.288T12 13v6q0 .425-.288.713T11 20t-.712-.288T10 19zm5.4-5.4H19q.425 0 .713.288T20 11t-.288.713T19 12h-6q-.425 0-.712-.288T12 11V5q0-.425.288-.712T13 4t.713.288T14 5v3.6l5.9-5.9q.275-.275.7-.275t.7.275t.275.7t-.275.7z"
   }
 ));
-var { UserStore } = Webpack.Stores;
-var FullscreenUtils = Webpack.getMangled('requestFullscreen():"function"', {
+var { UserStore } = Webpack3.Stores;
+var FullscreenUtils = Webpack3.getMangled('requestFullscreen():"function"', {
   FindFullscreenElement: BdApi.Webpack.Filters.byStrings("arguments.length"),
   RequestFullscreen: BdApi.Webpack.Filters.byStrings('"function"==typeof', ".requestFullscreen()", ".webkitRequestFullscreen()", ".webkitEnterFullscreen()"),
   ExitFullscreen: BdApi.Webpack.Filters.byStrings(".exitFullscreen()", ".webkitExitFullscreen()", ".mozCancelFullScreen()", ".msExitFullscreen()"),
@@ -310,8 +315,8 @@ function getKey(module2, fn) {
 }
 var BetterMediaPlayer = class {
   start() {
-    const module2 = getKey(VideoComponent, Webpack.Filters.byRegex(/return\(0,.{1}.jsx\)\(.{1},.{1}\({},.{1}\)\)/));
-    Patcher.after(module2.module, module2.key, (a, args, res) => {
+    const module2 = getKey(VideoComponent, Webpack3.Filters.byRegex(/return\(0,.{1}.jsx\)\(.{1},.{1}\({},.{1}\)\)/));
+    Patcher.after(window.n(994064).Ay.prototype, "render", (a, args, res) => {
       return /* @__PURE__ */ BdApi.React.createElement(VideoWrapper, { args }, res);
     });
     DOM.addStyle(css);

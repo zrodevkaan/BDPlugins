@@ -6,7 +6,7 @@
  */
 const { Patcher, Webpack, Data, React, Utils } = new BdApi("DisplayAlbums")
 import MP3Tag from './mp3tag'
-import { styled } from '../Helpers';
+import { styled } from '@helpers';
 
 const Slider = Webpack.getModule(Webpack.Filters.byStrings("stickToMarkers", 'fillStyles'), { searchExports: true })
 const Clickable = Webpack.getModule(x => String(x.render).includes('secondaryColorClass:'), { searchExports: true })

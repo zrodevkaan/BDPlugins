@@ -4,8 +4,10 @@
  * @author Kaan
  * @version 2.4.0
  * @keyframes pulse {
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterReactions/BetterReactions.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterReactions/BetterReactions.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;

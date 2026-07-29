@@ -12,7 +12,7 @@ const { Store, className } = Utils;
 const { useStateFromStores } = Hooks;
 import _css from './index.css';
 
-import { styled } from '../Helpers';
+import { styled } from '@helpers';
 
 type SelfAudio = {
   id: string;

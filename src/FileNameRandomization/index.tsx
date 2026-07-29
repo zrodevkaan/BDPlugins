@@ -159,9 +159,7 @@ class FileNameRandomization {
 
     handleFileUpload(_, args) {
         if (!settingsStore.get('shouldIncognito')) return;
-
         if (args[2]?.attachmentsToUpload?.length == 0) return;
-
         for (const file of args[2]?.attachmentsToUpload) {
             file.filename = this.generateFilename(file.filename);
         }

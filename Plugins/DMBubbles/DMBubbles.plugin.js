@@ -3,8 +3,10 @@
  * @author Kaan
  * @version 1.0.0
  * @description Copies Apples iMessage pins
- * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DMBubbles/DMBubbles.plugin.js 
+ * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DMBubbles/DMBubbles.plugin.js
  * @invite t3zMgv7Nvb
+ * @stable 585344
+ * @canary 585560
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -32,8 +34,11 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/Helpers/index.tsx
-var { React, ContextMenu } = BdApi;
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
   return (props) => {
@@ -42,27 +47,24 @@ function styledBase(tag, cssOrFn) {
   };
 }
 var styled = new Proxy(styledBase, {
-  get(target, p, receiver) {
+  get(target, p) {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
 var ContextMenuHelper = (patches) => {
   const unpatches = [];
   patches.forEach((patch) => {
-    const unpatch = ContextMenu.patch(patch.navId, patch.patch);
-    unpatches.push(unpatch);
+    unpatches.push(ContextMenu.patch(patch.navId, patch.patch));
   });
-  return () => {
-    unpatches.forEach((unpatch) => unpatch());
-  };
+  return () => unpatches.forEach((unpatch) => unpatch());
 };
 
 // src/DMBubbles/index.tsx
-var { Patcher, Webpack, React: React2, DOM, Data, Hooks, Utils, ContextMenu: ContextMenu2 } = new BdApi("DMBubbles");
-var Module = Webpack.getBySource(".A.CONTACTS_LIST");
-var AvatarImg = Webpack.getByStrings("CutoutIcon", "avatarTooltipText", { searchExports: true });
-var Colors = Webpack.getByKeys("unsafe_rawColors")?.unsafe_rawColors;
-var { Stores } = Webpack;
+var { Patcher, Webpack: Webpack3, React: React2, DOM, Data, Hooks: Hooks2, Utils, ContextMenu: ContextMenu2 } = new BdApi("DMBubbles");
+var Module = Webpack3.getBySource(".A.CONTACTS_LIST");
+var AvatarImg = Webpack3.getByStrings("CutoutIcon", "avatarTooltipText", { searchExports: true });
+var Colors = Webpack3.getByKeys("unsafe_rawColors")?.unsafe_rawColors;
+var { Stores } = Webpack3;
 var FavoritesStore = new class FS extends Utils.Store {
   favorites = {};
   constructor() {
@@ -107,7 +109,7 @@ var GridContainer = styled.div({
   padding: "4px 8px"
 });
 function Yeah({ id }) {
-  const userData = Hooks.useStateFromStores([Stores.UserStore, Stores.PresenceStore, Stores.TypingStore, Stores.SelectedChannelStore], () => {
+  const userData = Hooks2.useStateFromStores([Stores.UserStore, Stores.PresenceStore, Stores.TypingStore, Stores.SelectedChannelStore], () => {
     const user = Stores.UserStore.getUser(id);
     const status = Stores.PresenceStore.getStatus(id);
     return {
@@ -123,7 +125,7 @@ function Yeah({ id }) {
   return /* @__PURE__ */ BdApi.React.createElement(BubbleContainer, null, /* @__PURE__ */ BdApi.React.createElement(AvatarImg, { ...userData }), /* @__PURE__ */ BdApi.React.createElement(StyledText, null, userData.username));
 }
 function PinsManager() {
-  const favorites = Hooks.useStateFromStores([FavoritesStore], () => FavoritesStore.getIds());
+  const favorites = Hooks2.useStateFromStores([FavoritesStore], () => FavoritesStore.getIds());
   return /* @__PURE__ */ BdApi.React.createElement(GridContainer, null, favorites.map((id, index) => {
     return /* @__PURE__ */ BdApi.React.createElement(Yeah, { key: id, id });
   }));
@@ -146,7 +148,7 @@ function getStatusColor(type) {
 }
 function ContextMenuBubbles({ props }) {
   const user = props.user;
-  const isFavorited = Hooks.useStateFromStores([FavoritesStore], () => FavoritesStore.isFavorited(user.id));
+  const isFavorited = Hooks2.useStateFromStores([FavoritesStore], () => FavoritesStore.isFavorited(user.id));
   const onAdd = () => {
     isFavorited ? FavoritesStore.removeFavorite(user.id) : FavoritesStore.addFavorite(user.id);
   };

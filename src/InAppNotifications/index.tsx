@@ -6,14 +6,14 @@
  */
 import type {Message} from "discord-types/general";
 import {
-    getExportBySource,
-    getExportByStrings,
-    getKey,
-    waitForExportBySource,
-    waitForExportByStrings
-} from "../../helpers";
+    wpFilter,
+    wpGetBulk,
+    wpGetMangled,
+    wpGetStore,
+    wpWaitMangled,
+} from "@helpers";
 
-const {Webpack, Utils, Patcher, Hooks, React, Data, Components} = new BdApi("InAppNotifications");
+const {Utils, Patcher, Hooks, React, Data, Components} = new BdApi("InAppNotifications");
 
 const {
     MessageStore,
@@ -25,26 +25,36 @@ const {
     ReferencedMessageStore,
     PendingReplyStore,
     SelectedChannelStore
-} = Webpack.Stores;
+} = {
+    MessageStore: wpGetStore<any>("MessageStore"),
+    ChannelStore: wpGetStore<any>("ChannelStore"),
+    UserStore: wpGetStore<any>("UserStore"),
+    GuildStore: wpGetStore<any>("GuildStore"),
+    UserGuildSettingsStore: wpGetStore<any>("UserGuildSettingsStore"),
+    GuildMemberStore: wpGetStore<any>("GuildMemberStore"),
+    ReferencedMessageStore: wpGetStore<any>("ReferencedMessageStore"),
+    PendingReplyStore: wpGetStore<any>("PendingReplyStore"),
+    SelectedChannelStore: wpGetStore<any>("SelectedChannelStore")
+};
 
 const [
     MessageComponent,
     MessageConstructor,
     Dispatcher,
     MessageActions,
-] = Webpack.getBulk(
-    {filter: Webpack.Filters.byStrings(".mention_everyone??!1"), searchExports: true},
-    {filter: Webpack.Filters.byPrototypeKeys("receivePushNotification")},
-    {filter: (x: any) => x?._dispatch, searchExports: true},
-    {filter: Webpack.Filters.byKeys("fetchMessage", "deleteMessage")},
-);
+] = wpGetBulk(
+    {strings: [".mention_everyone??!1"], options: {searchExports: true}},
+    {prototypeKeys: ["receivePushNotification"]},
+    {filter: (x: any) => x?._dispatch, options: {searchExports: true}},
+    {keys: ["fetchMessage", "deleteMessage"]},
+) as [any, any, any, any];
 
-const NavigationUtils = Webpack.getMangled("transitionTo - Transitioning to", {
-    transitionTo: Webpack.Filters.byStrings("transitionTo - Transitioning to"),
-    replace: Webpack.Filters.byStrings("Replacing route with"),
-    goBack: Webpack.Filters.byStrings(".goBack()"),
-    goForward: Webpack.Filters.byStrings(".goForward()"),
-    transitionToGuild: Webpack.Filters.byStrings("transitionToGuild - Transitioning to")
+const NavigationUtils = wpGetMangled("transitionTo - Transitioning to", {
+    transitionTo: wpFilter.byStrings("transitionTo - Transitioning to"),
+    replace: wpFilter.byStrings("Replacing route with"),
+    goBack: wpFilter.byStrings(".goBack()"),
+    goForward: wpFilter.byStrings(".goForward()"),
+    transitionToGuild: wpFilter.byStrings("transitionToGuild - Transitioning to")
 });
 
 interface DispatchedMessage {
@@ -341,7 +351,11 @@ function KeywordBadges({keywords}: { keywords: string[] }) {
     );
 }
 
-function NotificationCard({message: initialMessage, matchedKeywords, Wrapper}: { message: Message, matchedKeywords: string[], Wrapper: any }) {
+function NotificationCard({message: initialMessage, matchedKeywords, Wrapper}: {
+    message: Message,
+    matchedKeywords: string[],
+    Wrapper: any
+}) {
     const DURATION = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? (15 * 1000));
     const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
 
@@ -446,7 +460,7 @@ function NotificationCard({message: initialMessage, matchedKeywords, Wrapper}: {
                 }}/>
             </div>
             {showTextarea && (
-                <div style={{ padding: '10px', zIndex: '10' }}>
+                <div style={{padding: '10px', zIndex: '10'}}>
                     <Components.TextInput
                         value={getText}
                         onChange={(val) => setText(val)}
@@ -592,10 +606,10 @@ function NotificationContainer({wrapper}) {
     const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
 
     const pos: React.CSSProperties = {
-        top:    position.startsWith("top")    ? "5px" : undefined,
+        top: position.startsWith("top") ? "5px" : undefined,
         bottom: position.startsWith("bottom") ? "5px" : undefined,
-        left:   position.endsWith("left")     ? "5px" : undefined,
-        right:  position.endsWith("right")    ? "5px" : undefined,
+        left: position.endsWith("left") ? "5px" : undefined,
+        right: position.endsWith("right") ? "5px" : undefined,
     };
 
     // const reactions = Hooks.useStateFromStores(
@@ -631,7 +645,8 @@ function NotificationContainer({wrapper}) {
             } as React.CSSProperties}
         >
             {entries.map(({message, matchedKeywords}) => (
-                <NotificationCard Wrapper={wrapper} key={message.id} message={message} matchedKeywords={matchedKeywords}/>
+                <NotificationCard Wrapper={wrapper} key={message.id} message={message}
+                                  matchedKeywords={matchedKeywords}/>
             ))}
             {/*reactions.map(r => <ReactionCard key={`${r.messageId}-${r.userId}`} entry={r}/>)*/}
         </div>
@@ -673,10 +688,10 @@ function ForceUpdateRoot() {
 }
 
 const POSITIONS = [
-    { value: "top-left",     label: "Top Left" },
-    { value: "top-right",    label: "Top Right" },
-    { value: "bottom-right", label: "Bottom Right" },
-    { value: "bottom-left",  label: "Bottom Left" },
+    {value: "top-left", label: "Top Left"},
+    {value: "top-right", label: "Top Right"},
+    {value: "bottom-right", label: "Bottom Right"},
+    {value: "bottom-left", label: "Bottom Left"},
 ];
 
 export default class InAppNotifications {
@@ -759,15 +774,14 @@ export default class InAppNotifications {
     }
 
     async start() {
-        const MessageWrapper = getExportByStrings(
-            ["Message must not be a thread starter message"],
-            { declaration: x => String(x?.type).includes("Message must not be a thread starter message") }
-        );
-
-        const AppMount = await waitForExportBySource(
-            "DispatcherBridge",
-            { declaration: x => String(x?.type).includes("Shakeable") }
-        );
+        const [{MessageWrapper}, {AppMount}] = await Promise.all([
+            wpWaitMangled("Message must not be a thread starter message", {
+                MessageWrapper: x => String(x?.type).includes("Message must not be a thread starter message")
+            }),
+            wpWaitMangled("DispatcherBridge", {
+                AppMount: (x: any) => String(x?.type).includes("Shakeable")
+            }),
+        ]);
 
         BdApi.DOM.addStyle("IAN", `
             #ian-container::-webkit-scrollbar { display: none; }
@@ -777,119 +791,121 @@ export default class InAppNotifications {
         Patcher.after(AppMount, "type", (_: any, __: any, res: any) => {
             res.props.children.push(<ErrorBoundary><NotificationContainer wrapper={MessageWrapper}/></ErrorBoundary>);
         });
-        // Patcher.after(MessageWrapper, 'type', (a, [b], c) => {
-        //     const loc = Utils.findInTree(c, x => x.childrenAccessories, {walkable: ['props', 'children']})
-        //     if (b.__ian) loc.childrenButtons = undefined // Prevents the child buttons from the minipopover from showing on notification messages.
-        //     return c
-        // })
+        Patcher.after(MessageWrapper, 'type', (a, [b], c) => {
+            const loc = Utils.findInTree(c, x => x.childrenAccessories, {walkable: ['props', 'children']})
+            if (b.__ian) loc.childrenButtons = undefined // Prevents the child buttons from the minipopover from showing on notification messages.
+            return c
+        })
         Dispatcher.subscribe("MESSAGE_CREATE", this.#messageHandler);
 
         ForceUpdateRoot();
         //Dispatcher.subscribe("MESSAGE_REACTION_ADD", this.#reactionHandler);
     }
 
-    stop() {
-        BdApi.DOM.removeStyle("IAN");
-        Patcher.unpatchAll();
-        Dispatcher.unsubscribe("MESSAGE_CREATE", this.#messageHandler);
-        //Dispatcher.unsubscribe("MESSAGE_REACTION_ADD", this.#reactionHandler); // i dont have a nice way to display this, so just kill it.
-        NotificationStore.clear();
+        stop()
+        {
+            BdApi.DOM.removeStyle("IAN");
+            Patcher.unpatchAll();
+            Dispatcher.unsubscribe("MESSAGE_CREATE", this.#messageHandler);
+            //Dispatcher.unsubscribe("MESSAGE_REACTION_ADD", this.#reactionHandler); // i dont have a nice way to display this, so just kill it.
+            NotificationStore.clear();
+        }
+
+        getSettingsPanel()
+        {
+            return () => {
+                const [value, setValue] = React.useState(
+                    SettingsStore.getKeywords().join(";")
+                );
+
+                const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15000);
+                const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
+                const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
+                const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
+
+                return (
+                    <div>
+                        <Components.SettingItem
+                            id="keywords"
+                            name="Keywords"
+                            note="A semicolon-separated list of keywords that will always trigger notifications."
+                            inline={false}
+                        >
+                            <Components.TextInput
+                                value={value}
+                                placeholder="keyword1;keyword2;keyword3"
+                                onChange={(v: string) => {
+                                    setValue(v);
+                                    const keywords = v.split(";").map((k: string) => k.trim()).filter((k: string) => k.length > 0);
+                                    SettingsStore.setKeywords(keywords);
+                                }}
+                            />
+                        </Components.SettingItem>
+
+                        <Components.SettingItem
+                            id="duration"
+                            name="Notification Duration"
+                            note={`How long notifications remain on screen. Currently: ${(duration / 1000).toFixed(1)}s`}
+                            inline={false}
+                        >
+                            <Components.SliderInput
+                                min={3000}
+                                max={60000}
+                                step={1000}
+                                value={duration}
+                                units="ms"
+                                onChange={(v: number) => {
+                                    SettingsStore.setSetting("duration", v);
+                                }}
+                            />
+                        </Components.SettingItem>
+
+                        <Components.SettingItem
+                            id="shouldReply"
+                            name="Reply to Messages"
+                            note="When enabled, allows you to reply directly to messages from the notification."
+                            inline={true}
+                        >
+                            <Components.SwitchInput
+                                value={shouldReply}
+                                onChange={(v: number) => {
+                                    SettingsStore.setSetting("shouldReply", v);
+                                }}
+                            />
+                        </Components.SettingItem>
+
+                        <Components.SettingItem
+                            id="showTextarea"
+                            name="Show Reply Textarea"
+                            note="Displays a text input in the notification to reply to messages and DMs."
+                            inline={true}
+                        >
+                            <Components.SwitchInput
+                                value={showTextarea}
+                                onChange={(v: boolean) => {
+                                    SettingsStore.setSetting("showTextarea", v);
+                                }}
+                            />
+                        </Components.SettingItem>
+
+                        <Components.SettingItem
+                            id="position"
+                            name="Notification Position"
+                            note="Where notifications appear on screen."
+                        >
+                            <Components.RadioInput
+                                value={position}
+                                onChange={(v: string) => SettingsStore.setSetting("position", v)}
+                                options={[
+                                    {value: "top-left", name: "Top Left"},
+                                    {value: "top-right", name: "Top Right"},
+                                    {value: "bottom-right", name: "Bottom Right"},
+                                    {value: "bottom-left", name: "Bottom Left"},
+                                ]}
+                            />
+                        </Components.SettingItem>
+                    </div>
+                );
+            };
+        }
     }
-
-    getSettingsPanel() {
-        return () => {
-            const [value, setValue] = React.useState(
-                SettingsStore.getKeywords().join(";")
-            );
-
-            const duration = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("duration") ?? 15000);
-            const shouldReply = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("shouldReply") ?? true);
-            const showTextarea = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("showTextarea") ?? true);
-            const position = Hooks.useStateFromStores(SettingsStore, () => SettingsStore.getSetting("position") ?? "bottom-right");
-
-            return (
-                <div>
-                    <Components.SettingItem
-                        id="keywords"
-                        name="Keywords"
-                        note="A semicolon-separated list of keywords that will always trigger notifications."
-                        inline={false}
-                    >
-                        <Components.TextInput
-                            value={value}
-                            placeholder="keyword1;keyword2;keyword3"
-                            onChange={(v: string) => {
-                                setValue(v);
-                                const keywords = v.split(";").map((k: string) => k.trim()).filter((k: string) => k.length > 0);
-                                SettingsStore.setKeywords(keywords);
-                            }}
-                        />
-                    </Components.SettingItem>
-
-                    <Components.SettingItem
-                        id="duration"
-                        name="Notification Duration"
-                        note={`How long notifications remain on screen. Currently: ${(duration / 1000).toFixed(1)}s`}
-                        inline={false}
-                    >
-                        <Components.SliderInput
-                            min={3000}
-                            max={60000}
-                            step={1000}
-                            value={duration}
-                            units="ms"
-                            onChange={(v: number) => {
-                                SettingsStore.setSetting("duration", v);
-                            }}
-                        />
-                    </Components.SettingItem>
-
-                    <Components.SettingItem
-                        id="shouldReply"
-                        name="Reply to Messages"
-                        note="When enabled, allows you to reply directly to messages from the notification."
-                        inline={true}
-                    >
-                        <Components.SwitchInput
-                            value={shouldReply}
-                            onChange={(v: number) => {
-                                SettingsStore.setSetting("shouldReply", v);
-                            }}
-                        />
-                    </Components.SettingItem>
-
-                    <Components.SettingItem
-                        id="showTextarea"
-                        name="Show Reply Textarea"
-                        note="Displays a text input in the notification to reply to messages and DMs."
-                        inline={true}
-                    >
-                        <Components.SwitchInput
-                            value={showTextarea}
-                            onChange={(v: boolean) => {
-                                SettingsStore.setSetting("showTextarea", v);
-                            }}
-                        />
-                    </Components.SettingItem>
-
-                    <Components.SettingItem
-                        id="position"
-                        name="Notification Position"
-                        note="Where notifications appear on screen."
-                    >
-                        <Components.RadioInput
-                            value={position}
-                            onChange={(v: string) => SettingsStore.setSetting("position", v)}
-                            options={[
-                                { value: "top-left",     name: "Top Left" },
-                                { value: "top-right",    name: "Top Right" },
-                                { value: "bottom-right", name: "Bottom Right" },
-                                { value: "bottom-left",  name: "Bottom Left" },
-                            ]}
-                        />
-                    </Components.SettingItem>
-                </div>
-            );
-        };
-    }
-}

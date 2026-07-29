@@ -54,6 +54,7 @@ interface WebpackOptions {
     searchExports?: boolean;
     searchDefault?: boolean;
     defaultExport?: boolean;
+    declarationFilter?: (e: any) => boolean
 }
 
 interface WebpackLazyOptions extends WebpackOptions {
@@ -64,7 +65,7 @@ interface WebpackFilters {
     byKeys(...keys: string[]): ExportedOnlyFilter;
     byPrototypeKeys(...props: string[]): ExportedOnlyFilter;
     byRegex(regex: RegExp): ExportedOnlyFilter;
-    bySource(...searches: Array<RegExp | string>): WebpackFilter;
+    bySource(...searches: Array<RegExp | string>): ExportedOnlyFilter;
     byStrings(...strings: string[]): ExportedOnlyFilter;
     byDisplayName(name: string): ExportedOnlyFilter;
     byStoreName(name: string): ExportedOnlyFilter;
@@ -334,7 +335,7 @@ interface UIAPI {
 // ==================== Utils Types ====================
 interface UtilsAPI {
     findInTree(tree: object, searchFilter: (obj: object) => boolean, options?: { walkable?: string[] | null; ignore?: string[] }): object | undefined;
-    forceLoad(id: number | string): Promise<object[]>;
+    forceLoad(id: number | string | number[] | string[]): Promise<object[]>;
     extend(extendee: object, ...extenders: object[]): object;
     debounce<T extends (...args: unknown[]) => unknown>(executor: T, delay: number): T & { cancel(): void; flush(): void };
     escapeHTML(html: string): string;
