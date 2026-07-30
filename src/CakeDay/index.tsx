@@ -1,10 +1,11 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.1
+ * @version 1.1.2
  * @description Birfdays in discord
  */
 import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
+
 const ModalModule = wpGetByKeys(["openModal"])
 const Modal = wpGetByKeys(["Modal"]).Modal
 
@@ -121,20 +122,77 @@ const velocityConfigs = [
     }
 ];
 
+const CustomConfettiTypes = {
+    heart: {
+        name: "heart",
+        execute: (methods: any, centerX: number, centerY: number, amount: number) => {
+            const scale = 15;
+
+            for (let i = 0; i < amount; i++) {
+                const t = (i / amount) * Math.PI * 2;
+                const heartX = 16 * Math.pow(Math.sin(t), 3);
+                const heartY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+
+                const targetX = centerX + heartX * scale;
+                const targetY = centerY + heartY * scale;
+
+                const velocityX = (targetX - centerX) * 0.1;
+                const velocityY = (targetY - centerY) * 0.1;
+
+                methods.createMultipleConfettiAt(centerX, centerY, {
+                    velocity: {
+                        type: "static",
+                        value: {x: velocityX, y: velocityY, z: 0},
+                        uniformVectorValues: false
+                    }
+                }, 1);
+            }
+        }
+    },
+    attempt: {
+        name: "DEBUG",
+        execute: (methods: any, centerX: number, centerY: number, amount: number) => {
+            const radius = 15;
+
+            for (let i = 0; i < amount; i++) {
+                const t = (i / amount) * Math.PI * 2;
+
+                const circleX = radius * (Math.cos(t) * t / 0.1);
+                const circleY = radius * -(Math.sin(t) * t / 0.1);
+
+                methods.createMultipleConfettiAt(centerX, centerY, {
+                    velocity: {
+                        type: "static",
+                        value: {
+                            x: circleX,
+                            y: circleY,
+                            z: 0
+                        },
+                        uniformVectorValues: false
+                    }
+                }, 1);
+            }
+        }
+    }
+};
+
 function CakeWithConfetti({data, type, size}): React.JSX.Element {
     const Methods = React.use(ConfettiContext);
 
     const handleMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
         const t = e.currentTarget.getBoundingClientRect();
-
         const currentType = Settings.get("confettiType") || type || 'static-random';
-
         const centerX = t.left + t.width / 2;
         const centerY = t.top + t.height / 2;
+        const amount = Settings.get("confettiAmount") ?? 20;
 
-        Methods.createMultipleConfettiAt(centerX, centerY, {
-            velocity: velocityConfigs.find(x => x.type === currentType) ?? velocityConfigs[3],
-        }, Settings.get("confettiAmount") ?? 20);
+        if (CustomConfettiTypes[currentType]) {
+            CustomConfettiTypes[currentType].execute(Methods, centerX, centerY, amount);
+        } else {
+            Methods.createMultipleConfettiAt(centerX, centerY, {
+                velocity: velocityConfigs.find(x => x.type === currentType) ?? velocityConfigs[3],
+            }, amount);
+        }
     };
 
     return (
@@ -259,7 +317,10 @@ const checkDate = (date?: string): boolean => {
     return isDDMM || isMMDD;
 };
 
-const BirthdayListNotification = ({extraUsers, showDate}: { extraUsers?: User[]; showDate: boolean }): React.JSX.Element => {
+const BirthdayListNotification = ({extraUsers, showDate}: {
+    extraUsers?: User[];
+    showDate: boolean
+}): React.JSX.Element => {
     const allBirthdays = Hooks.useStateFromStores([DataStore], () => Object.entries(DataStore.getAll()))
     const users = extraUsers ? extraUsers.map((user) => ({user: user, id: user.id, date: ""})) : allBirthdays
         .map(([id, data]) => ({user: Webpack.Stores.UserStore.getUser(id), date: data.date, id: id}))
@@ -308,6 +369,43 @@ const BirthdayListNotification = ({extraUsers, showDate}: { extraUsers?: User[];
     );
 };
 
+function reactSvgToDataUri(Component: Function, props = {}) {
+    function serialize(element: any): string {
+        if (!element) return "";
+
+        if (typeof element === "string" || typeof element === "number") {
+            return String(element);
+        }
+
+        const {type, props} = element;
+
+        const attrs = Object.entries(props ?? {})
+            .filter(([key, value]) =>
+                key !== "children" &&
+                value !== undefined &&
+                value !== null &&
+                typeof value !== "function"
+            )
+            .map(([key, value]) => {
+                const attr = key === "className" ? "class" : key;
+                return `${attr}="${String(value)}"`;
+            })
+            .join(" ");
+
+        const children = Array.isArray(props.children)
+            ? props.children.map(serialize).join("")
+            : serialize(props.children);
+
+        return `<${type}${attrs ? " " + attrs : ""}>${children}</${type}>`;
+    }
+
+    const element = Component(props);
+
+    const svg = serialize(element);
+
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 export default class CakeDay {
     private interval: NodeJS.Timeout;
 
@@ -332,11 +430,10 @@ export default class CakeDay {
 
         const NameAndDecorators = wpGetBySource([":null,withDisplayNameStyles:"], {raw: true})
         const ModuleWithKey = getKey(NameAndDecorators.declarations, x => String(x).includes(".FRIEND_REQUEST_ACCEPTED})"))
-
         const MemberList = wpGetBySource(["placement:c.u.MEMBER_LIST"])
 
         Patcher.after(MemberList, 'A', (that: any, [args], res: any) => {
-            const Data = findInTree(args, x => x.user, {walkable: ['props','children','avatar']});
+            const Data = findInTree(args, x => x.user, {walkable: ['props', 'children', 'avatar']});
             const user = Data.user;
             const birthday = DataStore.get(user.id)
             const Location = res.props.children.props.children[1].props.children
@@ -356,6 +453,41 @@ export default class CakeDay {
             Patcher.after(res.props, "children", () => BeforeChildren)
             return res;
         })
+
+        Patcher.after(Webpack.Stores.UserProfileStore, "getUserProfile", (a, b, c) => {
+            const user = Webpack.Stores.UserStore.getUser(b[0])
+            if (c?.badges && !Object.values(c?.badges).find(x => x.id == "birthday") && checkDate(DataStore.get(user.id).date)) {
+                c.badges.push({
+                    id: "birthday",
+                    name: "Birthday",
+                    description: <div style={{marginBottom: '-10px'}}>
+                        <div>Birthday</div>
+                        <span
+                            style={{
+                                all: "revert",
+                                fontFamily: "inherit",
+                                font: "200 14px var(--font-display)",
+                                color: "var(--interactive-text-default)",
+                                textTransform: "none",
+                                letterSpacing: "normal",
+                            }}
+                        >
+                                {user.globalName ?? user.username}'s birthday!
+                            </span>
+                    </div>,
+                    iconSrc: reactSvgToDataUri(CakeSVG, {size: 16})
+                })
+            }
+        })
+
+        // Patcher.after(FetchModule, "fetchProfile", (a,b,c) => {
+        //     const userId = b[0]
+        //     const location = Webpack.Stores.UserProfileStore.getUserProfile(userId)
+        //     const user = Webpack.Stores.UserStore.getUser(userId)
+        //     const isBirthday = checkDate(DataStore.get(userId).date)
+        //     console.log(location, user, isBirthday)
+        //     setTimeout(() => isBirthday && location.badges.push({id: "birthday", name:"Birthday", description:`Say happy birthday to ${user.username}` , iconSrc: reactSvgToDataUri(CakeSVG, {size: 16})}), 1000)
+        // })
 
         // Patcher.after(UsernameLocation, 'ZP', (_, __, res) => {
         //     Patcher.after(res, 'type', (_, __, res) => {
@@ -416,30 +548,48 @@ export default class CakeDay {
         return () => {
             const confettiType = Hooks.useStateFromStores([Settings], () => Settings.get("confettiType")) || "linear-random";
             const confettiAmount = Hooks.useStateFromStores([Settings], () => Settings.get("confettiAmount")) || 20;
-
             const bypassAmount = Hooks.useStateFromStores([Settings], () => Settings.get("bypassAmount")) || false;
 
+            const allConfettiTypes = [
+                ...velocityConfigs.map((config) => ({
+                    label: config.type.substring(0, 1).toUpperCase() + config.type.substring(1, config.type.length),
+                    value: config.type
+                })),
+                ...Object.values(CustomConfettiTypes).map((customType) => ({
+                    label: customType.name.substring(0, 1).toUpperCase() + customType.name.substring(1, customType.name.length),
+                    value: customType.name,
+                }))
+            ];
 
             return <div>
                 <Components.SettingGroup name={"Confetti Settings"}>
                     <Components.SettingItem name={"Confetti Type"}
                                             note={"Changes the behaviour of the confetti when hovering."}>
-                        <Components.DropdownInput value={confettiType}
-                                                  onChange={(amt: string) => Settings.set("confettiType", amt)}
-                                                  options={velocityConfigs.map((config) => ({
-                                                      label: config.type,
-                                                      value: config.type
-                                                  }))}></Components.DropdownInput>
+                        <Components.DropdownInput
+                            value={confettiType}
+                            onChange={(amt: string) => Settings.set("confettiType", amt)}
+                            options={allConfettiTypes}
+                        />
                     </Components.SettingItem>
 
                     <Components.SettingItem name={"Confetti Amount"}
                                             note={"how much bifday you want....."}>
-                        <Components.SliderInput min={0} max={bypassAmount ? 1000 : 100} step={[20]} value={confettiAmount}
-                                                onChange={(type: string) => Settings.set("confettiAmount", type)}></Components.SliderInput>
+                        <Components.SliderInput
+                            min={0}
+                            max={bypassAmount ? 1000 : 100}
+                            step={[20]}
+                            value={confettiAmount}
+                            onChange={(type: string) => Settings.set("confettiAmount", type)}
+                        />
                     </Components.SettingItem>
 
-                    <Components.SettingItem name={"More confett~~~~!!@@!~#@#"} note={"Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."}>
-                        <Components.SwitchInput value={bypassAmount} onChange={(val:boolean) => Settings.set("bypassAmount", val)}/>
+                    <Components.SettingItem
+                        name={"More confett~~~~!!@@!~#@#"}
+                        note={"Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."}>
+                        <Components.SwitchInput
+                            value={bypassAmount}
+                            onChange={(val: boolean) => Settings.set("bypassAmount", val)}
+                        />
                     </Components.SettingItem>
                 </Components.SettingGroup>
                 <Components.SettingGroup name={"Birthdays"}>
@@ -464,7 +614,7 @@ export default class CakeDay {
                     action: () => {
                         // im lazy....
                         ModalModule.openModal((props) => <Modal {...props}
-                            title={`Set ${user.globalName ?? user.username}'s birthday`}>
+                                                                title={`Set ${user.globalName ?? user.username}'s birthday`}>
                             <TextInput user={user}
                                        birthday={birthday}/>
                         </Modal>)

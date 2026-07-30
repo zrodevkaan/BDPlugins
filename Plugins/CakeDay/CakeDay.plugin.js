@@ -1,12 +1,12 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.1
+ * @version 1.1.2
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 586111
+ * @canary 586419
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -163,6 +163,52 @@ var velocityConfigs = [
     uniformVectorValues: false
   }
 ];
+var CustomConfettiTypes = {
+  heart: {
+    name: "heart",
+    execute: (methods, centerX, centerY, amount) => {
+      const scale = 15;
+      for (let i = 0; i < amount; i++) {
+        const t = i / amount * Math.PI * 2;
+        const heartX = 16 * Math.pow(Math.sin(t), 3);
+        const heartY = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        const targetX = centerX + heartX * scale;
+        const targetY = centerY + heartY * scale;
+        const velocityX = (targetX - centerX) * 0.1;
+        const velocityY = (targetY - centerY) * 0.1;
+        methods.createMultipleConfettiAt(centerX, centerY, {
+          velocity: {
+            type: "static",
+            value: { x: velocityX, y: velocityY, z: 0 },
+            uniformVectorValues: false
+          }
+        }, 1);
+      }
+    }
+  },
+  attempt: {
+    name: "DEBUG",
+    execute: (methods, centerX, centerY, amount) => {
+      const radius = 15;
+      for (let i = 0; i < amount; i++) {
+        const t = i / amount * Math.PI * 2;
+        const circleX = radius * (Math.cos(t) * t / 0.1);
+        const circleY = radius * -(Math.sin(t) * t / 0.1);
+        methods.createMultipleConfettiAt(centerX, centerY, {
+          velocity: {
+            type: "static",
+            value: {
+              x: circleX,
+              y: circleY,
+              z: 0
+            },
+            uniformVectorValues: false
+          }
+        }, 1);
+      }
+    }
+  }
+};
 function CakeWithConfetti({ data, type, size }) {
   const Methods = React2.use(ConfettiContext);
   const handleMouseOver = (e) => {
@@ -170,9 +216,14 @@ function CakeWithConfetti({ data, type, size }) {
     const currentType = Settings.get("confettiType") || type || "static-random";
     const centerX = t.left + t.width / 2;
     const centerY = t.top + t.height / 2;
-    Methods.createMultipleConfettiAt(centerX, centerY, {
-      velocity: velocityConfigs.find((x) => x.type === currentType) ?? velocityConfigs[3]
-    }, Settings.get("confettiAmount") ?? 20);
+    const amount = Settings.get("confettiAmount") ?? 20;
+    if (CustomConfettiTypes[currentType]) {
+      CustomConfettiTypes[currentType].execute(Methods, centerX, centerY, amount);
+    } else {
+      Methods.createMultipleConfettiAt(centerX, centerY, {
+        velocity: velocityConfigs.find((x) => x.type === currentType) ?? velocityConfigs[3]
+      }, amount);
+    }
   };
   return /* @__PURE__ */ BdApi.React.createElement("div", { ...data, onMouseOver: handleMouseOver }, /* @__PURE__ */ BdApi.React.createElement(CakeSVG, { size, ...data }));
 }
@@ -338,6 +389,26 @@ var BirthdayListNotification = ({ extraUsers, showDate }) => {
     });
   } }, fetching.has(data.id) ? /* @__PURE__ */ BdApi.React.createElement(Components.Spinner, null) : /* @__PURE__ */ BdApi.React.createElement("div", null, "Empty user ", data.id))));
 };
+function reactSvgToDataUri(Component, props = {}) {
+  function serialize(element2) {
+    if (!element2) return "";
+    if (typeof element2 === "string" || typeof element2 === "number") {
+      return String(element2);
+    }
+    const { type, props: props2 } = element2;
+    const attrs = Object.entries(props2 ?? {}).filter(
+      ([key, value]) => key !== "children" && value !== void 0 && value !== null && typeof value !== "function"
+    ).map(([key, value]) => {
+      const attr = key === "className" ? "class" : key;
+      return `${attr}="${String(value)}"`;
+    }).join(" ");
+    const children = Array.isArray(props2.children) ? props2.children.map(serialize).join("") : serialize(props2.children);
+    return `<${type}${attrs ? " " + attrs : ""}>${children}</${type}>`;
+  }
+  const element = Component(props);
+  const svg = serialize(element);
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
 var CakeDay = class {
   interval;
   start() {
@@ -373,6 +444,31 @@ var CakeDay = class {
       Patcher.after(res.props, "children", () => BeforeChildren);
       return res;
     });
+    Patcher.after(Webpack3.Stores.UserProfileStore, "getUserProfile", (a, b, c) => {
+      const user = Webpack3.Stores.UserStore.getUser(b[0]);
+      if (c?.badges && !Object.values(c?.badges).find((x) => x.id == "birthday") && checkDate(DataStore.get(user.id).date)) {
+        c.badges.push({
+          id: "birthday",
+          name: "Birthday",
+          description: /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "-10px" } }, /* @__PURE__ */ BdApi.React.createElement("div", null, "Birthday"), /* @__PURE__ */ BdApi.React.createElement(
+            "span",
+            {
+              style: {
+                all: "revert",
+                fontFamily: "inherit",
+                font: "200 14px var(--font-display)",
+                color: "var(--interactive-text-default)",
+                textTransform: "none",
+                letterSpacing: "normal"
+              }
+            },
+            user.globalName ?? user.username,
+            "'s birthday!"
+          )),
+          iconSrc: reactSvgToDataUri(CakeSVG, { size: 16 })
+        });
+      }
+    });
     Webpack3.Stores.UserStore._dispatcher.subscribe("HOUR", this.updateUserThatSomePersonBirthdayIsTodayLmao);
     ContextMenu2.patch("user-context", this.patchUserContextMenu);
     this.interval = setInterval(() => Webpack3.Stores.A._dispatcher.dispatch({ type: "HOUR" }), 60 * 60 * 1e3);
@@ -401,6 +497,16 @@ var CakeDay = class {
       const confettiType = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiType")) || "linear-random";
       const confettiAmount = Hooks2.useStateFromStores([Settings], () => Settings.get("confettiAmount")) || 20;
       const bypassAmount = Hooks2.useStateFromStores([Settings], () => Settings.get("bypassAmount")) || false;
+      const allConfettiTypes = [
+        ...velocityConfigs.map((config) => ({
+          label: config.type.substring(0, 1).toUpperCase() + config.type.substring(1, config.type.length),
+          value: config.type
+        })),
+        ...Object.values(CustomConfettiTypes).map((customType) => ({
+          label: customType.name.substring(0, 1).toUpperCase() + customType.name.substring(1, customType.name.length),
+          value: customType.name
+        }))
+      ];
       return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Confetti Settings" }, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
@@ -412,10 +518,7 @@ var CakeDay = class {
           {
             value: confettiType,
             onChange: (amt) => Settings.set("confettiType", amt),
-            options: velocityConfigs.map((config) => ({
-              label: config.type,
-              value: config.type
-            }))
+            options: allConfettiTypes
           }
         )
       ), /* @__PURE__ */ BdApi.React.createElement(
@@ -434,7 +537,20 @@ var CakeDay = class {
             onChange: (type) => Settings.set("confettiAmount", type)
           }
         )
-      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "More confett~~~~!!@@!~#@#", note: "Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues." }, /* @__PURE__ */ BdApi.React.createElement(Components.SwitchInput, { value: bypassAmount, onChange: (val) => Settings.set("bypassAmount", val) }))), /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Birthdays" }, /* @__PURE__ */ BdApi.React.createElement(BirthdayListNotification, { showDate: true })));
+      ), /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
+        {
+          name: "More confett~~~~!!@@!~#@#",
+          note: "Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."
+        },
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.SwitchInput,
+          {
+            value: bypassAmount,
+            onChange: (val) => Settings.set("bypassAmount", val)
+          }
+        )
+      )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Birthdays" }, /* @__PURE__ */ BdApi.React.createElement(BirthdayListNotification, { showDate: true })));
     };
   }
   patchUserContextMenu = (res, args) => {
