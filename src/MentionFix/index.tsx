@@ -1,67 +1,92 @@
 /**
  * @name MentionFix
- * @version 2.0.1
+ * @version 2.0.3
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
-const { Webpack, Patcher, ReactUtils } = new BdApi('MentionFix')
-const [Module, Key] = Webpack.getWithKey(Webpack.Filters.byStrings('viewingChannelId', 'parsedUserId'))
-const UserStore = Webpack.getStore('UserStore')
-const FetchModule = Webpack.getMangled('type:"USER_PROFILE_FETCH_START"', { fetchUser: Webpack.Filters.byStrings("USER_UPDATE", "Promise.resolve") })
+import {getKey, wpGetByStrings} from "@helpers";
 
-const Message = Webpack.getByKeys('quotedChatMessage')
+const {Webpack, Patcher, React, Hooks, Components} = new BdApi('MentionFix')
 
-function reRender(selector) {
-    const target = document.querySelector(selector)?.parentElement;
-    if (!target) return;
-    const instance = ReactUtils.getOwnerInstance(target);
-    const unpatch = Patcher.instead(instance, "render", () => unpatch());
-    instance.forceUpdate(() => instance.forceUpdate());
+const FetchUser = getKey(Webpack.getBySource('UserProfileModalActionCreators'), x => String(x).includes("USER_UPDATE") && !String(x).includes("USER_PROFILE_FETCH_START") && String(x).includes('Promise.resolve'));
+const UserMention = getKey(wpGetByStrings(['.A.USER_MENTION),'], {raw: true}).exports, x => String(x).includes("USER_MENTION"));
+const UserComponent = UserMention.module[UserMention.key];
+
+interface MentionProps {
+    className?: string;
+    userId?: string;
+    parsedUserId?: string;
+    channelId: string;
+    viewingChannelId?: string;
+    content?: unknown[];
+    inlinePreview?: boolean;
+}
+
+function queuer(worker, {concurrency = 3} = {}) {
+    const pending = new Map();
+    const queue = [];
+    let active = 0;
+
+    function runNext() {
+        if (active >= concurrency || queue.length === 0) return;
+        const {key, resolve, reject} = queue.shift();
+        active++;
+
+        worker(key)
+            .then(resolve, reject)
+            .finally(() => {
+                active--;
+                pending.delete(key);
+                runNext();
+            });
+    }
+
+    return function enqueue(key) {
+        if (pending.has(key)) return pending.get(key);
+
+        const promise = new Promise((resolve, reject) => {
+            queue.push({key, resolve, reject});
+        });
+
+        pending.set(key, promise);
+        runNext();
+        return promise;
+    };
+}
+
+const fetchUserQueue = queuer(
+    userId => FetchUser.module[FetchUser.key](userId),
+    {concurrency: 8}
+);
+
+function CustomMention({args}: {args: MentionProps}) {
+    const userId = args.userId ?? args.parsedUserId;
+
+    const data = Hooks.useStateFromStores([Webpack.Stores.UserStore, Webpack.Stores.ChannelStore], () => ({
+        user: Webpack.Stores.UserStore.getUser(userId),
+        channel: Webpack.Stores.ChannelStore.getChannel(args.channelId),
+    }))
+
+    React.useEffect(() => {
+        if (data.user) return;
+        fetchUserQueue(userId).then(() => Webpack.Stores.UserStore.emitChange());
+    }, [userId, data.user]);
+
+    return !data.user ? <Components.Spinner/> : <UserComponent {...args} />
 }
 
 class MentionFix {
-    constructor() {
-        this.fetchedUsers = new Set()
-    }
-
     start() {
-        Patcher.after(Module, Key, (that, [args], res) => {
-            const userId = args.parsedUserId
-            const doesUserExist = UserStore.getUser(userId)
+        Patcher.after(UserMention.module, UserMention.key, (that, [args], res) => {
+            const userId = args.userId ?? args.parsedUserId;
+            if (!userId || Webpack.Stores.UserStore.getUser(userId)) return res;
 
-            if (doesUserExist === undefined) {
-                for (var child of res.props.children) {
-                    if (child && child.props) {
-                        const originalOnMouseEnter = child.props.onMouseEnter
-
-                        Object.defineProperty(child.props, 'onMouseEnter', {
-                            value: async (e) => {
-                                if (!this.fetchedUsers.has(userId)) {
-                                    await this.fetchedUsers.add(userId)
-                                    await FetchModule.fetchUser(userId).catch(error => {
-                                        this.fetchedUsers.delete(userId)
-                                    })
-                                }
-                                setTimeout(() => reRender(`.${Message.message}`), 10)
-
-                                if (originalOnMouseEnter) {
-                                    originalOnMouseEnter(e)
-                                }
-                            },
-                            writable: true,
-                            configurable: true
-                        })
-                    }
-                }
-            }
-            // setTimeout(() => reRender(`.${Message}`), 10)
-
+            return <CustomMention args={args}/>
         })
     }
 
     stop() {
         Patcher.unpatchAll()
-        this.fetchedUsers.clear()
     }
 }
 
