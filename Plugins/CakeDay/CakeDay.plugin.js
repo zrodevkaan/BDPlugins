@@ -1,12 +1,12 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.2
+ * @version 1.1.3
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 586111
- * @canary 586419
+ * @canary 586877
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -445,12 +445,11 @@ var CakeDay = class {
       return res;
     });
     Patcher.after(Webpack3.Stores.UserProfileStore, "getUserProfile", (a, b, c) => {
-      const user = Webpack3.Stores.UserStore.getUser(b[0]);
-      if (c?.badges && !Object.values(c?.badges).find((x) => x.id == "birthday") && checkDate(DataStore.get(user.id).date)) {
+      if (c?.badges && !Object.values(c?.badges).find((x) => x.id == "birthday") && checkDate(DataStore.get(b[0]).date)) {
         c.badges.push({
           id: "birthday",
           name: "Birthday",
-          description: /* @__PURE__ */ BdApi.React.createElement("div", { style: { marginBottom: "-10px" } }, /* @__PURE__ */ BdApi.React.createElement("div", null, "Birthday"), /* @__PURE__ */ BdApi.React.createElement(
+          description: /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement("div", null, "Birthday"), /* @__PURE__ */ BdApi.React.createElement(
             "span",
             {
               style: {
@@ -462,8 +461,7 @@ var CakeDay = class {
                 letterSpacing: "normal"
               }
             },
-            user.globalName ?? user.username,
-            "'s birthday!"
+            "birthday time!"
           )),
           iconSrc: reactSvgToDataUri(CakeSVG, { size: 16 })
         });

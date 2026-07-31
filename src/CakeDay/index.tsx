@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.2
+ * @version 1.1.3
  * @description Birfdays in discord
  */
 import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
@@ -455,12 +455,13 @@ export default class CakeDay {
         })
 
         Patcher.after(Webpack.Stores.UserProfileStore, "getUserProfile", (a, b, c) => {
-            const user = Webpack.Stores.UserStore.getUser(b[0])
-            if (c?.badges && !Object.values(c?.badges).find(x => x.id == "birthday") && checkDate(DataStore.get(user.id).date)) {
+            // what do you mean YABDP4Nitro crashes when I call getUser in getUserProfile??
+
+            if (c?.badges && !Object.values(c?.badges).find(x => x.id == "birthday") && checkDate(DataStore.get(b[0]).date)) {
                 c.badges.push({
                     id: "birthday",
                     name: "Birthday",
-                    description: <div style={{marginBottom: '-10px'}}>
+                    description: <>
                         <div>Birthday</div>
                         <span
                             style={{
@@ -472,9 +473,9 @@ export default class CakeDay {
                                 letterSpacing: "normal",
                             }}
                         >
-                                {user.globalName ?? user.username}'s birthday!
+                                birthday time!
                             </span>
-                    </div>,
+                    </>,
                     iconSrc: reactSvgToDataUri(CakeSVG, {size: 16})
                 })
             }
