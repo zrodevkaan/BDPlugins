@@ -1,18 +1,41 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.1
+ * @version 2.1.2
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 586984
+ * @canary 587118
  */
 "use strict";
 
+// helpers/webpack.ts
+var { Webpack } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
+var { createElement, forwardRef } = React;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+function getKey(module2, fn) {
+  for (const key in module2) {
+    if (fn(module2[key])) return { key, module: module2 };
+  }
+}
+
 // src/LiveTyping/index.tsx
-var { Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu } = new BdApi("LiveTyping");
+var { Webpack: Webpack3, Patcher, React: React2, Components, Data, UI, Utils, DOM, ContextMenu: ContextMenu2 } = new BdApi("LiveTyping");
 var {
   getStore,
   getByStrings,
@@ -20,7 +43,7 @@ var {
   getBySource,
   getBulk,
   Filters
-} = Webpack;
+} = Webpack3;
 var getBulkStore = /* @__PURE__ */ (() => {
   const storeCache = /* @__PURE__ */ new Map();
   return (storeNames, options = {}) => {
@@ -75,7 +98,7 @@ var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x &&
   searchExports: true
 }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
 var Spinner = Components.Spinner;
-var scrollersModule = Webpack.getBySource(/disableFocusRingScope:.{1,2}=!1/);
+var scrollersModule = Webpack3.getBySource(",experimental_useStack:");
 var RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers");
 var GuildObject = getByStrings(".guildbar.AVATAR_SIZE", "backgroundStyle", {
   searchExports: true,
@@ -201,7 +224,7 @@ function getTypingUsers(users) {
 function ExtractItemID(link) {
   return link?.substr(link.lastIndexOf("_") + 1);
 }
-var KeyboardSVG = (props) => React.createElement(
+var KeyboardSVG = (props) => React2.createElement(
   "svg",
   {
     xmlns: "http://www.w3.org/2000/svg",
@@ -211,14 +234,14 @@ var KeyboardSVG = (props) => React.createElement(
     fill: "var(--interactive-icon-default)",
     ...props
   },
-  React.createElement("path", {
+  React2.createElement("path", {
     d: "M20 5a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3zM6 13a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V14a1 1 0 0 0-1-1m12 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V14a1 1 0 0 0-1-1m-7.998 0a1 1 0 0 0-.004 2l4 .01a1 1 0 0 0 .005-2zM6 9a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1m4 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1m4 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1m4 0a1 1 0 0 0-1 1v.01a1 1 0 0 0 2 0V10a1 1 0 0 0-1-1"
   })
 );
 var UserAvatarList = ({ users, guild }) => {
   const SelectedGuild = SelectedGuildStore.getGuildId();
   const users_ = Object.values(users).map((x) => x.id).map((x) => UserStore.getUser(x));
-  return React.createElement("div", {
+  return React2.createElement("div", {
     className: "live-typing-avatar-list",
     key: guild ? "GuildTypingIndicator" : "TypingIndicator",
     style: {
@@ -230,7 +253,7 @@ var UserAvatarList = ({ users, guild }) => {
       justifyContent: "left",
       backgroundColor: !guild ? "var(--background-base-lower)" : "transparent"
     }
-  }, [guild && React.createElement(KeyboardSVG, { key: "balls" }), React.createElement(RenderAvatars, {
+  }, [guild && React2.createElement(KeyboardSVG, { key: "balls" }), React2.createElement(RenderAvatars, {
     key: "balls_",
     guildId: SelectedGuild,
     max: 6,
@@ -238,9 +261,9 @@ var UserAvatarList = ({ users, guild }) => {
   })]);
 };
 var isEmpty = (o) => !o || !Object.keys(o).length;
-var TypingIndicatorDMBar = React.memo(() => {
-  const [showPopout, setShowPopout] = React.useState(false);
-  const ref = React.useRef(null);
+var TypingIndicatorDMBar = React2.memo(() => {
+  const [showPopout, setShowPopout] = React2.useState(false);
+  const ref = React2.useRef(null);
   const privateChannelIds = useStateFromStores([PrivateChannelSortStore], () => PrivateChannelSortStore.getPrivateChannelIds());
   const currentUserId = useStateFromStores([UserStore], (x) => UserStore.getCurrentUser()?.id || null);
   const typingUsersByChannel = useStateFromStores([TypingStore], () => {
@@ -263,24 +286,24 @@ var TypingIndicatorDMBar = React.memo(() => {
   });
   if (isEmpty(typingUsers) && currentUserId) return null;
   const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
-  return React.createElement(
+  return React2.createElement(
     "div",
     { ref },
-    React.createElement(Popout, {
-      renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
+    React2.createElement(Popout, {
+      renderPopout: () => React2.createElement(UserAvatarList, { users: typingUsers }),
       position: "left",
       shouldShow: showPopout,
       className: "moreCorners",
       targetElementRef: ref,
       onRequestClose: () => setShowPopout(false),
-      children: (props) => React.createElement("div", {
+      children: (props) => React2.createElement("div", {
         className: "typing-indicator-dm-container",
         onMouseEnter: () => setShowPopout(true),
         onMouseLeave: () => setShowPopout(false),
         onClick: () => setShowPopout((x) => !x),
         ref,
         style: { cursor: "pointer" }
-      }, React.createElement(Spinner, {
+      }, React2.createElement(Spinner, {
         ...props,
         type: Spinner.Type[indicatorType],
         animated: true,
@@ -289,37 +312,37 @@ var TypingIndicatorDMBar = React.memo(() => {
     })
   );
 });
-var TypingIndicator = React.memo(({ channelId }) => {
-  const ref = React.useRef(null);
+var TypingIndicator = React2.memo(({ channelId }) => {
+  const ref = React2.useRef(null);
   const isMuted = useStateFromStores([UserGuildSettingsStore, SelectedGuildStore], (a, b) => {
     const isMuted2 = UserGuildSettingsStore.isChannelMuted(SelectedGuildStore.getGuildId(), channelId);
     return isMuted2;
   }, [channelId]);
   if (shouldIgnoreItem("ignoreChannels", channelId)) return null;
-  const [showPopout, setShowPopout] = React.useState(false);
+  const [showPopout, setShowPopout] = React2.useState(false);
   const typingUsers = useStateFromStores([TypingStore], () => getTypingUsers(TypingStore.getTypingUsers(channelId)), [channelId]);
   if (isEmpty(typingUsers)) return null;
   const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
-  return !isMuted && React.createElement(
+  return !isMuted && React2.createElement(
     "div",
     { ref },
-    React.createElement(Popout, {
-      renderPopout: () => React.createElement(UserAvatarList, { users: typingUsers }),
+    React2.createElement(Popout, {
+      renderPopout: () => React2.createElement(UserAvatarList, { users: typingUsers }),
       position: "right",
       shouldShow: showPopout,
       className: "moreCorners",
       targetElementRef: ref,
       onRequestClose: () => setShowPopout(false),
-      children: (props) => React.createElement("div", {
+      children: (props) => React2.createElement("div", {
         onMouseEnter: () => setShowPopout(true),
         onMouseLeave: () => setShowPopout(false),
         onClick: () => setShowPopout((x) => !x),
         style: { cursor: "pointer" },
         ref
-      }, React.createElement(
+      }, React2.createElement(
         Components.Tooltip,
         { text: getTypingTooltip(typingUsers) },
-        (tooltipProps) => React.createElement(Spinner, {
+        (tooltipProps) => React2.createElement(Spinner, {
           ...tooltipProps,
           ...props,
           type: Spinner.Type[indicatorType],
@@ -330,7 +353,7 @@ var TypingIndicator = React.memo(({ channelId }) => {
     })
   );
 });
-var GuildTypingIndicator = React.memo(({ guildId }) => {
+var GuildTypingIndicator = React2.memo(({ guildId }) => {
   if (shouldIgnoreItem("ignoreServers", guildId)) return null;
   const allTypingUsers = useStateFromStores([TypingStore], () => {
     const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
@@ -341,9 +364,9 @@ var GuildTypingIndicator = React.memo(({ guildId }) => {
     }, {});
   }, [guildId]);
   if (isEmpty(allTypingUsers)) return null;
-  return React.createElement(UserAvatarList, { key: "UserAvatarList_Main", users: allTypingUsers, guild: true });
+  return React2.createElement(UserAvatarList, { key: "UserAvatarList_Main", users: allTypingUsers, guild: true });
 });
-var GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
+var GuildTypingIndicatorV2 = React2.memo(({ guildId }) => {
   if (shouldIgnoreItem("ignoreServers", guildId)) return null;
   const allTypingUsers = useStateFromStores([TypingStore], () => {
     const { VOCAL = {}, SELECTABLE = {} } = GuildChannelStore.getChannels(guildId) || {};
@@ -355,7 +378,7 @@ var GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
   }, [guildId]);
   if (isEmpty(allTypingUsers)) return null;
   const indicatorType = DataStore.settings.indicatorType || DEFAULT_INDICATOR_TYPE;
-  return React.createElement(Spinner, {
+  return React2.createElement(Spinner, {
     style: {
       position: "absolute",
       zIndex: 2,
@@ -370,6 +393,7 @@ var GuildTypingIndicatorV2 = React.memo(({ guildId }) => {
 var LiveTyping = class {
   start() {
     this.patchChannelElement();
+    this.patchGuildObject();
     this.patchDMTyping();
     this.injectStyles();
     this.patchContextMenus();
@@ -409,7 +433,7 @@ var LiveTyping = class {
     });
     if (dmChannel) {
       const isIgnored = isBlocked("ignoredDMs", dmChannel);
-      const item = ContextMenu.buildItem({
+      const item = ContextMenu2.buildItem({
         type: "toggle",
         label: `${isIgnored ? "Show" : "Hide"} Typing Indicator`,
         checked: isIgnored,
@@ -425,7 +449,7 @@ var LiveTyping = class {
     const channelId = props.channel?.id;
     if (!channelId) return;
     const isIgnored = isBlocked("ignoredChannels", channelId);
-    const item = ContextMenu.buildItem({
+    const item = ContextMenu2.buildItem({
       type: "toggle",
       label: `${isIgnored ? "Show" : "Hide"} Typing Indicator`,
       checked: isIgnored,
@@ -440,7 +464,7 @@ var LiveTyping = class {
     const guildId = props.guild?.id;
     if (!guildId) return;
     const isIgnored = isBlocked("ignoredServers", guildId);
-    const item = ContextMenu.buildItem({
+    const item = ContextMenu2.buildItem({
       type: "toggle",
       label: `${isIgnored ? "Show" : "Hide"} Typing Indicator`,
       checked: isIgnored,
@@ -451,16 +475,16 @@ var LiveTyping = class {
     retVal.props.children.push(item);
   }
   patchContextMenus() {
-    ContextMenu.patch("user-context", this.patchUserContextMenu);
-    ContextMenu.patch("channel-context", this.patchChannelContextMenu);
-    ContextMenu.patch("guild-context", this.patchGuildContextMenu);
-    ContextMenu.patch("gdm-context", this.patchChannelContextMenu);
+    ContextMenu2.patch("user-context", this.patchUserContextMenu);
+    ContextMenu2.patch("channel-context", this.patchChannelContextMenu);
+    ContextMenu2.patch("guild-context", this.patchGuildContextMenu);
+    ContextMenu2.patch("gdm-context", this.patchChannelContextMenu);
   }
   patchDMTyping() {
     Patcher.after(scrollersModule.zC, "render", (that, [props], res) => {
       if (shouldIgnoreItem("ignoreDMs")) return res;
       const isGuildObject = Utils.findInTree(res, (x) => x?.lurkingGuildIds, { walkable: ["props", "children"] });
-      isGuildObject && res.props.children.props.children.unshift(React.createElement("div", {}, React.createElement(TypingIndicatorDMBar)));
+      isGuildObject && res.props.children.props.children.unshift(React2.createElement("div", {}, React2.createElement(TypingIndicatorDMBar)));
     });
   }
   patchChannelElement() {
@@ -470,7 +494,7 @@ var LiveTyping = class {
       if (!channelId) return;
       if (shouldIgnoreItem("ignoreChannels", channelId)) return ret;
       const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children;
-      const component = React.createElement("div", null, React.createElement(TypingIndicator, { channelId }));
+      const component = React2.createElement("div", null, React2.createElement(TypingIndicator, { channelId }));
       const location = DataStore.settings.indicatorLocation || DEFAULT_INDICATOR_LOCATION;
       if (location === "left") {
         children.unshift(component);
@@ -480,14 +504,21 @@ var LiveTyping = class {
     });
   }
   patchGuildObject() {
+    const GuildComponent = getKey(Webpack3.getBySource(".A.modules.guildbar.AVATAR_SIZE"), (x) => String(x).includes("AVATAR_SIZE"));
+    Patcher.after(GuildComponent?.module, GuildComponent?.key, (a, props, c) => {
+      const guildId = ExtractItemID(props[0]["data-list-item-id"]);
+      if (!guildId) return;
+      if (shouldIgnoreItem("ignoreServers", guildId)) return c;
+      c.props.children.push(/* @__PURE__ */ BdApi.React.createElement(GuildTypingIndicatorV2, { guildId }));
+    });
   }
   stop() {
     Patcher.unpatchAll();
     DOM.removeStyle("LiveTyping");
-    ContextMenu.unpatch("user-context", this.patchUserContextMenu);
-    ContextMenu.unpatch("channel-context", this.patchChannelContextMenu);
-    ContextMenu.unpatch("guild-context", this.patchGuildContextMenu);
-    ContextMenu.unpatch("gdm-context", this.patchChannelContextMenu);
+    ContextMenu2.unpatch("user-context", this.patchUserContextMenu);
+    ContextMenu2.unpatch("channel-context", this.patchChannelContextMenu);
+    ContextMenu2.unpatch("guild-context", this.patchGuildContextMenu);
+    ContextMenu2.unpatch("gdm-context", this.patchChannelContextMenu);
   }
   getSettingsPanel() {
     const currentSettings = DataStore.settings;

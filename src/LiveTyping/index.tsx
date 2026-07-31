@@ -1,9 +1,10 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.1
+ * @version 2.1.2
  * @description Typing status per user on servers, channels or threads.
  */
+import {getKey} from "@helpers";
 
 const {Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu} = new BdApi("LiveTyping");
 
@@ -83,7 +84,7 @@ const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && 
 }, {filter: Filters.byStrings("useStateFromStores"), searchExports: true})
 
 const Spinner = Components.Spinner
-const scrollersModule = Webpack.getBySource(/disableFocusRingScope:.{1,2}=!1/) //Webpack.getById(475825,{raw:true}) // 689175
+const scrollersModule = Webpack.getBySource(",experimental_useStack:") //Webpack.getById(475825,{raw:true}) // 689175
 const RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers")
 
 // const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip'), {raw: true}).exports
@@ -427,7 +428,7 @@ const GuildTypingIndicatorV2 = React.memo(({guildId}) => {
 class LiveTyping {
     start() {
         this.patchChannelElement();
-        // this.patchGuildObject();
+        this.patchGuildObject();
         this.patchDMTyping();
         this.injectStyles();
         this.patchContextMenus();
@@ -563,49 +564,15 @@ class LiveTyping {
     }
 
     patchGuildObject() {
-        /* okay well goodbye. thanks Discord^tm*/
-        /*
-                Patcher.after(n(593618), "Z", (_, [props], ret) => {
-            if (shouldIgnoreItem('ignoreServers')) return ret;
-
-            const guild = props.guild;
-            if (shouldIgnoreItem('ignoreServers', guild.id)) return ret;
-
-            const retChildren = ret.props.children;
-
-            ret.props.children = (a, b, c) => {
-                const rets = retChildren()
-                const extra = rets.props.children?.type?.render
-                if (extra) {
-                    rets.props.children.type.render = (aa,bb,cc) => {
-                        const renderChildren = extra(a, b, c)
-                        console.log(renderChildren,aa,bb,cc)
-                        return renderChildren
-                    }
-                }
-                return rets
-            }
-
-            return ret;
-        });
-         */
-
-        /*Patcher.after(GuildObject, "L", (_, [props], ret) => {
-            if (shouldIgnoreItem('ignoreServers')) return ret;
-
-            const guildId = ExtractItemID(props['data-list-item-id']);
+        const GuildComponent = getKey(Webpack.getBySource(".A.modules.guildbar.AVATAR_SIZE"), x => String(x).includes("AVATAR_SIZE"))
+        Patcher.after(GuildComponent?.module, GuildComponent?.key, (a,props,c) => {
+            const guildId = ExtractItemID(props[0]['data-list-item-id']);
             if (!guildId) return;
 
-            if (shouldIgnoreItem('ignoreServers', guildId)) return ret;
+            if (shouldIgnoreItem('ignoreServers', guildId)) return c;
 
-            const unpatch = Patcher.after(ret.type.prototype, "render", (thisObj, _, renderRet) => {
-                unpatch();
-                const guild = Utils.findInTree(renderRet, x => x?.['data-list-item-id'], {walkable: ['props', 'children']});
-                if (guild && guild.children) {
-                    guild.children?.push?.(React.createElement('div', {}, React.createElement(GuildTypingIndicatorV2, {guildId})));
-                }
-            });
-        });*/
+            c.props.children.push(<GuildTypingIndicatorV2 guildId={guildId} />)
+        })
     }
 
     stop() {
