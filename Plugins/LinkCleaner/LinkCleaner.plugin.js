@@ -2,11 +2,11 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.3
+ * @version 1.0.4
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkCleaner/LinkCleaner.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 586984
- * @canary 587625
+ * @stable 587597
+ * @canary 587647
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -49,37 +49,35 @@ var CleanStore = new class CleanStore2 extends Utils.Store {
     if (!this.rules) return url;
     url = url.replace(/\?([^?]*)\?/, "?$1&");
     if (!url.includes("?") && url.includes("&")) {
-      if (!url.includes("?") && url.includes("&")) {
-        url = url.replace("&", "?");
-      }
-      url = url.replace(/(youtu\.be\/[^?&]+)&/, "$1?");
-      let parsed;
-      try {
-        parsed = new URL(url);
-      } catch {
-        return url;
-      }
-      let href = parsed.toString();
-      const providers = Object.values(this.rules);
-      const matching = providers.filter(
-        (p) => new RegExp(p.urlPattern, "i").test(url) && !p.exceptions?.some((e) => new RegExp(e, "i").test(url))
-      );
-      matching.sort((a, b) => b.urlPattern.length - a.urlPattern.length);
-      for (const provider of matching) {
-        const rules = Array.isArray(provider.rules) ? provider.rules : Object.values(provider.rules ?? {});
-        const rawRules = Array.isArray(provider.rawRules) ? provider.rawRules : Object.values(provider.rawRules ?? {});
-        for (const [key] of [...parsed.searchParams]) {
-          if (rules.some((r) => new RegExp(r, "i").test(key))) {
-            parsed.searchParams.delete(key);
-          }
-        }
-        href = parsed.toString();
-        for (const raw of rawRules) {
-          href = href.replace(new RegExp(raw, "i"), "");
-        }
-      }
-      return href;
+      url = url.replace("&", "?");
     }
+    url = url.replace(/(youtu\.be\/[^?&]+)&/, "$1?");
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return url;
+    }
+    let href = parsed.toString();
+    const providers = Object.values(this.rules);
+    const matching = providers.filter(
+      (p) => new RegExp(p.urlPattern, "i").test(url) && !p.exceptions?.some((e) => new RegExp(e, "i").test(url))
+    );
+    matching.sort((a, b) => b.urlPattern.length - a.urlPattern.length);
+    for (const provider of matching) {
+      const rules = Array.isArray(provider.rules) ? provider.rules : Object.values(provider.rules ?? {});
+      const rawRules = Array.isArray(provider.rawRules) ? provider.rawRules : Object.values(provider.rawRules ?? {});
+      for (const [key] of [...parsed.searchParams]) {
+        if (rules.some((r) => new RegExp(r, "i").test(key))) {
+          parsed.searchParams.delete(key);
+        }
+      }
+      href = parsed.toString();
+      for (const raw of rawRules) {
+        href = href.replace(new RegExp(raw, "i"), "");
+      }
+    }
+    return href;
   }
 }();
 var Cleaner = class {

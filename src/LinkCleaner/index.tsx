@@ -2,7 +2,7 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.3
+ * @version 1.0.4
  */
 
 const {Webpack, Patcher, Utils, Net, Logger} = new BdApi("LinkCleaner")
@@ -25,48 +25,44 @@ const CleanStore = new class CleanStore extends Utils.Store {
 
         url = url.replace(/\?([^?]*)\?/, '?$1&');
         if (!url.includes('?') && url.includes('&')) {
-            if (!url.includes('?') && url.includes('&')) {
-                url = url.replace('&', '?');
-            }
-
-            url = url.replace(/(youtu\.be\/[^?&]+)&/, '$1?'); // how would I account for weird malformed links
-            // besides hardcoding them into a URL array?
-
-            let parsed: URL;
-            try {
-                parsed = new URL(url)
-            } catch {
-                return url
-            }
-
-            let href = parsed.toString();
-
-            const providers = Object.values(this.rules) as any[];
-            const matching = providers.filter(p =>
-                new RegExp(p.urlPattern, "i").test(url) &&
-                !p.exceptions?.some((e: string) => new RegExp(e, "i").test(url))
-            );
-
-            matching.sort((a, b) => b.urlPattern.length - a.urlPattern.length);
-
-            for (const provider of matching) {
-                const rules = Array.isArray(provider.rules) ? provider.rules : Object.values(provider.rules ?? {});
-                const rawRules = Array.isArray(provider.rawRules) ? provider.rawRules : Object.values(provider.rawRules ?? {});
-
-                for (const [key] of [...parsed.searchParams]) {
-                    if (rules.some((r: string) => new RegExp(r, "i").test(key))) {
-                        parsed.searchParams.delete(key);
-                    }
-                }
-
-                href = parsed.toString();
-                for (const raw of rawRules) {
-                    href = href.replace(new RegExp(raw, "i"), "");
-                }
-            }
-
-            return href;
+            url = url.replace('&', '?');
         }
+        url = url.replace(/(youtu\.be\/[^?&]+)&/, '$1?');
+
+        let parsed: URL;
+        try {
+            parsed = new URL(url);
+        } catch {
+            return url;
+        }
+
+        let href = parsed.toString();
+
+        const providers = Object.values(this.rules) as any[];
+        const matching = providers.filter(p =>
+            new RegExp(p.urlPattern, "i").test(url) &&
+            !p.exceptions?.some((e: string) => new RegExp(e, "i").test(url))
+        );
+
+        matching.sort((a, b) => b.urlPattern.length - a.urlPattern.length);
+
+        for (const provider of matching) {
+            const rules = Array.isArray(provider.rules) ? provider.rules : Object.values(provider.rules ?? {});
+            const rawRules = Array.isArray(provider.rawRules) ? provider.rawRules : Object.values(provider.rawRules ?? {});
+
+            for (const [key] of [...parsed.searchParams]) {
+                if (rules.some((r: string) => new RegExp(r, "i").test(key))) {
+                    parsed.searchParams.delete(key);
+                }
+            }
+
+            href = parsed.toString();
+            for (const raw of rawRules) {
+                href = href.replace(new RegExp(raw, "i"), "");
+            }
+        }
+
+        return href;
     }
 }
 
@@ -78,6 +74,7 @@ export default class Cleaner {
             args[1].content = args[1].content.replace(/https?:\/\/\S+[^>]/g, url => CleanStore.cleanURL(url));
         })
     }
+
     stop() {
         Patcher.unpatchAll();
     }
