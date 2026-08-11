@@ -2,11 +2,11 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.4
+ * @version 1.0.5
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkCleaner/LinkCleaner.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 587597
- * @canary 587647
+ * @stable 590738
+ * @canary 590965
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -84,7 +84,7 @@ var Cleaner = class {
   start() {
     CleanStore.init();
     Patcher.before(MessageActions, "sendMessage", (_, args) => {
-      args[1].content = args[1].content.replace(/https?:\/\/\S+[^>]/g, (url) => CleanStore.cleanURL(url));
+      args[1].content = args[1].content.replace(/(?:https?:\/\/)?(?:www\.)?[-\w@%.+~#=]{2,256}\.[a-z]{2,24}\b[-\w@:%+.~#?&\/=]*/g, (url) => CleanStore.cleanURL(url));
     });
   }
   stop() {

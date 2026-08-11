@@ -2,7 +2,7 @@
  * @name LinkCleaner
  * @author kaan
  * @description Clean URLs automatically every time you send a message.
- * @version 1.0.4
+ * @version 1.0.5
  */
 
 const {Webpack, Patcher, Utils, Net, Logger} = new BdApi("LinkCleaner")
@@ -71,7 +71,7 @@ export default class Cleaner {
         CleanStore.init();
         Patcher.before(MessageActions, "sendMessage", (_, args) => {
             // lmfao https://github.com/zrodevkaan/BDPlugins/issues/40
-            args[1].content = args[1].content.replace(/https?:\/\/\S+[^>]/g, url => CleanStore.cleanURL(url));
+            args[1].content = args[1].content.replace(/(?:https?:\/\/)?(?:www\.)?[-\w@%.+~#=]{2,256}\.[a-z]{2,24}\b[-\w@:%+.~#?&\/=]*/g, url => CleanStore.cleanURL(url));
         })
     }
 
