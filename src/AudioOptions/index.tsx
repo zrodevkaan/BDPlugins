@@ -1,16 +1,14 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 2.0.1
+ * @version 2.0.2
  * @description Adds an option button next to voice messages.
  */
-import {getKey} from "@helpers";
+import {getKey, wpGet, wpWait} from "@helpers";
 
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils} = new BdApi('AudioOptions')
 
 const IconBase = Webpack.getModule(x => x.Icon)
-const VoiceMessagePlayer = getKey(Webpack.getBySource("MEDIA_PLAYBACK_POSITION_UPDATE",{raw:true}).declarations, x => String(x.type).includes('.Ay.getPlaybackRate('))
-console.log(VoiceMessagePlayer)
 const PathIcon = () => {
     return React.createElement(
         'svg',
@@ -41,7 +39,8 @@ const createDownloadLink = async (url: string, filename: string) => {
 
         const a = Object.assign(document.createElement('a'), {
             href: URL.createObjectURL(blob),
-            download: filename || 'download.ogg'});
+            download: filename || 'download.ogg'
+        });
 
         document.body.appendChild(a);
         a.click();
@@ -55,7 +54,9 @@ const createDownloadLink = async (url: string, filename: string) => {
 }
 
 const AudioButton = ({showOptionsMenu}) => {
-    return (<IconBase.Icon icon={PathIcon} tooltip="Audio Options" className="audio-options-button" tooltipPosition="right" onClick={(e) => showOptionsMenu(e)}/>)
+    return (
+        <IconBase.Icon icon={PathIcon} tooltip="Audio Options" className="audio-options-button" tooltipPosition="right"
+                       onClick={(e) => showOptionsMenu(e)}/>)
 };
 
 class AudioOptions {
@@ -64,7 +65,10 @@ class AudioOptions {
     }
 
     patchAudioPlayer() {
-        Patcher.after(VoiceMessagePlayer.module[VoiceMessagePlayer.key], 'type', (_, [props], res) => {
+        const VoiceMessagePlayer = wpGet(Webpack.Filters.bySource(".AlHqHT)"), {raw: true})
+        const module = getKey(VoiceMessagePlayer.declarations, x => String(x.type).includes('.Ay.getPlaybackRate('))
+
+        Patcher.after(module?.module[module.key], 'type', (_, [props], res) => {
             res.props.children.push(<AudioButton showOptionsMenu={this.showOptionsMenu.bind(this, props)}/>);
         })
     }

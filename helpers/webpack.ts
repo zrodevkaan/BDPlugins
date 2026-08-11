@@ -1,5 +1,3 @@
-import {waitForExportBySource} from "./index.tsx";
-
 const {Webpack} = BdApi;
 
 type ModuleFilter = (m: any) => boolean;
@@ -438,20 +436,112 @@ export async function wpWaitGetBulkKeyed<T extends Record<string, WaitQueryWithT
     return Object.fromEntries(entries) as any;
 }
 
-const moduleCache = new Map();
-const resolvedCache = new Map();
+type PathSegment = string | symbol;
 
-function wpWaitCached(key, filter) {
-    if (!moduleCache.has(key)) {
-        const p = waitForExportBySource(key, filter).then(v => {
-            resolvedCache.set(key, v);
-            return v;
-        });
-        moduleCache.set(key, p);
+const PASSTHROUGH_PROPS = new Set<PathSegment>([
+    "then",
+    "toJSON",
+    "valueOf",
+    "toString",
+    Symbol.toPrimitive,
+    Symbol.toStringTag,
+    Symbol.iterator,
+]);
+
+const IDENTITY_PROPS = new Set<PathSegment>([
+    "prototype",
+    "contextType",
+    "defaultProps",
+    "$$typeof",
+]);
+
+function resolveLive(filter: ModuleFilter, options: GetOptions | undefined, path: PathSegment[]): any {
+    let current: any = resolveModule(filter, options);
+    for (const seg of path) {
+        if (current == null) return undefined;
+        current = current[seg as any];
     }
-    return moduleCache.get(key);
+    return current;
 }
 
-function wpGetCached(key) {
-    return resolvedCache.get(key);
+function createLiveProxy(filter: ModuleFilter, options: GetOptions | undefined, path: PathSegment[]): any {
+    const target = function wpGetProxyTarget() {} as any; // constructible target
+
+    return new Proxy(target, {
+        get(_t, prop) {
+            if (PASSTHROUGH_PROPS.has(prop) || IDENTITY_PROPS.has(prop)) {
+                const val = resolveLive(filter, options, path);
+                if (val == null) return undefined;
+                const member = (val as any)[prop as any];
+                return typeof member === "function" ? member.bind(val) : member;
+            }
+            return createLiveProxy(filter, options, [...path, prop]);
+        },
+
+        apply(_t, thisArg, args) {
+            const fn = resolveLive(filter, options, path);
+            const parent = resolveLive(filter, options, path.slice(0, -1));
+            return fn.apply(parent ?? thisArg, args);
+        },
+
+        construct(_t, args, _newTarget) {
+            const ctor = resolveLive(filter, options, path);
+            if (typeof ctor !== "function") {
+                throw new TypeError(`${String(path[path.length - 1] ?? "target")} is not a constructor`);
+            }
+            return Reflect.construct(ctor, args, ctor); // always use the real ctor as newTarget
+        },
+
+        set(_t, prop, value) {
+            const val = resolveLive(filter, options, path);
+            if (val == null) return false;
+            (val as any)[prop as any] = value;
+            return true;
+        },
+
+        has(_t, prop) {
+            const val = resolveLive(filter, options, path);
+            return val != null && prop in Object(val);
+        },
+
+        ownKeys(_t) {
+            const val = resolveLive(filter, options, path);
+            const keys = val ? Reflect.ownKeys(val) : [];
+            // 'prototype' is a non-configurable own key on the target function,
+            // so the invariant requires it to always appear in the trap result.
+            if (!keys.includes("prototype")) keys.push("prototype");
+            return keys;
+        },
+
+        getOwnPropertyDescriptor(_t, prop) {
+            if (prop === "prototype") {
+                // Must exactly match the target's real (non-configurable) descriptor,
+                // can't fabricate one for this key without violating the invariant.
+                return Reflect.getOwnPropertyDescriptor(_t, prop);
+            }
+            const val = resolveLive(filter, options, path);
+            if (val == null) return undefined;
+            return (
+                Object.getOwnPropertyDescriptor(val, prop) ?? {
+                    enumerable: true,
+                    configurable: true,
+                    value: (val as any)[prop as any],
+                }
+            );
+        },
+    });
+}
+
+export function wpGetProxy<T = any>(filter: ModuleFilter, options?: GetOptions): T {
+    return createLiveProxy(filter, options, []) as T;
+}
+
+export function wpGetProxyQuery<T = any>(query: Query): T {
+    return createLiveProxy(queryToFilter(query), query.options, []) as T;
+}
+
+export function getKey(module2, fn) {
+    for (const key in module2) {
+        if (fn(module2[key])) return { key, module: module2 };
+    }
 }

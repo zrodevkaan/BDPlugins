@@ -1,17 +1,34 @@
 /**
  * @name AudioOptions
  * @author Kaan
- * @version 2.0.1
+ * @version 2.0.2
  * @description Adds an option button next to voice messages.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/AudioOptions/AudioOptions.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 591071
+ * @canary 591157
  */
 "use strict";
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;
+function resolveModule(filter, options) {
+  const opts = options ?? {};
+  if (opts.declaration) {
+    const { declaration, key, raw, ...rest } = opts;
+    const result = Webpack.getMangled(filter, { __value: declaration }, {
+      ...rest,
+      mapDeclarations: true
+    });
+    return result?.__value ?? null;
+  }
+  const mod = Webpack.getModule(filter, opts);
+  if (mod == null) return null;
+  return opts.key ? mod[opts.key] : mod;
+}
+function wpGet(filter, options) {
+  return resolveModule(filter, options);
+}
 
 // helpers/index.tsx
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
@@ -36,8 +53,6 @@ function getKey(module2, fn) {
 // src/AudioOptions/index.tsx
 var { Patcher, React: React2, Webpack: Webpack3, DOM, ContextMenu: ContextMenu2, UI, Net, Utils } = new BdApi("AudioOptions");
 var IconBase = Webpack3.getModule((x) => x.Icon);
-var VoiceMessagePlayer = getKey(Webpack3.getBySource("MEDIA_PLAYBACK_POSITION_UPDATE", { raw: true }).declarations, (x) => String(x.type).includes(".Ay.getPlaybackRate("));
-console.log(VoiceMessagePlayer);
 var PathIcon = () => {
   return React2.createElement(
     "svg",
@@ -79,14 +94,25 @@ var createDownloadLink = async (url, filename) => {
   }
 };
 var AudioButton = ({ showOptionsMenu }) => {
-  return /* @__PURE__ */ BdApi.React.createElement(IconBase.Icon, { icon: PathIcon, tooltip: "Audio Options", className: "audio-options-button", tooltipPosition: "right", onClick: (e) => showOptionsMenu(e) });
+  return /* @__PURE__ */ BdApi.React.createElement(
+    IconBase.Icon,
+    {
+      icon: PathIcon,
+      tooltip: "Audio Options",
+      className: "audio-options-button",
+      tooltipPosition: "right",
+      onClick: (e) => showOptionsMenu(e)
+    }
+  );
 };
 var AudioOptions = class {
   start() {
     this.patchAudioPlayer();
   }
   patchAudioPlayer() {
-    Patcher.after(VoiceMessagePlayer.module[VoiceMessagePlayer.key], "type", (_, [props], res) => {
+    const VoiceMessagePlayer = wpGet(Webpack3.Filters.bySource(".AlHqHT)"), { raw: true });
+    const module2 = getKey(VoiceMessagePlayer.declarations, (x) => String(x.type).includes(".Ay.getPlaybackRate("));
+    Patcher.after(module2?.module[module2.key], "type", (_, [props], res) => {
       res.props.children.push(/* @__PURE__ */ BdApi.React.createElement(AudioButton, { showOptionsMenu: this.showOptionsMenu.bind(this, props) }));
     });
   }
