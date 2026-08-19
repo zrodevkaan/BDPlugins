@@ -103,11 +103,11 @@ const SettingsPanel = () => {
         <div>
             <SettingGroup name="General" collapsible={false} shown={true}>
                 <SettingItem name="Use Unix Timestamp" note="Use a Unix timestamp instead of random characters." inline={true}>
-                    <SwitchInput value={useTimestamp} onChange={(e) => onFieldChange('useTimestamp', e)} />
+                    <SwitchInput defaultValue={useTimestamp} onChange={(e) => onFieldChange('useTimestamp', e)} />
                 </SettingItem>
 
                 <SettingItem name="Preserve Original Filename" note="Include the original filename in the new name." inline={true}>
-                    <SwitchInput value={preserveOriginalName} onChange={(e) => onFieldChange('preserveOriginalName', e)} />
+                    <SwitchInput defaultValue={preserveOriginalName} onChange={(e) => onFieldChange('preserveOriginalName', e)} />
                 </SettingItem>
             </SettingGroup>
 
@@ -115,25 +115,25 @@ const SettingsPanel = () => {
                 <SettingItem name="Case Option" note="Choose how the generated filename casing is applied.">
                     <RadioInput
                         options={caseOptions}
-                        value={caseOption}
+                        defaultValue={caseOption}
                         onChange={(e) => onFieldChange('caseOption', e)}
                     />
                 </SettingItem>
 
                 <SettingItem name="Prefix" inline={true}>
-                    <TextInput value={prefix} onChange={(e) => onFieldChange('prefix', e)} />
+                    <TextInput defaultValue={prefix} onChange={(e) => onFieldChange('prefix', e)} />
                 </SettingItem>
 
                 <SettingItem name="Suffix" inline={true}>
-                    <TextInput value={suffix} onChange={(e) => onFieldChange('suffix', e)} />
+                    <TextInput defaultValue={suffix} onChange={(e) => onFieldChange('suffix', e)} />
                 </SettingItem>
 
                 <SettingItem name="Random String Length" inline={true}>
-                    <TextInput type="number" value={randomLength} onChange={(e) => onFieldChange('randomLength', e)} />
+                    <TextInput type="number" defaultValue={randomLength} onChange={(e) => onFieldChange('randomLength', e)} />
                 </SettingItem>
 
                 <SettingItem name="Custom Format" note="Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders.">
-                    <TextInput value={customFormat} onChange={(e) => onFieldChange('customFormat', e)} />
+                    <TextInput defaultValue={customFormat} onChange={(e) => onFieldChange('customFormat', e)} />
                 </SettingItem>
             </SettingGroup>
         </div>

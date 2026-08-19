@@ -1,12 +1,12 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.3
+ * @version 1.1.4
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 586111
- * @canary 586877
+ * @stable 595897
+ * @canary 596000
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -514,7 +514,7 @@ var CakeDay = class {
         /* @__PURE__ */ BdApi.React.createElement(
           Components.DropdownInput,
           {
-            value: confettiType,
+            defaultValue: confettiType,
             onChange: (amt) => Settings.set("confettiType", amt),
             options: allConfettiTypes
           }
@@ -531,7 +531,7 @@ var CakeDay = class {
             min: 0,
             max: bypassAmount ? 1e3 : 100,
             step: [20],
-            value: confettiAmount,
+            defaultValue: confettiAmount,
             onChange: (type) => Settings.set("confettiAmount", type)
           }
         )
@@ -544,7 +544,7 @@ var CakeDay = class {
         /* @__PURE__ */ BdApi.React.createElement(
           Components.SwitchInput,
           {
-            value: bypassAmount,
+            defaultValue: bypassAmount,
             onChange: (val) => Settings.set("bypassAmount", val)
           }
         )

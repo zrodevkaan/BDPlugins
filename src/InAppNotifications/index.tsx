@@ -1,7 +1,7 @@
 /**
  * @name InAppNotifications
  * @author kaan
- * @version 1.0.1
+ * @version 1.0.2
  * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
  */
 import type {Message} from "discord-types/general";
@@ -462,7 +462,7 @@ function NotificationCard({message: initialMessage, matchedKeywords, Wrapper}: {
             {showTextarea && (
                 <div style={{padding: '10px', zIndex: '10'}}>
                     <Components.TextInput
-                        value={getText}
+                        defaultValue={getText}
                         onChange={(val) => setText(val)}
                         placeholder="Reply to user?"
                         onKeyDown={(e) => {
@@ -832,7 +832,7 @@ export default class InAppNotifications {
                             inline={false}
                         >
                             <Components.TextInput
-                                value={value}
+                                defaultValue={value}
                                 placeholder="keyword1;keyword2;keyword3"
                                 onChange={(v: string) => {
                                     setValue(v);
@@ -852,7 +852,7 @@ export default class InAppNotifications {
                                 min={3000}
                                 max={60000}
                                 step={1000}
-                                value={duration}
+                                defaultValue={duration}
                                 units="ms"
                                 onChange={(v: number) => {
                                     SettingsStore.setSetting("duration", v);
@@ -867,7 +867,7 @@ export default class InAppNotifications {
                             inline={true}
                         >
                             <Components.SwitchInput
-                                value={shouldReply}
+                                defaultValue={shouldReply}
                                 onChange={(v: number) => {
                                     SettingsStore.setSetting("shouldReply", v);
                                 }}
@@ -881,7 +881,7 @@ export default class InAppNotifications {
                             inline={true}
                         >
                             <Components.SwitchInput
-                                value={showTextarea}
+                                defaultValue={showTextarea}
                                 onChange={(v: boolean) => {
                                     SettingsStore.setSetting("showTextarea", v);
                                 }}
@@ -894,7 +894,7 @@ export default class InAppNotifications {
                             note="Where notifications appear on screen."
                         >
                             <Components.RadioInput
-                                value={position}
+                                defaultValue={position}
                                 onChange={(v: string) => SettingsStore.setSetting("position", v)}
                                 options={[
                                     {value: "top-left", name: "Top Left"},

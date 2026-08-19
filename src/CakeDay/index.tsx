@@ -1,7 +1,7 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.3
+ * @version 1.1.4
  * @description Birfdays in discord
  */
 import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
@@ -567,7 +567,7 @@ export default class CakeDay {
                     <Components.SettingItem name={"Confetti Type"}
                                             note={"Changes the behaviour of the confetti when hovering."}>
                         <Components.DropdownInput
-                            value={confettiType}
+                            defaultValue={confettiType}
                             onChange={(amt: string) => Settings.set("confettiType", amt)}
                             options={allConfettiTypes}
                         />
@@ -579,7 +579,7 @@ export default class CakeDay {
                             min={0}
                             max={bypassAmount ? 1000 : 100}
                             step={[20]}
-                            value={confettiAmount}
+                            defaultValue={confettiAmount}
                             onChange={(type: string) => Settings.set("confettiAmount", type)}
                         />
                     </Components.SettingItem>
@@ -588,7 +588,7 @@ export default class CakeDay {
                         name={"More confett~~~~!!@@!~#@#"}
                         note={"Enabling this allows you to go from 100 confetti to 1000 confetti on the slider. \nThis can cause lag issues."}>
                         <Components.SwitchInput
-                            value={bypassAmount}
+                            defaultValue={bypassAmount}
                             onChange={(val: boolean) => Settings.set("bypassAmount", val)}
                         />
                     </Components.SettingItem>

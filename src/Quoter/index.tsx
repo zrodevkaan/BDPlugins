@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.4
+ * @version 1.0.5
  */
 
 const { Webpack, Patcher, ContextMenu, Data, Components, Utils } = new BdApi("Quoter")
@@ -241,7 +241,7 @@ export default class Quoter {
     {
         return () => {
             return <Components.SettingItem name={"Username Option"} note={"Changes what name shows of a user under the quote."}>
-                <Components.RadioInput value={SettingStore.getSetting("username")} onChange={(e) => {
+                <Components.RadioInput defaultValue={SettingStore.getSetting("username")} onChange={(e) => {
                     SettingStore.setSetting("username", e);
                 }} options={[
                     {

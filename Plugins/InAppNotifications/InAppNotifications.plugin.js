@@ -1,12 +1,12 @@
 /**
  * @name InAppNotifications
  * @author kaan
- * @version 1.0.1
+ * @version 1.0.2
  * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/InAppNotifications/InAppNotifications.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 595897
+ * @canary 596000
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -451,7 +451,7 @@ function NotificationCard({ message: initialMessage, matchedKeywords, Wrapper })
     showTextarea && /* @__PURE__ */ BdApi.React.createElement("div", { style: { padding: "10px", zIndex: "10" } }, /* @__PURE__ */ BdApi.React.createElement(
       Components.TextInput,
       {
-        value: getText,
+        defaultValue: getText,
         onChange: (val) => setText(val),
         placeholder: "Reply to user?",
         onKeyDown: (e) => {
@@ -647,7 +647,7 @@ var InAppNotifications = class {
         /* @__PURE__ */ BdApi.React.createElement(
           Components.TextInput,
           {
-            value,
+            defaultValue: value,
             placeholder: "keyword1;keyword2;keyword3",
             onChange: (v) => {
               setValue(v);
@@ -670,7 +670,7 @@ var InAppNotifications = class {
             min: 3e3,
             max: 6e4,
             step: 1e3,
-            value: duration,
+            defaultValue: duration,
             units: "ms",
             onChange: (v) => {
               SettingsStore.setSetting("duration", v);
@@ -688,7 +688,7 @@ var InAppNotifications = class {
         /* @__PURE__ */ BdApi.React.createElement(
           Components.SwitchInput,
           {
-            value: shouldReply,
+            defaultValue: shouldReply,
             onChange: (v) => {
               SettingsStore.setSetting("shouldReply", v);
             }
@@ -705,7 +705,7 @@ var InAppNotifications = class {
         /* @__PURE__ */ BdApi.React.createElement(
           Components.SwitchInput,
           {
-            value: showTextarea,
+            defaultValue: showTextarea,
             onChange: (v) => {
               SettingsStore.setSetting("showTextarea", v);
             }
@@ -721,7 +721,7 @@ var InAppNotifications = class {
         /* @__PURE__ */ BdApi.React.createElement(
           Components.RadioInput,
           {
-            value: position,
+            defaultValue: position,
             onChange: (v) => SettingsStore.setSetting("position", v),
             options: [
               { value: "top-left", name: "Top Left" },

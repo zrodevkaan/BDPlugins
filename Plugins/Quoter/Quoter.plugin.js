@@ -2,11 +2,11 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.4
+ * @version 1.0.5
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Quoter/Quoter.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 595897
+ * @canary 596000
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -235,7 +235,7 @@ var Quoter = class {
   }
   getSettingsPanel() {
     return () => {
-      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Username Option", note: "Changes what name shows of a user under the quote." }, /* @__PURE__ */ BdApi.React.createElement(Components.RadioInput, { value: SettingStore.getSetting("username"), onChange: (e) => {
+      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Username Option", note: "Changes what name shows of a user under the quote." }, /* @__PURE__ */ BdApi.React.createElement(Components.RadioInput, { defaultValue: SettingStore.getSetting("username"), onChange: (e) => {
         SettingStore.setSetting("username", e);
       }, options: [
         {
