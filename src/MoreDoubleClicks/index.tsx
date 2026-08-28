@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.3
+ * @version 3.0.4
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const EditUtils = Webpack.getModule(x => x.startEditMessageRecord)
@@ -72,8 +72,7 @@ function hasPermission(userId, permission, channelId) {
 
 const ReplyAction = Webpack.getByStrings('showMentionToggle', 'FOCUS_CHANNEL_TEXT_AREA', {searchExports: true})
 
-function StartDoubleClickAction(_, args, ret, event) {
-    const message = args[0].message
+function StartDoubleClickAction(_, args, ret, event, message) {
     const canEdit = message.author.id == UserStore.getCurrentUser().id
     const doubleClickEmoji = MoreDoubleClickStore.getSetting("doubleClickEmoji")
     const textOverride = MoreDoubleClickStore.getSetting("textOverride")
@@ -220,14 +219,17 @@ function SettingsPanel() {
             />
         </Components.SettingItem>
 
-        <Components.SettingItem id="shouldBurst" name="Use Burst Reaction" note="Enable burst/super reactions" inline={true}>
+        <Components.SettingItem id="shouldBurst" name="Use Burst Reaction" note="Enable burst/super reactions"
+                                inline={true}>
             <Components.SwitchInput
                 value={shouldBurst}
                 onChange={(v) => MoreDoubleClickStore.setSetting('shouldEmojiBurst', v)}
             />
         </Components.SettingItem>
 
-        <Components.SettingItem id="textOverride" name="Allow double click on text" note="Allows double clicks to trigger when double clicking/selecting text." inline={true}>
+        <Components.SettingItem id="textOverride" name="Allow double click on text"
+                                note="Allows double clicks to trigger when double clicking/selecting text."
+                                inline={true}>
             <Components.SwitchInput
                 value={textOverride}
                 onChange={(v) => MoreDoubleClickStore.setSetting('textOverride', v)}
@@ -251,7 +253,12 @@ function SettingsPanel() {
         </Components.SettingItem>
 
         <Components.SettingItem id="emojiGrid" name="Select Emoji">
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '5px', marginTop: '10px'}}>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+                gap: '5px',
+                marginTop: '10px'
+            }}>
                 {guild != 0
                     ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild) ?? {}).filter(x => x?.id).map(x =>
                         <img
@@ -266,7 +273,13 @@ function SettingsPanel() {
                         <div
                             key={String(x.names).split(' ').join(', ')}
                             onClick={() => setNewEmoji(x)}
-                            style={{width: '40px', height: '40px', fontSize: '40px', cursor: 'pointer', textAlign: 'center'}}
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                                fontSize: '40px',
+                                cursor: 'pointer',
+                                textAlign: 'center'
+                            }}
                         >{x.surrogates}</div>
                     )
                 }
@@ -309,16 +322,14 @@ export default class MoreDoubleClicks {
 
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('keyup', this.handleKeyUp);
-        const MessageContentA = Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'))
-        const AwaitedModule = await MessageContentA
+        const MessageContentA = Webpack.getModule(Webpack.Filters.bySource("location:\"BaseMessage\""))
 
-        Patcher.after(AwaitedModule.Ay, 'type', (_, args, ret) => {
-            const originalOnDoubleClick = ret.props.onDoubleClick;
-
-            Object.defineProperty(ret.props, 'onDoubleClick', {
+        Patcher.after(MessageContentA, 'A', (_, args, ret) => {
+            const target = Utils.findInTree(ret, x => x?.role, {walkable: ['props', 'children']})
+            Object.defineProperty(target, 'onDoubleClick', {
                 value: (event) => {
-                    StartDoubleClickAction(_, args, ret, event)
-                    if (originalOnDoubleClick) originalOnDoubleClick(event);
+                    const message = args[0].childrenMessageContent.props.children.props.message
+                    StartDoubleClickAction(_, args, ret, event, message)
                 },
                 configurable: true,
                 enumerable: true

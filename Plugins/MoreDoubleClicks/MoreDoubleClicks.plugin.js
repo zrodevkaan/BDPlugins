@@ -2,11 +2,11 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.3
+ * @version 3.0.4
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MoreDoubleClicks/MoreDoubleClicks.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 603132
+ * @canary 603437
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -87,8 +87,7 @@ function hasPermission(userId, permission, channelId) {
   return PermissionStore.can(permission, channelId, userId);
 }
 var ReplyAction = Webpack.getByStrings("showMentionToggle", "FOCUS_CHANNEL_TEXT_AREA", { searchExports: true });
-function StartDoubleClickAction(_, args, ret, event) {
-  const message = args[0].message;
+function StartDoubleClickAction(_, args, ret, event, message) {
   const canEdit = message.author.id == UserStore.getCurrentUser().id;
   const doubleClickEmoji = MoreDoubleClickStore.getSetting("doubleClickEmoji");
   const textOverride = MoreDoubleClickStore.getSetting("textOverride");
@@ -214,26 +213,49 @@ function SettingsPanel() {
       onChange: (e) => MoreDoubleClickStore.setSetting("delDoubleClickAction", e),
       options: actionOptions
     }
-  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "shouldBurst", name: "Use Burst Reaction", note: "Enable burst/super reactions", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
-    Components.SwitchInput,
+  )), /* @__PURE__ */ BdApi.React.createElement(
+    Components.SettingItem,
     {
-      value: shouldBurst,
-      onChange: (v) => MoreDoubleClickStore.setSetting("shouldEmojiBurst", v)
-    }
-  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "textOverride", name: "Allow double click on text", note: "Allows double clicks to trigger when double clicking/selecting text.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
-    Components.SwitchInput,
+      id: "shouldBurst",
+      name: "Use Burst Reaction",
+      note: "Enable burst/super reactions",
+      inline: true
+    },
+    /* @__PURE__ */ BdApi.React.createElement(
+      Components.SwitchInput,
+      {
+        value: shouldBurst,
+        onChange: (v) => MoreDoubleClickStore.setSetting("shouldEmojiBurst", v)
+      }
+    )
+  ), /* @__PURE__ */ BdApi.React.createElement(
+    Components.SettingItem,
     {
-      value: textOverride,
-      onChange: (v) => MoreDoubleClickStore.setSetting("textOverride", v)
-    }
-  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "selectedEmoji", name: "Currently Selected Emoji", inline: true }, emoji?.isGuildEmoji ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "selectedGuild", name: "Select Guild for Emojis", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
+      id: "textOverride",
+      name: "Allow double click on text",
+      note: "Allows double clicks to trigger when double clicking/selecting text.",
+      inline: true
+    },
+    /* @__PURE__ */ BdApi.React.createElement(
+      Components.SwitchInput,
+      {
+        value: textOverride,
+        onChange: (v) => MoreDoubleClickStore.setSetting("textOverride", v)
+      }
+    )
+  ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "selectedEmoji", name: "Currently Selected Emoji", inline: true }, emoji?.isGuildEmoji ? /* @__PURE__ */ BdApi.React.createElement("img", { src: emoji.icon, style: { width: "32px", height: "32px" } }) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "32px" } }, emoji?.name)), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "selectedGuild", name: "Select Guild for Emojis", inline: true }, /* @__PURE__ */ BdApi.React.createElement(
     Components.DropdownInput,
     {
       value: GuildStore.getGuild(guild)?.id,
       onChange: (e) => MoreDoubleClickStore.setSetting("selectedGuildForReaction", e),
       options: guildMapping
     }
-  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "emojiGrid", name: "Select Emoji" }, /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))", gap: "5px", marginTop: "10px" } }, guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild) ?? {}).filter((x) => x?.id).map(
+  )), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { id: "emojiGrid", name: "Select Emoji" }, /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))",
+    gap: "5px",
+    marginTop: "10px"
+  } }, guild != 0 ? Object.values(RawGuildEmojiStore.getGuildEmojis(guild) ?? {}).filter((x) => x?.id).map(
     (x) => /* @__PURE__ */ BdApi.React.createElement(
       "img",
       {
@@ -250,7 +272,13 @@ function SettingsPanel() {
       {
         key: String(x.names).split(" ").join(", "),
         onClick: () => setNewEmoji(x),
-        style: { width: "40px", height: "40px", fontSize: "40px", cursor: "pointer", textAlign: "center" }
+        style: {
+          width: "40px",
+          height: "40px",
+          fontSize: "40px",
+          cursor: "pointer",
+          textAlign: "center"
+        }
       },
       x.surrogates
     )
@@ -288,14 +316,13 @@ var MoreDoubleClicks = class {
     };
     document.addEventListener("keydown", this.handleKeyDown);
     document.addEventListener("keyup", this.handleKeyUp);
-    const MessageContentA = Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'));
-    const AwaitedModule = await MessageContentA;
-    Patcher.after(AwaitedModule.Ay, "type", (_, args, ret) => {
-      const originalOnDoubleClick = ret.props.onDoubleClick;
-      Object.defineProperty(ret.props, "onDoubleClick", {
+    const MessageContentA = Webpack.getModule(Webpack.Filters.bySource('location:"BaseMessage"'));
+    Patcher.after(MessageContentA, "A", (_, args, ret) => {
+      const target = Utils.findInTree(ret, (x) => x?.role, { walkable: ["props", "children"] });
+      Object.defineProperty(target, "onDoubleClick", {
         value: (event) => {
-          StartDoubleClickAction(_, args, ret, event);
-          if (originalOnDoubleClick) originalOnDoubleClick(event);
+          const message = args[0].childrenMessageContent.props.children.props.message;
+          StartDoubleClickAction(_, args, ret, event, message);
         },
         configurable: true,
         enumerable: true
