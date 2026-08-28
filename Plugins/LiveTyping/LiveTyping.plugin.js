@@ -507,7 +507,6 @@ var LiveTyping = class {
     const GuildComponent = getKey(Webpack3.getBySource(`]:"always"===`), (x) => String(x).includes("AVATAR_SIZE"));
     Patcher.after(GuildComponent?.module, GuildComponent?.key, (a, props, c) => {
       const guildId = ExtractItemID(props[0]["data-list-item-id"]);
-      console.log(guildId);
       if (!guildId) return;
       if (shouldIgnoreItem("ignoreServers", guildId)) return c;
       c.props.children.push(/* @__PURE__ */ BdApi.React.createElement(GuildTypingIndicatorV2, { guildId }));
