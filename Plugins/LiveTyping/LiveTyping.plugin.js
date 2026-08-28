@@ -1,13 +1,13 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.2
+ * @version 2.1.3
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 586984
- * @canary 587118
+ * @stable 603132
+ * @canary 603437
  */
 "use strict";
 
@@ -504,9 +504,10 @@ var LiveTyping = class {
     });
   }
   patchGuildObject() {
-    const GuildComponent = getKey(Webpack3.getBySource(".A.modules.guildbar.AVATAR_SIZE"), (x) => String(x).includes("AVATAR_SIZE"));
+    const GuildComponent = getKey(Webpack3.getBySource(`]:"always"===`), (x) => String(x).includes("AVATAR_SIZE"));
     Patcher.after(GuildComponent?.module, GuildComponent?.key, (a, props, c) => {
       const guildId = ExtractItemID(props[0]["data-list-item-id"]);
+      console.log(guildId);
       if (!guildId) return;
       if (shouldIgnoreItem("ignoreServers", guildId)) return c;
       c.props.children.push(/* @__PURE__ */ BdApi.React.createElement(GuildTypingIndicatorV2, { guildId }));
