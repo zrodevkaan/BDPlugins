@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.3
+ * @version 2.1.4
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js
@@ -98,7 +98,7 @@ var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x &&
   searchExports: true
 }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
 var Spinner = Components.Spinner;
-var scrollersModule = Webpack3.getBySource(",experimental_useStack:");
+var scrollersModule = Webpack3.getModule(Webpack3.Filters.bySource(",experimental_useStack:", "scrollbarGutter"));
 var RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers");
 var GuildObject = getByStrings(".guildbar.AVATAR_SIZE", "backgroundStyle", {
   searchExports: true,

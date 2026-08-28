@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.3
+ * @version 2.1.4
  * @description Typing status per user on servers, channels or threads.
  */
 import {getKey} from "@helpers";
@@ -84,7 +84,7 @@ const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && 
 }, {filter: Filters.byStrings("useStateFromStores"), searchExports: true})
 
 const Spinner = Components.Spinner
-const scrollersModule = Webpack.getBySource(",experimental_useStack:") //Webpack.getById(475825,{raw:true}) // 689175
+const scrollersModule = Webpack.getModule(Webpack.Filters.bySource(",experimental_useStack:",'scrollbarGutter')) //Webpack.getById(475825,{raw:true}) // 689175
 const RenderAvatars = getByPrototypeKeys("renderUsers", "renderMoreUsers")
 
 // const GuildTooltip = Webpack.getModule(Filters.byStrings('listItemTooltip'), {raw: true}).exports
