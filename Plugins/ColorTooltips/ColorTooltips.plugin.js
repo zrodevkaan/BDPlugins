@@ -228,27 +228,24 @@ function getCssVarAsHex(colorVar) {
 }
 function ChatColorComp({ color }) {
   const ref = React.useRef(null);
-  const { bgColor, textColor, type } = React.useMemo(() => {
-    const hexColor = color.includes("var") ? TinyColor(getCssVarAsHex(color.slice(4, -1))).hex() : TinyColor(color).hex();
-    const tinyColor = TinyColor(hexColor);
-    return {
-      bgColor: hexWithOpacity(tinyColor.hex(), 0.3),
-      textColor: tinyColor.lighten(0.1).hex(),
-      type: tinyColor.module
-    };
-  }, [color]);
+  let hexColor;
+  let bgColor;
+  let textColor;
+  if (color.includes("var")) {
+    hexColor = TinyColor(getCssVarAsHex(color.slice(4, color.length - 1))).hex();
+    bgColor = hexWithOpacity(TinyColor(hexColor).hex(), 0.3);
+    textColor = TinyColor(hexColor).lighten(0.1).hex();
+  } else {
+    hexColor = TinyColor(color).hex();
+    bgColor = hexWithOpacity(TinyColor(hexColor).hex(), 0.3);
+    textColor = TinyColor(hexColor).lighten(0.1).hex();
+  }
   return /* @__PURE__ */ BdApi.React.createElement(
     Popout,
     {
       position: "top",
       targetElementRef: ref,
-      renderPopout: () => /* @__PURE__ */ BdApi.React.createElement(
-        ChatColorPopoutContent,
-        {
-          targetRef: ref,
-          format: type
-        }
-      )
+      renderPopout: () => /* @__PURE__ */ BdApi.React.createElement(ChatColorPopoutContent, { targetRef: ref, format: "hex" })
     },
     (props) => /* @__PURE__ */ BdApi.React.createElement(
       "span",
@@ -268,7 +265,7 @@ function ChatColorComp({ color }) {
   );
 }
 var colorRegexArray = [
-  // {name: 'hex3', regex: /^(\s*)#[0-9a-f]{3}(\s*)/},
+  { name: "hex3", regex: /^(\s*)#[0-9a-f]{3}(\s*)/ },
   { name: "hex6", regex: /^(\s*)#[0-9a-fA-F]{6}(\s*)/ },
   {
     name: "rgb",
@@ -325,7 +322,7 @@ var Plugin = class {
         order: index,
         match: (text) => text.match(regex),
         parse: (capture) => ({ color: capture[0] || capture[1] || "red" }),
-        react: (node) => /* @__PURE__ */ BdApi.React.createElement(ChatColorComp, { color: node.color })
+        react: (node) => /* @__PURE__ */ BdApi.React.createElement(Components.ErrorBoundary, { fallback: /* @__PURE__ */ BdApi.React.createElement("span", null, node.color) }, /* @__PURE__ */ BdApi.React.createElement(ChatColorComp, { color: node.color }))
       };
       index++;
     }

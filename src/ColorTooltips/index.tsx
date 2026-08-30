@@ -263,48 +263,39 @@ function getCssVarAsHex(colorVar) {
     }
 }
 
-interface ChatColorCompProps {
-    color: string;
-}
-
-function ChatColorComp({ color }: ChatColorCompProps) {
+function ChatColorComp({color}: { color: string }) {
     const ref = React.useRef<HTMLDivElement>(null);
 
-    const { bgColor, textColor, type } = React.useMemo(() => {
-        const hexColor = color.includes("var")
-            ? TinyColor(getCssVarAsHex(color.slice(4, -1))).hex()
-            : TinyColor(color).hex();
+    let hexColor;
+    let bgColor;
+    let textColor;
 
-        const tinyColor = TinyColor(hexColor);
-
-        return {
-            bgColor: hexWithOpacity(tinyColor.hex(), 0.3),
-            textColor: tinyColor.lighten(0.1).hex(),
-            type: tinyColor.module
-        };
-    }, [color]);
+    if (color.includes("var")) {
+        hexColor = TinyColor(getCssVarAsHex(color.slice(4, color.length - 1))).hex();
+        bgColor = hexWithOpacity(TinyColor(hexColor).hex(), 0.3)
+        textColor = TinyColor(hexColor).lighten(0.1).hex();
+    } else {
+        hexColor = TinyColor(color).hex();
+        bgColor = hexWithOpacity(TinyColor(hexColor).hex(), 0.3)
+        textColor = TinyColor(hexColor).lighten(0.1).hex();
+    }
 
     return (
         <Popout
-            position="top"
+            position={"top"}
             targetElementRef={ref}
-            renderPopout={() => (
-                <ChatColorPopoutContent
-                    targetRef={ref}
-                    format={type}
-                />
-            )}
+            renderPopout={() => <ChatColorPopoutContent targetRef={ref} format="hex"/>}
         >
-            {(props: any) => (
+            {(props: Record<string, unknown>) => (
                 <span
-                    className="mention ctp interactive"
+                    className={"mention ctp interactive"}
                     {...props}
                     ref={ref}
-                    role="button"
+                    role={"button"}
                     aria-expanded={false}
                     style={{
                         backgroundColor: bgColor,
-                        color: textColor,
+                        color: textColor
                     }}
                 >
                     {color}
@@ -315,7 +306,7 @@ function ChatColorComp({ color }: ChatColorCompProps) {
 }
 
 const colorRegexArray = [
-    // {name: 'hex3', regex: /^(\s*)#[0-9a-f]{3}(\s*)/},
+    {name: 'hex3', regex: /^(\s*)#[0-9a-f]{3}(\s*)/},
     {name: 'hex6', regex: /^(\s*)#[0-9a-fA-F]{6}(\s*)/},
     {
         name: 'rgb',
@@ -385,7 +376,7 @@ export default class Plugin {
                 order: index,
                 match: (text: string) => text.match(regex),
                 parse: (capture: string[]) => ({color: capture[0] || capture[1] || "red"}),
-                react: (node: { color: string }) => <ChatColorComp color={node.color}/>
+                react: (node: { color: string }) => <Components.ErrorBoundary fallback={<span>{node.color}</span>}><ChatColorComp color={node.color}/></Components.ErrorBoundary>
             }
 
             index++;
