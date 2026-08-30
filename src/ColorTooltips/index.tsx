@@ -1,15 +1,30 @@
 /**
  * @name ColorTooltips
  * @author Kaan
- * @version 1.0.0
+ * @version 1.1.0
  * @description A remaster of Pu's ColorTooltips plugin, allowing you to do color conversions in chat
  */
 
 const {React, Webpack, Components, DOM} = new BdApi("ColorTooltips");
+import TinyColor from "tinycolor2";
+
+const addedColors = {
+    chucknorris: "c00000",
+    charmeleon: "red",
+    ivysaur: "blue",
+    squirtle: "green",
+};
+
+Object.entries(addedColors).forEach(([name, color]) => {
+    const hex = TinyColor(color).toHexString().replace("#", "").toLowerCase();
+    TinyColor.names[name] = hex;
+    TinyColor.hexNames[hex] = name;
+});
+
+// Object.assign(TinyColor.names, { chucknorris: "c00000" });
+// Object.assign(TinyColor.hexNames, {c00000: "chucky norris!!"})
 
 const Popout = Webpack.getModule((m) => m?.Animation, {searchExports: true, raw: true})?.exports?.Y;
-
-const TinyColor = Webpack.getByKeys("hsl");
 
 type Format =
     | "hex" | "keyword" | "decimal"
@@ -17,8 +32,6 @@ type Format =
     | "hsl" | "hsv" | "hwb" | "cmyk"
     | "xyz" | "lab" | "lch"
     | "ansi16" | "ansi256" | "hcg" | "apple";
-
-const CSS_STRINGABLE: ReadonlySet<Format> = new Set(["rgb", "hsl", "hwb"]);
 
 let normalizeCanvas: HTMLCanvasElement | null = null;
 let normalizeCtx: CanvasRenderingContext2D | null = null;
@@ -54,27 +67,83 @@ function getComputedColorString(element: HTMLElement) {
 
 function formatColor(rawColor: string | null, format: Format) {
     if (!rawColor) return null;
-    try {
-        const color = TinyColor(rawColor);
-        switch (format) {
-            case "hex":
-                return color.hex();
-            case "keyword":
-                return color.keyword() || "No matching CSS keyword";
-            case "decimal":
-                return color.rgbNumber().toString();
-            case "rgb_percent":
-                return color.percentString();
-            default: {
-                const instance = color[format]().round();
-                if (CSS_STRINGABLE.has(format)) return instance.string();
-                // tinycolorjs sucks.
-                return `${format}(${instance.array().join(", ")})`;
-            }
-        }
-    } catch {
-        return null;
+
+    const color = TinyColor(rawColor);
+    if (!color.isValid()) return null;
+
+    switch (format) {
+        case "hex":
+            return color.toHexString();
+        case "keyword":
+            // this is going to fail anyway. idk why I have it here.
+            return color.toName() || "No matching CSS keyword";
+        case "decimal":
+            return parseInt(color.toHex(), 16).toString();
+        case "rgb":
+            return color.toRgbString();
+        case "rgb_percent":
+            return color.toPercentageRgbString();
+        case "hsl":
+            return color.toHslString();
+        case "hsv":
+            return color.toHsvString();
+        default:
+            return null;
     }
+}
+
+type Adjustment = { label: string; hex: string };
+
+function mixHexColors(hexA: string, hexB: string, amount: number): string {
+    const parse = (hex: string) => {
+        const clean = hex.replace("#", "");
+        const full = clean.length === 3
+            ? clean.split("").map((c) => c + c).join("")
+            : clean;
+        const num = parseInt(full, 16);
+        return [(num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff];
+    };
+
+    const [r1, g1, b1] = parse(hexA);
+    const [r2, g2, b2] = parse(hexB);
+    const w = amount / 100;
+    const blend = (a: number, b: number) => Math.round(a + (b - a) * w);
+
+    return "#" + [blend(r1, r2), blend(g1, g2), blend(b1, b2)]
+        .map((c) => c.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+function getColorInfo(rawColor: string) {
+    const c = TinyColor(rawColor);
+    if (!c.isValid()) return null;
+
+    return {
+        isLight: c.isLight(),
+        brightness: Math.round(c.getBrightness()),
+        luminance: c.getLuminance().toFixed(2),
+    };
+}
+
+function getAdjustments(rawColor: string): Adjustment[] {
+    const base = TinyColor(rawColor);
+    if (!base.isValid()) return [];
+
+    const make = (fn: (c: any) => any) => fn(TinyColor(rawColor)).toHexString();
+    const baseHex = base.toHexString();
+
+    return [
+        // new versions dropped .mix();
+        {label: "Lighten", hex: make((c) => c.lighten(15))},
+        {label: "Brighten", hex: make((c) => c.brighten(15))},
+        {label: "Darken", hex: make((c) => c.darken(15))},
+        {label: "Saturate", hex: make((c) => c.saturate(25))},
+        {label: "Desaturate", hex: make((c) => c.desaturate(25))},
+        {label: "Greyscale", hex: make((c) => c.greyscale())},
+        {label: "Complement", hex: make((c) => c.complement())},
+        {label: "Tint", hex: mixHexColors(baseHex, "#ffffff", 50)},
+        {label: "Shade", hex: mixHexColors(baseHex, "#000000", 50)},
+    ];
 }
 
 const Icon = ({copied}: { copied: boolean }) => (
@@ -92,13 +161,15 @@ const Icon = ({copied}: { copied: boolean }) => (
 );
 
 function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
-    targetRef: {current: HTMLElement};
+    targetRef: { current: HTMLElement };
     format?: Format;
 }) {
     const [rawColor, setRawColor] = React.useState<string | null>(null);
     const [format, setFormat] = React.useState<Format>(initialFormat);
     const [copied, setCopied] = React.useState(false);
+    const [copiedAdjustment, setCopiedAdjustment] = React.useState<string | null>(null);
     const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const adjustmentTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     React.useEffect(() => {
         if (!targetRef.current) return;
@@ -108,12 +179,15 @@ function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
     React.useEffect(() => {
         return () => {
             if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+            if (adjustmentTimeoutRef.current) clearTimeout(adjustmentTimeoutRef.current);
         };
     }, []);
 
     if (!rawColor) return null;
 
     const display = formatColor(rawColor, format);
+    const info = getColorInfo(rawColor);
+    const adjustments = getAdjustments(rawColor);
 
     const formats: { label: string; value: Format }[] = [
         {label: "Hex", value: "hex"},
@@ -123,15 +197,6 @@ function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
         {label: "RGB %", value: "rgb_percent"},
         {label: "HSL", value: "hsl"},
         {label: "HSV", value: "hsv"},
-        // {label: "HWB", value: "hwb"},
-        // {label: "CMYK", value: "cmyk"},
-        // {label: "XYZ", value: "xyz"},
-        {label: "LAB", value: "lab"},
-        {label: "LCH", value: "lch"},
-        // {label: "ANSI16", value: "ansi16"},
-        // {label: "ANSI256", value: "ansi256"},
-        // {label: "HCG", value: "hcg"},
-        // {label: "Apple", value: "apple"},
     ];
 
     const handleCopy = async () => {
@@ -144,17 +209,31 @@ function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
         copyTimeoutRef.current = setTimeout(() => setCopied(false), 1500);
     };
 
+    const handleAdjustmentCopy = async (hex: string, label: string) => {
+        await navigator.clipboard.writeText(hex);
+
+        setCopiedAdjustment(label);
+        if (adjustmentTimeoutRef.current) clearTimeout(adjustmentTimeoutRef.current);
+        adjustmentTimeoutRef.current = setTimeout(() => setCopiedAdjustment(null), 1500);
+    };
+
     return (
-        <div style={{display: "flex", flexDirection: "column", color: "#fff", minWidth: "500px"}}>
+        <div style={{
+            display: "flex",
+            backgroundColor: "#000",
+            flexDirection: "column",
+            color: "#fff",
+            minWidth: "500px"
+        }}>
             <div style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 backgroundColor: "var(--background-gradient-high,var(--background-base-lowest))",
                 borderRadius: "8px",
-                padding: "6px 10px",
+                padding: "6px",
             }}>
-                <div style={{display: "flex", flex: 1, flexWrap: "wrap", gap: "4px"}}>
+                <div style={{display: "flex", flex: 1, flexWrap: "wrap", gap: "6px"}}>
                     {formats.map(({label, value}) => {
                         const active = format === value;
                         return (
@@ -170,8 +249,8 @@ function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
                                     borderRadius: "6px",
                                     cursor: "pointer",
                                     backgroundColor: active
-                                        ? "var(--background-modifier-selected, rgba(255,255,255,0.12))"
-                                        : "transparent",
+                                        ? "var(--interactive-background-selected)"
+                                        : "var(--interactive-background-selected, rgba(255,255,255,0.4))",
                                     transition: "background-color 0.15s ease, font-weight 0.15s ease",
                                 }}
                             >
@@ -206,42 +285,119 @@ function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
             <div style={{
                 backgroundColor: "var(--background-gradient-highest,var(--chat-background-default))",
                 borderRadius: "8px",
-                padding: "10px",
+                padding: "6px",
+                marginTop: "8px",
                 display: "flex",
-                alignItems: "center",
-                gap: "12px",
+                flexDirection: "column",
+                gap: "8px",
             }}>
-                <div style={{
-                    backgroundColor: rawColor,
-                    width: "60px",
-                    height: "60px",
-                    borderRadius: "12px",
-                    flexShrink: 0,
-                    border: "1px solid rgba(255,255,255,0.15)",
-                }}/>
-                <span
-                    onClick={handleCopy}
-                    style={{
-                        color: "#fff",
-                        fontFamily: "var(--font-code, monospace)",
-                        cursor: display ? "pointer" : "default",
-                        wordBreak: "break-all",
-                    }}
-                >
-                    {display ?? "Unsupported color format"}
-                </span>
+                <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
+                    <div style={{
+                        backgroundColor: rawColor,
+                        width: "60px",
+                        height: "60px",
+                        borderRadius: "12px",
+                        flexShrink: 0,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                    }}/>
+                    <div style={{display: "flex", flexDirection: "column", gap: "4px"}}>
+                        <span
+                            onClick={handleCopy}
+                            style={{
+                                color: "#fff",
+                                fontFamily: "var(--font-code, monospace)",
+                                cursor: display ? "pointer" : "default",
+                                wordBreak: "break-all",
+                            }}
+                        >
+                            {display ?? "Unsupported color format"}
+                        </span>
+                        {info && (
+                            <div style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "10px",
+                                fontSize: "12px",
+                                color: "var(--text-muted, #949ba4)"
+                            }}>
+                                <span>{info.isLight ? "Light" : "Dark"}</span>
+                                <span>Brightness {info.brightness}/255</span>
+                                <span>Luminance {info.luminance}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
+
+            {adjustments.length > 0 && (
+                <div style={{
+                    backgroundColor: "var(--background-gradient-highest,var(--chat-background-default))",
+                    borderRadius: "8px",
+                    padding: "10px",
+                    marginTop: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                }}>
+                    <span style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        color: "var(--text-muted, #949ba4)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.03em",
+                    }}>
+                        Adjustments
+                    </span>
+                    <div style={{display: "flex", flexWrap: "wrap", gap: "6px"}}>
+                        {adjustments.map(({label, hex}) => (
+                            <Components.Tooltip
+                                key={label}
+                                text={copiedAdjustment === label ? "Copied!" : `${label} · ${hex}`}
+                            >
+                                {(x) => (
+                                    <div
+                                        {...x}
+                                        onClick={() => handleAdjustmentCopy(hex, label)}
+                                        role="button"
+                                        aria-label={`Copy ${label} color (${hex})`}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "6px",
+                                            padding: "4px 8px",
+                                            borderRadius: "6px",
+                                            cursor: "pointer",
+                                            backgroundColor: "var(--background-modifier-hover, rgba(255,255,255,0.06))",
+                                            transition: "background-color 0.15s ease",
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: "16px",
+                                            height: "16px",
+                                            borderRadius: "4px",
+                                            backgroundColor: hex,
+                                            border: "1px solid rgba(255,255,255,0.15)",
+                                            flexShrink: 0,
+                                        }}/>
+                                        <span style={{fontSize: "12px", color: "#fff"}}>{label}</span>
+                                    </div>
+                                )}
+                            </Components.Tooltip>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-function hexWithOpacity(hexColor, opacity) {
+function hexWithOpacity(hexColor: string, opacity: number) {
     const alpha = Math.round(opacity * 255);
     const alphaHex = alpha.toString(16).padStart(2, '0');
     return hexColor + alphaHex;
 }
 
-function getCssVarAsHex(colorVar) {
+function getCssVarAsHex(colorVar: string): string | null {
     const computedColor = getComputedStyle(document.body)
         .getPropertyValue(colorVar)
         .trim();
@@ -252,32 +408,53 @@ function getCssVarAsHex(colorVar) {
     canvas.width = 1;
     canvas.height = 1;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
 
     try {
         ctx.fillStyle = computedColor;
         ctx.fillRect(0, 0, 1, 1);
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        return TinyColor(`rgb(${r}, ${g}, ${b})`).hex();
+        // discord is on old ass version of tinycolor2 lmao.
+        return TinyColor(`rgb(${r}, ${g}, ${b})`).toHexString();
     } catch {
         return null;
     }
 }
 
+function lightenHex(hex: string, amount: number): string {
+    const clean = hex.replace("#", "");
+    const full = clean.length === 3
+        ? clean.split("").map(c => c + c).join("")
+        : clean;
+    const num = parseInt(full, 16);
+
+    const r = (num >> 16) & 0xff;
+    const g = (num >> 8) & 0xff;
+    const b = num & 0xff;
+
+    const mix = (channel: number) => Math.round(channel + (255 - channel) * amount);
+
+    return "#" + [mix(r), mix(g), mix(b)]
+        .map(c => c.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 function ChatColorComp({color}: { color: string }) {
     const ref = React.useRef<HTMLDivElement>(null);
 
-    let hexColor;
-    let bgColor;
-    let textColor;
+    let hexColor: string;
+    let bgColor: string;
+    let textColor: string;
 
-    if (color.includes("var")) {
-        hexColor = TinyColor(getCssVarAsHex(color.slice(4, color.length - 1))).hex();
-        bgColor = hexWithOpacity(TinyColor(hexColor).hex(), 0.3)
-        textColor = TinyColor(hexColor).lighten(0.1).hex();
+    if (color.startsWith("var(")) {
+        const resolved = getCssVarAsHex(color.slice(4, color.length - 1));
+        hexColor = resolved ? TinyColor(resolved).toHexString() : "#000000";
+        bgColor = hexWithOpacity(hexColor, 0.3);
+        textColor = lightenHex(hexColor, 0.1);
     } else {
-        hexColor = TinyColor(color).hex();
-        bgColor = hexWithOpacity(TinyColor(hexColor).hex(), 0.3)
-        textColor = TinyColor(hexColor).lighten(0.1).hex();
+        hexColor = TinyColor(color).toHexString();
+        bgColor = hexWithOpacity(hexColor, 0.3);
+        textColor = lightenHex(hexColor, 0.1);
     }
 
     return (
@@ -306,39 +483,39 @@ function ChatColorComp({color}: { color: string }) {
 }
 
 const colorRegexArray = [
-    {name: 'hex3', regex: /^(\s*)#[0-9a-f]{3}/},
     {name: 'hex6', regex: /^(\s*)#[0-9a-fA-F]{6}/},
+    {name: 'hex3', regex: /^(\s*)#[0-9a-f]{3}/},
     {
         name: 'rgb',
-        regex: /^(\s*)rgb\(\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*\)/,
+        regex: /^(\s*)?rgb\(\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*\)/,
     },
     {
         name: 'rgba',
-        regex: /^(\s*)rgba\(\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:0*\.?\d+|1(?:\.0*)?)\s*\)/,
+        regex: /^(\s*)?rgba\(\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\s*,\s*(?:0*\.?\d+|1(?:\.0*)?)\s*\)/,
     },
     {
         name: 'rgb_percentage',
-        regex: /^(\s*)rgb\(\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*\)/,
+        regex: /^(\s*)?rgb\(\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*\)/,
     },
     {
         name: 'rgba_percentage',
-        regex: /^(\s*)rgba\(\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:0*\.?\d+|1(?:\.0*)?)\s*\)/,
+        regex: /^(\s*)?rgba\(\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:0*\.?\d+|1(?:\.0*)?)\s*\)/,
     },
     {
         name: 'hsl',
-        regex: /^(\s*)hsl\(\s*(?:360|3[0-5][0-9]|[12]?[0-9]{1,2})\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*\)/,
+        regex: /^(\s*)?hsl\(\s*(?:360|3[0-5][0-9]|[12]?[0-9]{1,2})\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*\)/,
     },
     {
         name: 'hsla',
-        regex: /^(\s*)hsla\(\s*(?:360|3[0-5][0-9]|[12]?[0-9]{1,2})\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:0*\.?\d+|1(?:\.0*)?)\s*\)/,
+        regex: /^(\s*)?hsla\(\s*(?:360|3[0-5][0-9]|[12]?[0-9]{1,2})\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:100|[1-9]?[0-9])%\s*,\s*(?:0*\.?\d+|1(?:\.0*)?)\s*\)/,
     },
     {
         name: 'named_colors',
-        regex: /^(\s*)?(lightgoldenrodyellow|mediumspringgreen|mediumaquamarine|mediumslateblue|mediumturquoise|mediumvioletred|blanchedalmond|cornflowerblue|darkolivegreen|lightslategray|lightslategrey|lightsteelblue|mediumseagreen|darkgoldenrod|darkslateblue|darkslategray|darkslategrey|darkturquoise|lavenderblush|lightseagreen|palegoldenrod|paleturquoise|palevioletred|rebeccapurple|antiquewhite|darkseagreen|lemonchiffon|lightskyblue|mediumorchid|mediumpurple|midnightblue|darkmagenta|deepskyblue|floralwhite|forestgreen|greenyellow|lightsalmon|lightyellow|navajowhite|saddlebrown|springgreen|yellowgreen|aquamarine|blueviolet|chartreuse|darkorange|darkorchid|darksalmon|darkviolet|dodgerblue|ghostwhite|indianred |lightcoral|lightgreen|mediumblue|papayawhip|powderblue|sandybrown|whitesmoke|aliceblue|burlywood|cadetblue|chocolate|darkgreen|darkkhaki|firebrick|gainsboro|goldenrod|lawngreen|lightblue|lightcyan|lightgray|lightgrey|lightpink|limegreen|mintcream|mistyrose|olivedrab|orangered|palegreen|peachpuff|rosybrown|royalblue|slateblue|slategray|slategrey|steelblue|turquoise|cornsilk|darkblue|darkcyan|darkgray|darkgrey|deeppink|honeydew|indigo  |lavender|moccasin|seagreen|seashell|crimson|darkred|dimgray|dimgrey|fuchsia|hotpink|magenta|oldlace|skyblue|thistle|bisque|maroon|orange|orchid|purple|salmon|sienna|silver|tomato|violet|yellow|azure|beige|black|brown|coral|green|ivory|khaki|linen|olive|wheat|white|aqua|blue|cyan|gold|gray|grey|lime|navy|peru|pink|plum|snow|teal|red|tan)/,
+        regex: /^(\s*)?(squirtle|charmeleon|ivysaur|chucknorris|lightgoldenrodyellow|mediumspringgreen|mediumaquamarine|mediumslateblue|mediumturquoise|mediumvioletred|blanchedalmond|cornflowerblue|darkolivegreen|lightslategray|lightslategrey|lightsteelblue|mediumseagreen|darkgoldenrod|darkslateblue|darkslategray|darkslategrey|darkturquoise|lavenderblush|lightseagreen|palegoldenrod|paleturquoise|palevioletred|rebeccapurple|antiquewhite|darkseagreen|lemonchiffon|lightskyblue|mediumorchid|mediumpurple|midnightblue|darkmagenta|deepskyblue|floralwhite|forestgreen|greenyellow|lightsalmon|lightyellow|navajowhite|saddlebrown|springgreen|yellowgreen|aquamarine|blueviolet|chartreuse|darkorange|darkorchid|darksalmon|darkviolet|dodgerblue|ghostwhite|indianred |lightcoral|lightgreen|mediumblue|papayawhip|powderblue|sandybrown|whitesmoke|aliceblue|burlywood|cadetblue|chocolate|darkgreen|darkkhaki|firebrick|gainsboro|goldenrod|lawngreen|lightblue|lightcyan|lightgray|lightgrey|lightpink|limegreen|mintcream|mistyrose|olivedrab|orangered|palegreen|peachpuff|rosybrown|royalblue|slateblue|slategray|slategrey|steelblue|turquoise|cornsilk|darkblue|darkcyan|darkgray|darkgrey|deeppink|honeydew|indigo  |lavender|moccasin|seagreen|seashell|crimson|darkred|dimgray|dimgrey|fuchsia|hotpink|magenta|oldlace|skyblue|thistle|bisque|maroon|orange|orchid|purple|salmon|sienna|silver|tomato|violet|yellow|azure|beige|black|brown|coral|green|ivory|khaki|linen|olive|wheat|white|aqua|blue|cyan|gold|gray|grey|lime|navy|peru|pink|plum|snow|teal|red|tan)/,
     },
     {
         name: 'css_variables',
-        regex: /^(\s*)var\(\s*--[a-zA-Z0-9_-]+(?:\s*,\s*[^)]+)?\s*\)/,
+        regex: /^(\s*)?var\(\s*--[a-zA-Z0-9_-]+(?:\s*,\s*[^)]+)?\s*\)/,
     },
 ];
 const markdown = Webpack.getModule(m => m.reactParserFor)
@@ -367,8 +544,10 @@ export default class Plugin {
             markdown.defaultRules[name] = {
                 order: index,
                 match: (text: string) => text.match(regex),
-                parse: (capture: string[]) => ({color: capture[0] || capture[1] || "red"}),
-                react: (node: { color: string }) => <Components.ErrorBoundary fallback={<span>{node.color}</span>}><ChatColorComp color={node.color.replace(" ","")}/></Components.ErrorBoundary>
+                parse: (capture: string[]) => ({color: capture[0].toLowerCase() || capture[1].toLowerCase() || "red"}),
+                react: (node: { color: string }) => <Components.ErrorBoundary
+                    fallback={<span>{node.color}</span>}><ChatColorComp
+                    color={node.color.replace(" ", "")}/></Components.ErrorBoundary>
             }
 
             index++;
