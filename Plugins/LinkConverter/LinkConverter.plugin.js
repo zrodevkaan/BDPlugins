@@ -2,11 +2,11 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.4
+ * @version 2.0.5
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkConverter/LinkConverter.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 605958
+ * @canary 606445
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -354,10 +354,8 @@ function AddDomainInline({ onAdd }) {
   ));
 }
 var LinkConverter = class {
-  load() {
-    DataStore.settings ??= defaultLinks;
-  }
   start() {
+    DataStore.settings ??= defaultLinks;
     DOM.addStyle("link-convert", ".discor-moment textarea {max-height: 36px !important; min-height: 36x !important;}");
     ContextMenu.patch("textarea-context", this.PTAC);
     Patcher.before(MessageActions, "sendMessage", (a, b, c) => {

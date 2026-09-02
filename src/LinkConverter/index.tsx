@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.4
+ * @version 2.0.5
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
@@ -385,10 +385,9 @@ function AddDomainInline({ onAdd }) {
 }
 
 export default class LinkConverter {
-    load() {
-        DataStore.settings ??= defaultLinks
-    }
     start() {
+        DataStore.settings ??= defaultLinks
+
         DOM.addStyle('link-convert', '.discor-moment textarea {max-height: 36px !important; min-height: 36x !important;}')
         ContextMenu.patch('textarea-context', this.PTAC)
         Patcher.before(MessageActions, 'sendMessage', (a, b, c) => {

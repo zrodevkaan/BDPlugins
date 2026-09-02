@@ -2,7 +2,7 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.4
+ * @version 3.0.5
  */
 const {Webpack, Utils, Patcher, Data, React, Hooks, Components} = new BdApi("MoreDoubleClicks");
 const EditUtils = Webpack.getModule(x => x.startEditMessageRecord)
@@ -289,7 +289,7 @@ function SettingsPanel() {
 }
 
 export default class MoreDoubleClicks {
-    load() {
+    async start() {
         DataStore.settings = {
             normalDoubleClickAction: "REPLY",
             shiftDoubleClickAction: "EDIT",
@@ -305,9 +305,7 @@ export default class MoreDoubleClicks {
             textOverride: true,
             ...(DataStore.settings || {}),
         }
-    }
 
-    async start() {
         this.handleKeyDown = (e) => {
             if (e.key === 'Delete') {
                 MoreDoubleClickStore.setDeleteKeyPressed(true);

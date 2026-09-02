@@ -2,11 +2,11 @@
  * @name MoreDoubleClicks
  * @description Allows you to double-click more areas with modifier keys for different actions.
  * @author Kaan
- * @version 3.0.4
+ * @version 3.0.5
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MoreDoubleClicks/MoreDoubleClicks.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 603132
- * @canary 603437
+ * @stable 605958
+ * @canary 606445
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -285,7 +285,7 @@ function SettingsPanel() {
   ))));
 }
 var MoreDoubleClicks = class {
-  load() {
+  async start() {
     DataStore.settings = {
       normalDoubleClickAction: "REPLY",
       shiftDoubleClickAction: "EDIT",
@@ -302,8 +302,6 @@ var MoreDoubleClicks = class {
       textOverride: true,
       ...DataStore.settings || {}
     };
-  }
-  async start() {
     this.handleKeyDown = (e) => {
       if (e.key === "Delete") {
         MoreDoubleClickStore.setDeleteKeyPressed(true);
