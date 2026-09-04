@@ -5,30 +5,13 @@
  * @author Kaan
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MentionFix/MentionFix.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 586111
- * @canary 586503
+ * @stable 607562
+ * @canary 607966
  */
 "use strict";
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;
-function resolveModule(filter, options) {
-  const opts = options ?? {};
-  if (opts.declaration) {
-    const { declaration, key, raw, ...rest } = opts;
-    const result = Webpack.getMangled(filter, { __value: declaration }, {
-      ...rest,
-      mapDeclarations: true
-    });
-    return result?.__value ?? null;
-  }
-  const mod = Webpack.getModule(filter, opts);
-  if (mod == null) return null;
-  return opts.key ? mod[opts.key] : mod;
-}
-function wpGetByStrings(strings, options) {
-  return resolveModule(Webpack.Filters.byStrings(...strings), options);
-}
 
 // helpers/index.tsx
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
@@ -52,8 +35,8 @@ function getKey(module2, fn) {
 
 // src/MentionFix/index.tsx
 var { Webpack: Webpack3, Patcher, React: React2, Hooks: Hooks2, Components } = new BdApi("MentionFix");
-var FetchUser = getKey(Webpack3.getBySource("UserProfileModalActionCreators"), (x) => String(x).includes("USER_UPDATE") && !String(x).includes("USER_PROFILE_FETCH_START") && String(x).includes("Promise.resolve"));
-var UserMention = getKey(wpGetByStrings([".A.USER_MENTION),"], { raw: true }).exports, (x) => String(x).includes("USER_MENTION"));
+var FetchUser = getKey(Webpack3.getModule(Webpack3.Filters.combine(Webpack3.Filters.bySource("UserProfileModalActionCreators"), Webpack3.Filters.bySource("CURRENT_USER_UPDATE"))), (x) => String(x).includes("USER_UPDATE") && !String(x).includes("USER_PROFILE_FETCH_START") && String(x).includes("Promise.resolve"));
+var UserMention = getKey(Webpack3.getBySource(".A.USER_MENTION),"), (x) => String(x).includes("USER_MENTION"));
 var UserComponent = UserMention.module[UserMention.key];
 function queuer(worker, { concurrency = 3 } = {}) {
   const pending = /* @__PURE__ */ new Map();

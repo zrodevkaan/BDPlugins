@@ -1,15 +1,15 @@
 /**
  * @name MentionFix
- * @version 2.0.3
+ * @version 2.0.4
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
-import {getKey, wpGetByStrings} from "@helpers";
+import {getKey} from "@helpers";
 
 const {Webpack, Patcher, React, Hooks, Components} = new BdApi('MentionFix')
 
-const FetchUser = getKey(Webpack.getBySource('UserProfileModalActionCreators'), x => String(x).includes("USER_UPDATE") && !String(x).includes("USER_PROFILE_FETCH_START") && String(x).includes('Promise.resolve'));
-const UserMention = getKey(wpGetByStrings(['.A.USER_MENTION),'], {raw: true}).exports, x => String(x).includes("USER_MENTION"));
+const FetchUser = getKey(Webpack.getModule(Webpack.Filters.combine(Webpack.Filters.bySource('UserProfileModalActionCreators'), Webpack.Filters.bySource('CURRENT_USER_UPDATE'))), x => String(x).includes("USER_UPDATE") && !String(x).includes("USER_PROFILE_FETCH_START") && String(x).includes('Promise.resolve'));
+const UserMention = getKey(Webpack.getBySource('.A.USER_MENTION),'), x => String(x).includes("USER_MENTION"));
 const UserComponent = UserMention.module[UserMention.key];
 
 interface MentionProps {
@@ -59,7 +59,7 @@ const fetchUserQueue = queuer(
     {concurrency: 8}
 );
 
-function CustomMention({args}: {args: MentionProps}) {
+function CustomMention({args}: { args: MentionProps }) {
     const userId = args.userId ?? args.parsedUserId;
 
     const data = Hooks.useStateFromStores([Webpack.Stores.UserStore, Webpack.Stores.ChannelStore], () => ({
