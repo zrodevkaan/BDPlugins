@@ -1,6 +1,6 @@
 /**
  * @name MentionFix
- * @version 2.0.4
+ * @version 2.0.5
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
@@ -70,7 +70,7 @@ function CustomMention({args}: { args: MentionProps }) {
     React.useEffect(() => {
         if (data.user) return;
         fetchUserQueue(userId).then(() => Webpack.Stores.UserStore.emitChange());
-    }, [userId, data.user]);
+    }, [data.user]);
 
     return !data.user ? <Components.Spinner/> : <UserComponent {...args} />
 }
