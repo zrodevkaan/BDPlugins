@@ -5,8 +5,8 @@
  * @description Allow translations from DeepL, the best translator in existence. You can autotranslate selected users
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DeepTranslate/DeepTranslate.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 607562
- * @canary 608649
+ * @stable 608660
+ * @canary 609443
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -30,6 +30,7 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/DeepTranslate/index.tsx
 var index_exports = {};
 __export(index_exports, {
+  SepWithText: () => SepWithText,
   default: () => DeepTranslate
 });
 module.exports = __toCommonJS(index_exports);
@@ -113,7 +114,7 @@ var TranslateError = class extends Error {
     this.code = code;
   }
 };
-async function translate(text, targetLang, sourceLang = "auto") {
+async function translate(text, targetLang, sourceLang = "auto", signal) {
   const target = TARGET_LANG_MAP[targetLang.toUpperCase()] || targetLang;
   const source = sourceLang === "auto" ? void 0 : TARGET_LANG_MAP[sourceLang.toUpperCase()] || sourceLang;
   const body = {
@@ -153,7 +154,8 @@ async function translate(text, targetLang, sourceLang = "auto") {
       "x-app-instance-id": crypto.randomUUID?.() || "00000000-0000-4000-8000-000000000000",
       "x-app-session-id": crypto.randomUUID?.() || "00000000-0000-4000-8000-000000000000"
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal
   });
   const data = await response.json();
   if (response.status === 429 /* TOO_MANY_REQUESTS */) {
@@ -177,6 +179,14 @@ async function translate(text, targetLang, sourceLang = "auto") {
 }
 var MAX_ERROR_LOG = 20;
 var AUTO_TRANSLATE_MIN_INTERVAL_MS = 1500;
+var TextAreaParentClasses = Webpack.getByKeys("channelBottomBarArea");
+function reRender(selector) {
+  const target = document.querySelector(selector)?.parentElement;
+  if (!target) return;
+  const instance = BdApi.ReactUtils.getOwnerInstance(target);
+  const unpatch = Patcher.instead(instance, "render", () => unpatch());
+  instance.forceUpdate(() => instance.forceUpdate());
+}
 var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
   _cache = /* @__PURE__ */ new Map();
   // global log for letting us know if they hit some weird error.
@@ -185,13 +195,16 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
   _pending = /* @__PURE__ */ new Set();
   _lastTargetLang = /* @__PURE__ */ new Map();
   _autoTranslateUsers = /* @__PURE__ */ new Set();
+  _outgoingTranslateLang = /* @__PURE__ */ new Map();
+  _autoControllers = /* @__PURE__ */ new Map();
   _autoQueue = [];
   _autoQueueRunning = false;
   _lastAutoTranslateAt = 0;
+  _isCurrentlyTranslating = false;
   _pendingKey(userId, messageId) {
     return `${userId}:${messageId}`;
   }
-  async storeTranslate(userId, messageId, text, targetLang, sourceLang = "auto") {
+  async storeTranslate(userId, messageId, text, targetLang, sourceLang = "auto", signal) {
     const key = this._pendingKey(userId, messageId);
     this._pending.add(key);
     this.emitChange();
@@ -212,6 +225,9 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
       this._lastTargetLang.set(userId, targetLang.toUpperCase());
       return entry;
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw err;
+      }
       this._logError(userId, messageId, err);
       throw err;
     } finally {
@@ -224,7 +240,16 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
     if (this.getCached(userId, messageId)) return;
     if (this._pending.has(key)) return;
     if (this._autoQueue.some((job) => job.userId === userId && job.messageId === messageId)) return;
-    this._autoQueue.push({ userId, messageId, text, targetLang, sourceLang });
+    const controller = new AbortController();
+    this._autoControllers.set(key, controller);
+    this._autoQueue.push({
+      userId,
+      messageId,
+      text,
+      targetLang,
+      sourceLang,
+      controller
+    });
     this._runAutoQueue();
   }
   async _runAutoQueue() {
@@ -233,13 +258,31 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
     try {
       while (this._autoQueue.length > 0) {
         const wait = AUTO_TRANSLATE_MIN_INTERVAL_MS - (Date.now() - this._lastAutoTranslateAt);
-        if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+        if (wait > 0) {
+          await new Promise((resolve) => setTimeout(resolve, wait));
+        }
         const job = this._autoQueue.shift();
         if (!job) continue;
+        const key = this._pendingKey(job.userId, job.messageId);
+        if (job.controller.signal.aborted) {
+          this._autoControllers.delete(key);
+          continue;
+        }
         this._lastAutoTranslateAt = Date.now();
         try {
-          await this.storeTranslate(job.userId, job.messageId, job.text, job.targetLang, job.sourceLang);
-        } catch {
+          await this.storeTranslate(
+            job.userId,
+            job.messageId,
+            job.text,
+            job.targetLang,
+            job.sourceLang,
+            job.controller.signal
+          );
+        } catch (err) {
+          if (!(err instanceof DOMException && err.name === "AbortError")) {
+          }
+        } finally {
+          this._autoControllers.delete(key);
         }
         if (this.isRateLimited()) {
           this._autoQueue = [];
@@ -249,6 +292,30 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
     } finally {
       this._autoQueueRunning = false;
     }
+  }
+  cancelAutoTranslate(userId, messageId) {
+    const key = this._pendingKey(userId, messageId);
+    const oldLength = this._autoQueue.length;
+    this._autoQueue = this._autoQueue.filter(
+      (job) => !(job.userId === userId && job.messageId === messageId)
+    );
+    const wasQueued = this._autoQueue.length !== oldLength;
+    const controller = this._autoControllers.get(key);
+    if (controller) {
+      controller.abort();
+      this._autoControllers.delete(key);
+    }
+    if (wasQueued || controller) {
+      this.emitChange();
+      return true;
+    }
+    return false;
+  }
+  cancelAll() {
+    this._autoControllers.values().map((job) => {
+      job.abort();
+    });
+    this.emitChange();
   }
   _logError(userId, messageId, err) {
     const isTranslateError = err instanceof TranslateError;
@@ -269,6 +336,31 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
   }
   getLastTargetLang(userId) {
     return this._lastTargetLang.get(userId);
+  }
+  getOutgoingTranslateLang(channelId) {
+    return this._outgoingTranslateLang.get(channelId);
+  }
+  setOutgoingTranslateLang(channelId, targetLang) {
+    if (targetLang) this._outgoingTranslateLang.set(channelId, targetLang);
+    else this._outgoingTranslateLang.delete(channelId);
+    this.emitChange();
+  }
+  async translateOutgoing(text, targetLang, sourceLang = "auto") {
+    try {
+      this._isCurrentlyTranslating = true;
+      reRender(`.${TextAreaParentClasses.channelBottomBarArea}`);
+      return await translate(text, targetLang, sourceLang).finally((err) => {
+        this._isCurrentlyTranslating = false;
+        reRender(`.${TextAreaParentClasses.channelBottomBarArea}`);
+      });
+    } catch (err) {
+      this._logError("__outgoing__", "__outgoing__", err);
+      this.emitChange();
+      throw err;
+    }
+  }
+  isCurrentlyTranslating() {
+    return this._isCurrentlyTranslating;
   }
   isAutoTranslate(userId) {
     return this._autoTranslateUsers.has(userId);
@@ -302,18 +394,38 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
   }
 }();
 
+// src/DeepTranslate/deepl.tsx
+function DeepL() {
+  return /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-text-default)", d: "M20.907 4.94L12.685.186a1.36 1.36 0 0 0-1.37 0l-8.222 4.77a1.38 1.38 0 0 0-.686 1.183v9.526a1.38 1.38 0 0 0 .686 1.194l8.222 4.76l.062.035L15.425 24l-.011-2.061l.008-1.145l.003.02v-.385a.69.69 0 0 1 .296-.56l.264-.151l.127-.07h-.008l4.803-2.78a1.38 1.38 0 0 0 .686-1.195V6.135a1.38 1.38 0 0 0-.686-1.195m-9.853 9.688a1.43 1.43 0 0 1-.4 1.384a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 2.042.076l3.328-1.916l.687.386zm5.77-2.414a1.41 1.41 0 0 1-1.97 0a1.43 1.43 0 0 1-.37-1.478l-.013.008L10.72 8.57l-.057.057a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 1.972 0c.394.377.524.918.39 1.407l3.781 2.2l.019-.019a1.41 1.41 0 0 1 1.972 0a1.427 1.427 0 0 1 0 2.061z" }));
+}
+
+// helpers/webpack.ts
+var { Webpack: Webpack2 } = BdApi;
+
+// helpers/index.tsx
+var { Webpack: Webpack3, React: React3, ContextMenu: ContextMenu2, Hooks: Hooks2 } = BdApi;
+var { createElement, forwardRef } = React3;
+function styledBase(tag, cssOrFn) {
+  return (props) => {
+    const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
+    return React3.createElement(tag, { ...props, style: { ...style, ...props.style } });
+  };
+}
+var styled = new Proxy(styledBase, {
+  get(target, p) {
+    return (cssOrFn) => target(p, cssOrFn);
+  }
+});
+
 // src/DeepTranslate/index.tsx
 var MAX_CHARS = 1500;
 var DEFAULT_TARGET_LANG = "EN";
-function DeepL() {
-  return /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
-    "path",
-    {
-      fill: "white",
-      d: "M20.907 4.94L12.685.186a1.36 1.36 0 0 0-1.37 0l-8.222 4.77a1.38 1.38 0 0 0-.686 1.183v9.526a1.38 1.38 0 0 0 .686 1.194l8.222 4.76l.062.035L15.425 24l-.011-2.061l.008-1.145l.003.02v-.385a.69.69 0 0 1 .296-.56l.264-.151l.127-.07h-.008l4.803-2.78a1.38 1.38 0 0 0 .686-1.195V6.135a1.38 1.38 0 0 0-.686-1.195m-9.853 9.688a1.43 1.43 0 0 1-.4 1.384a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 2.042.076l3.328-1.916l.687.386zm5.77-2.414a1.41 1.41 0 0 1-1.97 0a1.43 1.43 0 0 1-.37-1.478l-.013.008L10.72 8.57l-.057.057a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 1.972 0c.394.377.524.918.39 1.407l3.781 2.2l.019-.019a1.41 1.41 0 0 1 1.972 0a1.427 1.427 0 0 1 0 2.061z"
-    }
-  ));
-}
+var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".A.getActiveOption(");
+var HeaderComponents = Webpack.getModule((x) => x.Icon && x.Title);
+var ScrollerClassNames = Webpack.getByKeys("scrollbarGutterStable");
+var SelectedChannelStore = Webpack.Stores.SelectedChannelStore;
+var StackedBarsModule = Webpack.getBySource("xU4pF1,{", { raw: true }).declarations;
+var Popout = Webpack.getModule((m) => m?.Animation, { searchExports: true, raw: true })?.exports?.Y;
 function Translate() {
   return /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
     "path",
@@ -333,7 +445,7 @@ function TCM({ user, message }) {
   const isTooLong = message.content.length > MAX_CHARS;
   const disabled = isRateLimited || isTooLong;
   function translateTo(targetLang) {
-    return () => DeepTranslateStore.storeTranslate(user.id, message.id, message.content, targetLang);
+    return () => DeepTranslateStore.storeTranslate(user.id, message.id, message.content, targetLang, "auto");
   }
   const quickTargetLang = DeepTranslateStore.getLastTargetLang(user.id) ?? DEFAULT_TARGET_LANG;
   const subtext = isRateLimited ? "Rate limited, try again shortly" : isTooLong ? `Message exceeds ${MAX_CHARS} characters` : void 0;
@@ -349,7 +461,13 @@ function TCM({ user, message }) {
       id: "dr-tr-ts",
       color: disabled ? "danger" : void 0,
       disabled,
-      label: /* @__PURE__ */ BdApi.React.createElement(MenuItemLabel, { title: `Translate to ${getLanguageName(quickTargetLang)}`, subtext }),
+      label: /* @__PURE__ */ BdApi.React.createElement(
+        MenuItemLabel,
+        {
+          title: `Translate to ${getLanguageName(quickTargetLang)}`,
+          subtext
+        }
+      ),
       action: translateTo(quickTargetLang),
       leadingAccessory: {
         type: "icon",
@@ -408,18 +526,210 @@ function TranslateComponent({ original, message, author }) {
     if (!isAutoTranslate || translateData || isPending || isRateLimited) return;
     if (message.content.length === 0 || message.content.length > MAX_CHARS) return;
     const targetLang = DeepTranslateStore.getLastTargetLang(author.id) ?? DEFAULT_TARGET_LANG;
-    DeepTranslateStore.queueAutoTranslate(author.id, message.id, message.content, targetLang);
+    DeepTranslateStore.queueAutoTranslate(author.id, message.id, message.content, targetLang, "auto");
   }, [isAutoTranslate, translateData, isPending, isRateLimited, author.id, message.id, message.content]);
   if (!translateData && !isPending) return original;
   return /* @__PURE__ */ BdApi.React.createElement("div", { style: { display: "flex", flexDirection: "column" } }, original, isPending ? /* @__PURE__ */ BdApi.React.createElement("span", { style: { maxWidth: "100px !important" } }, /* @__PURE__ */ BdApi.React.createElement(Components.Spinner, null)) : /* @__PURE__ */ BdApi.React.createElement("span", { style: { fontSize: "16px", color: "var(--text-muted)" } }, translateData.translatedText, " \xB7 Translated from ", getLanguageName(translateData.detectedSource), " to ", getLanguageName(translateData.targetLang)));
 }
+var Wrapper = styled.div({
+  display: "flex",
+  alignItems: "center",
+  margin: "10px 0"
+});
+var Line = styled.div({
+  flex: 1,
+  height: "2px",
+  borderRadius: "100%",
+  background: "var(--border-subtle)"
+});
+var Label = styled.span({
+  margin: "0 10px",
+  color: "var(--text-muted)",
+  fontSize: "12px",
+  fontWeight: 600,
+  textTransform: "uppercase",
+  whiteSpace: "nowrap"
+});
+function SepWithText({ children }) {
+  return /* @__PURE__ */ BdApi.React.createElement(Wrapper, null, /* @__PURE__ */ BdApi.React.createElement(Line, null), /* @__PURE__ */ BdApi.React.createElement(Label, null, children), /* @__PURE__ */ BdApi.React.createElement(Line, null));
+}
+function DeepLChatPopout({ channelId }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  const selectedLang = Hooks.useStateFromStores([DeepTranslateStore], () => DeepTranslateStore.getOutgoingTranslateLang(channelId));
+  function pick(lang) {
+    DeepTranslateStore.setOutgoingTranslateLang(channelId, lang);
+    setIsOpen(false);
+  }
+  function LangRow({ label, active, onClick }) {
+    const [hovered, setHovered] = React.useState(false);
+    return /* @__PURE__ */ BdApi.React.createElement(
+      "div",
+      {
+        onClick,
+        onMouseEnter: () => setHovered(true),
+        onMouseLeave: () => setHovered(false),
+        style: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "8px",
+          padding: "6px 8px",
+          borderRadius: "4px",
+          fontSize: "14px",
+          fontWeight: 500,
+          lineHeight: "18px",
+          cursor: "pointer",
+          background: active ? "var(--interactive-accent-background-selected)" : hovered ? "var(--interactive-background-hover)" : "transparent",
+          color: active ? "white" : "var(--interactive-text-default)"
+        }
+      },
+      /* @__PURE__ */ BdApi.React.createElement("span", null, label),
+      active && /* @__PURE__ */ BdApi.React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement(
+        "path",
+        {
+          fill: "currentColor",
+          d: "M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.6L20.3 5.3a1 1 0 0 1 1.4 0Z"
+        }
+      ))
+    );
+  }
+  return /* @__PURE__ */ BdApi.React.createElement("div", { ref }, /* @__PURE__ */ BdApi.React.createElement(
+    Popout,
+    {
+      shouldShow: isOpen,
+      onRequestClose: () => setIsOpen(false),
+      position: "top",
+      clickTrap: true,
+      targetElementRef: ref,
+      renderPopout: () => /* @__PURE__ */ BdApi.React.createElement(
+        "div",
+        {
+          className: Utils.className(ScrollerClassNames.container, ScrollerClassNames.scrollbarGutterStable, ScrollerClassNames.thin, ScrollerClassNames.scrollerBase, ScrollerClassNames.fade),
+          style: {
+            // container_d02962 scrollbarGutterStable__99f8c thin__99f8c scrollerBase__99f8c fade__99f8c
+            background: "var(--background-surface-high)",
+            borderRadius: "var(--radius-sm)",
+            boxShadow: "var(--elevation-high)",
+            padding: "6px",
+            width: "400px",
+            maxHeight: "280px",
+            overflowY: "auto",
+            border: "1px solid var(--border-subtle)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "2px"
+          }
+        },
+        /* @__PURE__ */ BdApi.React.createElement("div", { style: {
+          padding: "6px 8px 4px",
+          fontSize: "12px",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: ".02em",
+          color: "var(--text-muted)"
+        } }, "Auto-Translate Sent Messages"),
+        /* @__PURE__ */ BdApi.React.createElement(LangRow, { label: "Off", active: !selectedLang, onClick: () => pick(null) }),
+        /* @__PURE__ */ BdApi.React.createElement(SepWithText, null, "Common Languages"),
+        COMMON_TARGET_LANGS.map((code) => /* @__PURE__ */ BdApi.React.createElement(
+          LangRow,
+          {
+            key: code,
+            label: getLanguageName(code),
+            active: selectedLang === code,
+            onClick: () => pick(code)
+          }
+        )),
+        /* @__PURE__ */ BdApi.React.createElement(SepWithText, null, "All Languages"),
+        ALL_TARGET_LANGS.map((code) => /* @__PURE__ */ BdApi.React.createElement(
+          LangRow,
+          {
+            key: code,
+            label: getLanguageName(code),
+            active: selectedLang === code,
+            onClick: () => pick(code)
+          }
+        ))
+      )
+    },
+    (_props, { isShown }) => /* @__PURE__ */ BdApi.React.createElement(
+      "div",
+      {
+        key: "rere-dern",
+        ..._props,
+        onClick: (e) => {
+          setIsOpen((o) => !o);
+        },
+        style: {
+          cursor: "pointer",
+          display: "flex",
+          color: selectedLang || isShown ? "var(--icon-brand)" : "var(--interactive-icon-default)"
+        }
+      },
+      /* @__PURE__ */ BdApi.React.createElement(HeaderComponents.Icon, { icon: DeepL })
+    )
+  ));
+}
+function FloatingBarTeller() {
+  const isOutgoing = Hooks.useStateFromStores(
+    [DeepTranslateStore],
+    () => DeepTranslateStore.isCurrentlyTranslating()
+  );
+  return /* @__PURE__ */ BdApi.React.createElement(
+    "div",
+    {
+      key: "floating-bar",
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        ...isOutgoing ? { padding: "6px 10px" } : {},
+        marginBottom: "6px",
+        justifyContent: "flex-start",
+        width: "100%",
+        boxSizing: "border-box",
+        borderBottom: "1px solid var(--border-subtle)"
+      }
+    },
+    isOutgoing ? /* @__PURE__ */ BdApi.React.createElement(BdApi.React.Fragment, null, /* @__PURE__ */ BdApi.React.createElement(DeepL, null), /* @__PURE__ */ BdApi.React.createElement("span", { style: { color: "var(--text-default)" } }, "Currently translating...")) : null
+  );
+}
 var DeepTranslate = class {
   async start() {
     const MessageContent = await Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'));
+    const MessageActions = Webpack.getByKeys("_sendMessage");
+    Patcher.instead(MessageActions, "_sendMessage", async (_this, methodArgs, originalFunc) => {
+      const channelId = SelectedChannelStore.getChannelId();
+      const content = methodArgs[1].content;
+      const targetLang = channelId ? DeepTranslateStore.getOutgoingTranslateLang(channelId) : void 0;
+      const canTranslate = targetLang && content && content.length > 0 && content.length <= MAX_CHARS && !DeepTranslateStore.isRateLimited();
+      if (canTranslate) {
+        try {
+          const result = await DeepTranslateStore.translateOutgoing(content, targetLang);
+          methodArgs[1].content = result.text;
+        } catch (err) {
+          throw new TranslateError("Failed to translate; Rate limit?", 0);
+        }
+      }
+      return originalFunc.apply(_this, methodArgs);
+    });
+    Patcher.after(Buttons.A, "type", (_, buttonArgs, returnValue) => {
+      const [props] = buttonArgs;
+      const channelId = props?.channel?.id;
+      if (!channelId) return returnValue;
+      returnValue.props.children.push(/* @__PURE__ */ BdApi.React.createElement(DeepLChatPopout, { channelId, key: "deep-translate-outgoing" }));
+    });
     Patcher.after(MessageContent.Ay, "type", (_this, args, returnValue) => {
       const message = args[0].message;
       if (!message) return returnValue;
       return /* @__PURE__ */ BdApi.React.createElement(TranslateComponent, { original: returnValue, message, author: message.author });
+    });
+    Patcher.instead(StackedBarsModule, "ne", (a, b, c) => {
+      const data = c(...b);
+      !Object.values(b[0].bars.floating).find((x) => x.type.name.includes("FloatingBarTeller")) && b[0].bars.floating.push(
+        /* @__PURE__ */ BdApi.React.createElement(FloatingBarTeller, null)
+      );
+      return data;
     });
     this.unpatch = ContextMenu.patch("message", (res, props) => {
       res.props.children.props.children.splice(

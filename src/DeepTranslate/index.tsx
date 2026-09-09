@@ -4,20 +4,31 @@
  * @version 1.0.0
  * @description Allow translations from DeepL, the best translator in existence. You can autotranslate selected users
  */
-import {Components, ContextMenu, Hooks, Patcher, React, Webpack} from "./global.ts";
+import {Components, ContextMenu, Hooks, Patcher, React, Utils, Webpack} from "./global.ts";
 import type {ReactNode} from "react";
 import type {Message, User} from "discord-types/general";
-import {ALL_TARGET_LANGS, COMMON_TARGET_LANGS, DeepTranslateStore, getLanguageName} from "./translate.ts";
+import {
+    ALL_TARGET_LANGS,
+    COMMON_TARGET_LANGS,
+    DeepTranslateStore,
+    getLanguageName,
+    TranslateError
+} from "./translate.ts";
+import {DeepL} from "./deepl.tsx";
+import {styled} from "@helpers";
 
 const MAX_CHARS = 1500; // DeepL oneshot/anon tier limit, see translate.ts
 const DEFAULT_TARGET_LANG = "EN";
 
-function DeepL() {
-    return <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
-        <path fill="white"
-              d="M20.907 4.94L12.685.186a1.36 1.36 0 0 0-1.37 0l-8.222 4.77a1.38 1.38 0 0 0-.686 1.183v9.526a1.38 1.38 0 0 0 .686 1.194l8.222 4.76l.062.035L15.425 24l-.011-2.061l.008-1.145l.003.02v-.385a.69.69 0 0 1 .296-.56l.264-.151l.127-.07h-.008l4.803-2.78a1.38 1.38 0 0 0 .686-1.195V6.135a1.38 1.38 0 0 0-.686-1.195m-9.853 9.688a1.43 1.43 0 0 1-.4 1.384a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 2.042.076l3.328-1.916l.687.386zm5.77-2.414a1.41 1.41 0 0 1-1.97 0a1.43 1.43 0 0 1-.37-1.478l-.013.008L10.72 8.57l-.057.057a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 1.972 0c.394.377.524.918.39 1.407l3.781 2.2l.019-.019a1.41 1.41 0 0 1 1.972 0a1.427 1.427 0 0 1 0 2.061z"></path>
-    </svg>
-}
+const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.A.getActiveOption(')
+const HeaderComponents = Webpack.getModule((x) => x.Icon && x.Title)
+const ScrollerClassNames = Webpack.getByKeys("scrollbarGutterStable")
+const SelectedChannelStore = Webpack.Stores.SelectedChannelStore;
+
+const StackedBarsModule = Webpack.getBySource("xU4pF1,{", {raw: true}).declarations
+
+const Popout = Webpack.getModule((m) => m?.Animation, {searchExports: true, raw: true})?.exports?.Y
+
 
 function Translate() {
     return <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
@@ -43,7 +54,7 @@ function TCM({user, message}: { user: User, message: Message }) {
     const disabled = isRateLimited || isTooLong;
 
     function translateTo(targetLang: string) {
-        return () => DeepTranslateStore.storeTranslate(user.id, message.id, message.content, targetLang as any);
+        return () => DeepTranslateStore.storeTranslate(user.id, message.id, message.content, targetLang as any, 'auto');
     }
 
     const quickTargetLang = DeepTranslateStore.getLastTargetLang(user.id) ?? DEFAULT_TARGET_LANG;
@@ -63,7 +74,8 @@ function TCM({user, message}: { user: User, message: Message }) {
         icon: DeepL
     }} id={"dp-tr"} label={"DeepTranslate"}>
         <ContextMenu.Item id={"dr-tr-ts"} color={disabled ? "danger" : undefined} disabled={disabled}
-                          label={<MenuItemLabel title={`Translate to ${getLanguageName(quickTargetLang)}`} subtext={subtext}/>}
+                          label={<MenuItemLabel title={`Translate to ${getLanguageName(quickTargetLang)}`}
+                                                subtext={subtext}/>}
                           action={translateTo(quickTargetLang)}
                           leadingAccessory={{
                               type: "icon",
@@ -113,7 +125,7 @@ function TranslateComponent({original, message, author}: { original?: ReactNode,
         if (message.content.length === 0 || message.content.length > MAX_CHARS) return;
 
         const targetLang = DeepTranslateStore.getLastTargetLang(author.id) ?? DEFAULT_TARGET_LANG;
-        DeepTranslateStore.queueAutoTranslate(author.id, message.id, message.content, targetLang as any);
+        DeepTranslateStore.queueAutoTranslate(author.id, message.id, message.content, targetLang as any, 'auto');
     }, [isAutoTranslate, translateData, isPending, isRateLimited, author.id, message.id, message.content]);
 
     if (!translateData && !isPending) return original;
@@ -130,15 +142,240 @@ function TranslateComponent({original, message, author}: { original?: ReactNode,
     );
 }
 
+const Wrapper = styled.div({
+    display: "flex",
+    alignItems: "center",
+    margin: "10px 0",
+});
+
+const Line = styled.div({
+    flex: 1,
+    height: "2px",
+    borderRadius: "100%",
+    background: "var(--border-subtle)",
+});
+
+const Label = styled.span({
+    margin: "0 10px",
+    color: "var(--text-muted)",
+    fontSize: "12px",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+});
+
+export function SepWithText({children}: { children: React.ReactNode }) {
+    return (
+        <Wrapper>
+            <Line/>
+            <Label>{children}</Label>
+            <Line/>
+        </Wrapper>
+    );
+}
+
+function DeepLChatPopout({channelId}: { channelId: string }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const ref = React.useRef(null);
+    const selectedLang = Hooks.useStateFromStores([DeepTranslateStore], () => DeepTranslateStore.getOutgoingTranslateLang(channelId));
+
+    function pick(lang: string | null) {
+        DeepTranslateStore.setOutgoingTranslateLang(channelId, lang);
+        setIsOpen(false);
+    }
+
+    function LangRow({label, active, onClick}: { label: string, active: boolean, onClick: () => void }) {
+        const [hovered, setHovered] = React.useState(false);
+
+        return (
+            <div
+                onClick={onClick}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                    padding: "6px 8px",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    lineHeight: "18px",
+                    cursor: "pointer",
+                    background: active
+                        ? "var(--interactive-accent-background-selected)"
+                        : hovered
+                            ? "var(--interactive-background-hover)"
+                            : "transparent",
+                    color: active ? "white" : "var(--interactive-text-default)"
+                }}>
+                <span>{label}</span>
+                {active && (
+                    <svg width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                              d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.6L20.3 5.3a1 1 0 0 1 1.4 0Z"/>
+                    </svg>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <div ref={ref}>
+            <Popout
+                shouldShow={isOpen}
+                onRequestClose={() => setIsOpen(false)}
+                position={"top"}
+                clickTrap={true}
+                targetElementRef={ref}
+                renderPopout={() => (
+                    <div
+                        className={Utils.className(ScrollerClassNames.container, ScrollerClassNames.scrollbarGutterStable, ScrollerClassNames.thin, ScrollerClassNames.scrollerBase, ScrollerClassNames.fade)}
+                        style={{
+                            // container_d02962 scrollbarGutterStable__99f8c thin__99f8c scrollerBase__99f8c fade__99f8c
+                            background: "var(--background-surface-high)",
+                            borderRadius: "var(--radius-sm)",
+                            boxShadow: "var(--elevation-high)",
+                            padding: "6px",
+                            width: "400px",
+                            maxHeight: "280px",
+                            overflowY: "auto",
+                            border: "1px solid var(--border-subtle)",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "2px"
+                        }}>
+                        <div style={{
+                            padding: "6px 8px 4px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: ".02em",
+                            color: "var(--text-muted)"
+                        }}>
+                            Auto-Translate Sent Messages
+                        </div>
+
+                        <LangRow label={"Off"} active={!selectedLang} onClick={() => pick(null)}/>
+
+                        <SepWithText>Common Languages</SepWithText>
+
+                        {COMMON_TARGET_LANGS.map(code => (
+                            <LangRow key={code} label={getLanguageName(code)} active={selectedLang === code}
+                                     onClick={() => pick(code)}/>
+                        ))}
+
+                        <SepWithText>All Languages</SepWithText>
+
+                        {ALL_TARGET_LANGS.map(code => (
+                            <LangRow key={code} label={getLanguageName(code)} active={selectedLang === code}
+                                     onClick={() => pick(code)}/>
+                        ))}
+                    </div>
+                )}
+            >
+                {(_props: any, {isShown}: { isShown: boolean }) => (
+                    <div key={"rere-dern"} {..._props}
+                         onClick={(e: MouseEvent) => {
+                             setIsOpen(o => !o);
+                         }}
+                         style={{
+                             cursor: "pointer",
+                             display: "flex",
+                             color: (selectedLang || isShown) ? "var(--icon-brand)" : "var(--interactive-icon-default)"
+                         }}>
+                        <HeaderComponents.Icon icon={DeepL}/>
+                    </div>
+                )}
+            </Popout>
+        </div>
+    );
+}
+
+function FloatingBarTeller() {
+    const isOutgoing = Hooks.useStateFromStores(
+        [DeepTranslateStore],
+        () => DeepTranslateStore.isCurrentlyTranslating()
+    );
+
+    return (
+        <div
+            key="floating-bar"
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                ...(isOutgoing ? { padding: '6px 10px' } : {}),
+                marginBottom: '6px',
+                justifyContent: 'flex-start',
+                width: '100%',
+                boxSizing: 'border-box',
+                borderBottom: '1px solid var(--border-subtle)'
+            }}
+        >
+            {isOutgoing ? (
+                <>
+                    <DeepL />
+                    <span /*onClick={() => DeepTranslateStore.cancelAll()} not yet.*/ style={{ color: 'var(--text-default)' }}>
+                        Currently translating...
+                    </span>
+                </>
+            ) : null}
+        </div>
+    );
+}
+
+
 export default class DeepTranslate {
     async start() {
         const MessageContent = await Webpack.waitForModule(Webpack.Filters.bySource('VOICE_HANGOUT_INVITE?""'))
+        const MessageActions = Webpack.getByKeys("_sendMessage")
+
+        Patcher.instead(MessageActions, "_sendMessage", async (_this, methodArgs, originalFunc) => {
+            const channelId = SelectedChannelStore.getChannelId();
+            const content = methodArgs[1].content
+
+            const targetLang = channelId ? DeepTranslateStore.getOutgoingTranslateLang(channelId) : undefined;
+
+            const canTranslate = targetLang
+                && content
+                && content.length > 0
+                && content.length <= MAX_CHARS
+                && !DeepTranslateStore.isRateLimited();
+
+            if (canTranslate) {
+                try {
+                    const result = await DeepTranslateStore.translateOutgoing(content, targetLang as any);
+                    methodArgs[1].content = result.text;
+                } catch (err) {
+                    throw new TranslateError("Failed to translate; Rate limit?", 0);
+                }
+            }
+
+            return originalFunc.apply(_this, methodArgs);
+        })
+
+        Patcher.after(Buttons.A, "type", (_, buttonArgs, returnValue) => {
+            const [props] = buttonArgs;
+            const channelId = props?.channel?.id
+            if (!channelId) return returnValue;
+
+            returnValue.props.children.push(<DeepLChatPopout channelId={channelId} key={"deep-translate-outgoing"}/>);
+        })
 
         Patcher.after(MessageContent.Ay, "type", (_this, args, returnValue) => {
             const message = args[0].message
             if (!message) return returnValue;
 
             return <TranslateComponent original={returnValue} message={message} author={message.author}/>
+        })
+
+        Patcher.instead(StackedBarsModule, "ne", (a, b, c) => {
+            const data = c(...b);
+            !Object.values(b[0].bars.floating).find(x => x.type.name.includes("FloatingBarTeller")) && b[0].bars.floating.push(
+                <FloatingBarTeller/>)
+            return data;
         })
 
         this.unpatch = ContextMenu.patch("message", (res, props) => {

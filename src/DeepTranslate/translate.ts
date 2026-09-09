@@ -1,4 +1,4 @@
-import {Net, Utils} from "./global.ts";
+import {Net, Patcher, Utils, Webpack} from "./global.ts";
 
 const TARGET_LANG_MAP = {
     'AR': 'ar', 'BG': 'bg', 'CS': 'cs', 'DA': 'da', 'DE': 'de', 'DE-CH': 'de-CH',
@@ -51,7 +51,7 @@ export class TranslateError extends Error {
     }
 }
 
-export async function translate(text: string, targetLang: keyof typeof TARGET_LANG_MAP, sourceLang: keyof typeof SOURCE_LANG_MAP = 'auto') {
+export async function translate(text: string, targetLang: keyof typeof TARGET_LANG_MAP, sourceLang: keyof typeof SOURCE_LANG_MAP = 'auto', signal: AbortSignal) {
     const target = TARGET_LANG_MAP[targetLang.toUpperCase()] || targetLang;
     const source = sourceLang === 'auto' ? undefined : (TARGET_LANG_MAP[sourceLang.toUpperCase()] || sourceLang);
 
@@ -95,7 +95,8 @@ export async function translate(text: string, targetLang: keyof typeof TARGET_LA
             'x-app-instance-id': crypto.randomUUID?.() || '00000000-0000-4000-8000-000000000000',
             'x-app-session-id': crypto.randomUUID?.() || '00000000-0000-4000-8000-000000000000'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
+        signal
     });
 
     const data = await response.json();
@@ -126,7 +127,7 @@ export async function translate(text: string, targetLang: keyof typeof TARGET_LA
 interface TranslateCache {
     translatedText: string;
     detectedSource: string;
-    targetLang: string; // BCP-47 i think? DOM Standard
+    targetLang: string; // resolved BCP-47 IS standard.
     lastTranslated: number;
 }
 
@@ -150,6 +151,18 @@ interface AutoTranslateJob {
     text: string;
     targetLang: string;
     sourceLang: string;
+    controller: AbortController;
+}
+
+const TextAreaParentClasses = Webpack.getByKeys("channelBottomBarArea")
+
+// skamt code.
+function reRender(selector) {
+    const target = document.querySelector(selector)?.parentElement;
+    if (!target) return;
+    const instance = BdApi.ReactUtils.getOwnerInstance(target);
+    const unpatch = Patcher.instead(instance, "render", () => unpatch());
+    instance.forceUpdate(() => instance.forceUpdate());
 }
 
 export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Store {
@@ -160,10 +173,15 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
     private _pending: Set<string> = new Set();
     private _lastTargetLang: Map<string, string> = new Map();
     private _autoTranslateUsers: Set<string> = new Set();
+    private _outgoingTranslateLang: Map<string, string> = new Map();
+
+    private _autoControllers: Map<string, AbortController> = new Map();
 
     private _autoQueue: AutoTranslateJob[] = [];
     private _autoQueueRunning = false;
     private _lastAutoTranslateAt = 0;
+
+    private _isCurrentlyTranslating = false;
 
     private _pendingKey(userId: string, messageId: string) {
         return `${userId}:${messageId}`;
@@ -174,7 +192,8 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
         messageId: string,
         text: string,
         targetLang: keyof typeof TARGET_LANG_MAP,
-        sourceLang: keyof typeof SOURCE_LANG_MAP = 'auto'
+        sourceLang: keyof typeof SOURCE_LANG_MAP = 'auto',
+        signal: AbortSignal
     ) {
         const key = this._pendingKey(userId, messageId);
         this._pending.add(key);
@@ -201,6 +220,10 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
 
             return entry;
         } catch (err) {
+            if (err instanceof DOMException && err.name === 'AbortError') {
+                throw err;
+            }
+
             this._logError(userId, messageId, err);
             throw err;
         } finally {
@@ -222,9 +245,22 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
         if (this._pending.has(key)) return;
         if (this._autoQueue.some(job => job.userId === userId && job.messageId === messageId)) return;
 
-        this._autoQueue.push({userId, messageId, text, targetLang, sourceLang});
+        const controller = new AbortController();
+
+        this._autoControllers.set(key, controller);
+
+        this._autoQueue.push({
+            userId,
+            messageId,
+            text,
+            targetLang,
+            sourceLang,
+            controller
+        });
+
         this._runAutoQueue();
     }
+
 
     private async _runAutoQueue() {
         if (this._autoQueueRunning) return;
@@ -232,17 +268,40 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
 
         try {
             while (this._autoQueue.length > 0) {
-                const wait = AUTO_TRANSLATE_MIN_INTERVAL_MS - (Date.now() - this._lastAutoTranslateAt);
-                if (wait > 0) await new Promise(resolve => setTimeout(resolve, wait));
+                const wait =
+                    AUTO_TRANSLATE_MIN_INTERVAL_MS -
+                    (Date.now() - this._lastAutoTranslateAt);
+
+                if (wait > 0) {
+                    await new Promise(resolve => setTimeout(resolve, wait));
+                }
 
                 const job = this._autoQueue.shift();
                 if (!job) continue;
 
+                const key = this._pendingKey(job.userId, job.messageId);
+
+                if (job.controller.signal.aborted) {
+                    this._autoControllers.delete(key);
+                    continue;
+                }
+
                 this._lastAutoTranslateAt = Date.now();
 
                 try {
-                    await this.storeTranslate(job.userId, job.messageId, job.text, job.targetLang as any, job.sourceLang as any);
-                } catch {}
+                    await this.storeTranslate(
+                        job.userId,
+                        job.messageId,
+                        job.text,
+                        job.targetLang as keyof typeof TARGET_LANG_MAP,
+                        job.sourceLang as keyof typeof SOURCE_LANG_MAP,
+                        job.controller.signal
+                    );
+                } catch (err) {
+                    if (!(err instanceof DOMException && err.name === 'AbortError')) {}
+                } finally {
+                    this._autoControllers.delete(key);
+                }
 
                 if (this.isRateLimited()) {
                     this._autoQueue = [];
@@ -252,6 +311,41 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
         } finally {
             this._autoQueueRunning = false;
         }
+    }
+
+    cancelAutoTranslate(userId: string, messageId: string): boolean {
+        const key = this._pendingKey(userId, messageId);
+
+        const oldLength = this._autoQueue.length;
+
+        this._autoQueue = this._autoQueue.filter(
+            job => !(job.userId === userId && job.messageId === messageId)
+        );
+
+        const wasQueued = this._autoQueue.length !== oldLength;
+
+        const controller = this._autoControllers.get(key);
+
+        if (controller) {
+            controller.abort();
+            this._autoControllers.delete(key);
+        }
+
+        if (wasQueued || controller) {
+            this.emitChange();
+            return true;
+        }
+
+        return false;
+    }
+
+    cancelAll()
+    {
+        this._autoControllers.values().map(job => {
+            job.abort();
+        })
+
+        this.emitChange();
     }
 
     private _logError(userId: string, messageId: string, err: unknown) {
@@ -278,6 +372,35 @@ export const DeepTranslateStore = new class DeepTranslateStore extends Utils.Sto
 
     getLastTargetLang(userId: string): string | undefined {
         return this._lastTargetLang.get(userId);
+    }
+
+    getOutgoingTranslateLang(channelId: string): string | undefined {
+        return this._outgoingTranslateLang.get(channelId);
+    }
+
+    setOutgoingTranslateLang(channelId: string, targetLang: string | null) {
+        if (targetLang) this._outgoingTranslateLang.set(channelId, targetLang);
+        else this._outgoingTranslateLang.delete(channelId);
+        this.emitChange();
+    }
+
+    async translateOutgoing(text: string, targetLang: keyof typeof TARGET_LANG_MAP, sourceLang: keyof typeof SOURCE_LANG_MAP = 'auto') {
+        try {
+            this._isCurrentlyTranslating = true;
+            reRender(`.${TextAreaParentClasses.channelBottomBarArea}`)
+            return await translate(text, targetLang, sourceLang).finally((err) => {
+                this._isCurrentlyTranslating = false;
+                reRender(`.${TextAreaParentClasses.channelBottomBarArea}`)
+            });
+        } catch (err) {
+            this._logError('__outgoing__', '__outgoing__', err);
+            this.emitChange();
+            throw err;
+        }
+    }
+
+    isCurrentlyTranslating() {
+        return this._isCurrentlyTranslating;
     }
 
     isAutoTranslate(userId: string): boolean {
