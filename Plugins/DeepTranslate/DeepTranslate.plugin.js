@@ -5,8 +5,8 @@
  * @description Allow translations from DeepL, the best translator in existence. You can autotranslate selected users
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DeepTranslate/DeepTranslate.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 608660
- * @canary 609443
+ * @stable 611316
+ * @canary 611599
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -395,8 +395,8 @@ var DeepTranslateStore = new class DeepTranslateStore2 extends Utils.Store {
 }();
 
 // src/DeepTranslate/deepl.tsx
-function DeepL() {
-  return /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: "var(--interactive-text-default)", d: "M20.907 4.94L12.685.186a1.36 1.36 0 0 0-1.37 0l-8.222 4.77a1.38 1.38 0 0 0-.686 1.183v9.526a1.38 1.38 0 0 0 .686 1.194l8.222 4.76l.062.035L15.425 24l-.011-2.061l.008-1.145l.003.02v-.385a.69.69 0 0 1 .296-.56l.264-.151l.127-.07h-.008l4.803-2.78a1.38 1.38 0 0 0 .686-1.195V6.135a1.38 1.38 0 0 0-.686-1.195m-9.853 9.688a1.43 1.43 0 0 1-.4 1.384a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 2.042.076l3.328-1.916l.687.386zm5.77-2.414a1.41 1.41 0 0 1-1.97 0a1.43 1.43 0 0 1-.37-1.478l-.013.008L10.72 8.57l-.057.057a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 1.972 0c.394.377.524.918.39 1.407l3.781 2.2l.019-.019a1.41 1.41 0 0 1 1.972 0a1.427 1.427 0 0 1 0 2.061z" }));
+function DeepL({ on }) {
+  return /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24" }, /* @__PURE__ */ BdApi.React.createElement("path", { fill: on ? "var(--icon-status-online)" : "var(--interactive-text-default)", d: "M20.907 4.94L12.685.186a1.36 1.36 0 0 0-1.37 0l-8.222 4.77a1.38 1.38 0 0 0-.686 1.183v9.526a1.38 1.38 0 0 0 .686 1.194l8.222 4.76l.062.035L15.425 24l-.011-2.061l.008-1.145l.003.02v-.385a.69.69 0 0 1 .296-.56l.264-.151l.127-.07h-.008l4.803-2.78a1.38 1.38 0 0 0 .686-1.195V6.135a1.38 1.38 0 0 0-.686-1.195m-9.853 9.688a1.43 1.43 0 0 1-.4 1.384a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 2.042.076l3.328-1.916l.687.386zm5.77-2.414a1.41 1.41 0 0 1-1.97 0a1.43 1.43 0 0 1-.37-1.478l-.013.008L10.72 8.57l-.057.057a1.41 1.41 0 0 1-1.97 0a1.42 1.42 0 0 1 0-2.063a1.41 1.41 0 0 1 1.972 0c.394.377.524.918.39 1.407l3.781 2.2l.019-.019a1.41 1.41 0 0 1 1.972 0a1.427 1.427 0 0 1 0 2.061z" }));
 }
 
 // helpers/webpack.ts
@@ -416,10 +416,15 @@ var styled = new Proxy(styledBase, {
     return (cssOrFn) => target(p, cssOrFn);
   }
 });
+function getKey(module2, fn) {
+  for (const key in module2) {
+    if (fn(module2[key])) return { key, module: module2 };
+  }
+}
 
 // src/DeepTranslate/index.tsx
 var MAX_CHARS = 1500;
-var DEFAULT_TARGET_LANG = "EN";
+var DEFAULT_TARGET_LANG = navigator.language.split("-")[0].toUpperCase() ?? "EN";
 var Buttons = Webpack.getBySource("isSubmitButtonEnabled", ".A.getActiveOption(");
 var HeaderComponents = Webpack.getModule((x) => x.Icon && x.Title);
 var ScrollerClassNames = Webpack.getByKeys("scrollbarGutterStable");
@@ -666,7 +671,7 @@ function DeepLChatPopout({ channelId }) {
           color: selectedLang || isShown ? "var(--icon-brand)" : "var(--interactive-icon-default)"
         }
       },
-      /* @__PURE__ */ BdApi.React.createElement(HeaderComponents.Icon, { icon: DeepL })
+      /* @__PURE__ */ BdApi.React.createElement(HeaderComponents.Icon, { icon: () => /* @__PURE__ */ BdApi.React.createElement(DeepL, { on: !!selectedLang }) })
     )
   ));
 }
@@ -717,14 +722,15 @@ var DeepTranslate = class {
       const [props] = buttonArgs;
       const channelId = props?.channel?.id;
       if (!channelId) return returnValue;
-      returnValue.props.children.push(/* @__PURE__ */ BdApi.React.createElement(DeepLChatPopout, { channelId, key: "deep-translate-outgoing" }));
+      returnValue.props.children.unshift(/* @__PURE__ */ BdApi.React.createElement(DeepLChatPopout, { channelId, key: "deep-translate-outgoing" }));
     });
     Patcher.after(MessageContent.Ay, "type", (_this, args, returnValue) => {
       const message = args[0].message;
       if (!message) return returnValue;
       return /* @__PURE__ */ BdApi.React.createElement(TranslateComponent, { original: returnValue, message, author: message.author });
     });
-    Patcher.instead(StackedBarsModule, "ne", (a, b, c) => {
+    const module2 = getKey(StackedBarsModule, Webpack.Filters.byRegex(/0===.{1}.length&&0===.{1}.length/));
+    Patcher.instead(module2?.module, module2?.key, (a, b, c) => {
       const data = c(...b);
       !Object.values(b[0].bars.floating).find((x) => x.type.name.includes("FloatingBarTeller")) && b[0].bars.floating.push(
         /* @__PURE__ */ BdApi.React.createElement(FloatingBarTeller, null)

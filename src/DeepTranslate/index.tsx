@@ -15,10 +15,10 @@ import {
     TranslateError
 } from "./translate.ts";
 import {DeepL} from "./deepl.tsx";
-import {styled} from "@helpers";
+import {getKey, styled} from "@helpers";
 
 const MAX_CHARS = 1500; // DeepL oneshot/anon tier limit, see translate.ts
-const DEFAULT_TARGET_LANG = "EN";
+const DEFAULT_TARGET_LANG = navigator.language.split("-")[0]!.toUpperCase() ?? "EN";
 
 const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.A.getActiveOption(')
 const HeaderComponents = Webpack.getModule((x) => x.Icon && x.Title)
@@ -285,7 +285,7 @@ function DeepLChatPopout({channelId}: { channelId: string }) {
                              display: "flex",
                              color: (selectedLang || isShown) ? "var(--icon-brand)" : "var(--interactive-icon-default)"
                          }}>
-                        <HeaderComponents.Icon icon={DeepL}/>
+                        <HeaderComponents.Icon icon={() => <DeepL on={!!selectedLang}/>}/>
                     </div>
                 )}
             </Popout>
@@ -361,7 +361,7 @@ export default class DeepTranslate {
             const channelId = props?.channel?.id
             if (!channelId) return returnValue;
 
-            returnValue.props.children.push(<DeepLChatPopout channelId={channelId} key={"deep-translate-outgoing"}/>);
+            returnValue.props.children.unshift(<DeepLChatPopout channelId={channelId} key={"deep-translate-outgoing"}/>);
         })
 
         Patcher.after(MessageContent.Ay, "type", (_this, args, returnValue) => {
@@ -371,7 +371,8 @@ export default class DeepTranslate {
             return <TranslateComponent original={returnValue} message={message} author={message.author}/>
         })
 
-        Patcher.instead(StackedBarsModule, "ne", (a, b, c) => {
+        const module = getKey(StackedBarsModule, Webpack.Filters.byRegex(/0===.{1}.length&&0===.{1}.length/))
+        Patcher.instead(module?.module, module?.key, (a, b, c) => {
             const data = c(...b);
             !Object.values(b[0].bars.floating).find(x => x.type.name.includes("FloatingBarTeller")) && b[0].bars.floating.push(
                 <FloatingBarTeller/>)
