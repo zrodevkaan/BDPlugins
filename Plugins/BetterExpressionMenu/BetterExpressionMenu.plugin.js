@@ -87,7 +87,7 @@ var providers = [
   },
   {
     type: "giphy",
-    api: (tags, limit = 100, page = 0) => `https://api.giphy.com/v1/gifs/search?q=${encodeURIComponent(tags)}&limit=${limit}&api_key=Gc7131jiJuvI7IdN0HZ1D7nh0ow5BU6g${page != 0 ? `&offset=${page}` : ""}`,
+    api: (tags, limit = 100, page = 0) => `https://api.giphy.com/v1/gifs/search?q=${encodeURIComponent(tags)}&limit=${limit}&api_key=${encodeURIComponent(Data.load("giphyApiKey") || "")}${page != 0 ? `&offset=${page}` : ""}`,
     returnsExtraArg: true,
     toplevelArg: "data",
     maxResults: 100,
