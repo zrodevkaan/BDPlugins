@@ -1,10 +1,11 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.4
+ * @version 1.1.5
  * @description Birfdays in discord
  */
 import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
+import type {SyntheticEvent} from "react";
 
 const ModalModule = wpGetByKeys(["openModal"])
 const Modal = wpGetByKeys(["Modal"]).Modal
@@ -272,13 +273,18 @@ const Settings = new class SettingsStore extends Utils.Store {
 }
 
 const TextInput = ({user, birthday}: TextInputProps): React.JSX.Element => {
+    const [value, setValue] = React.useState(birthday.date);
+
     return <div>
-        <Components.TextInput
+        <input
+            className={"bd-text-input"}
             style={{width: "100%"}}
             placeholder="MM/DD or DD/MM — e.g. 07/28"
-            value={birthday?.date}
-            onChange={(e: string) => {
-                birthday.date = e;
+            value={value}
+            onChange={(e: SyntheticEvent<HTMLInputElement>) => {
+                const newValue = e.target.value;
+                setValue(newValue);
+                birthday.date = newValue;
                 birthday.shouldShow = true;
                 DataStore.set(user.id, birthday);
             }}

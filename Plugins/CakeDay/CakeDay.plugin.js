@@ -1,12 +1,12 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.4
+ * @version 1.1.5
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 595897
- * @canary 596000
+ * @stable 615980
+ * @canary 616987
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -318,14 +318,18 @@ var Settings = new class SettingsStore extends Utils.Store {
   }
 }();
 var TextInput = ({ user, birthday }) => {
+  const [value, setValue] = React2.useState(birthday.date);
   return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
-    Components.TextInput,
+    "input",
     {
+      className: "bd-text-input",
       style: { width: "100%" },
       placeholder: "MM/DD or DD/MM \u2014 e.g. 07/28",
-      value: birthday?.date,
+      value,
       onChange: (e) => {
-        birthday.date = e;
+        const newValue = e.target.value;
+        setValue(newValue);
+        birthday.date = newValue;
         birthday.shouldShow = true;
         DataStore.set(user.id, birthday);
       }
