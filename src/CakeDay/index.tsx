@@ -1,14 +1,16 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.5
+ * @version 1.1.6
  * @description Birfdays in discord
  */
 import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
 import type {SyntheticEvent} from "react";
 
+const {Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components, Hooks} = new BdApi('CakeDay');
+
 const ModalModule = wpGetByKeys(["openModal"])
-const Modal = wpGetByKeys(["Modal"]).Modal
+const Modal = Webpack.getByStrings("actionBarInputLayout", {searchExports: true})
 
 interface BdApi {
     Patcher: any;
@@ -56,8 +58,6 @@ interface TextInputProps {
     user: User;
     birthday: Birthday;
 }
-
-const {Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components, Hooks} = new BdApi('CakeDay');
 
 const Confetti = Webpack.getBySource("createMultipleConfettiAt:()=>[]");
 

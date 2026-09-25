@@ -1,12 +1,12 @@
 /**
  * @name CakeDay
  * @author Kaan
- * @version 1.1.5
+ * @version 1.1.6
  * @description Birfdays in discord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 615980
- * @canary 616987
+ * @stable 621195
+ * @canary 622061
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -99,9 +99,9 @@ function findInTree(tree, predicate, { walkable = [], ignore = [], maxDepth = 10
 }
 
 // src/CakeDay/index.tsx
-var ModalModule = wpGetByKeys(["openModal"]);
-var Modal = wpGetByKeys(["Modal"]).Modal;
 var { Patcher, Webpack: Webpack3, React: React2, Data, DOM, ContextMenu: ContextMenu2, UI, Net, Utils, Components, Hooks: Hooks2 } = new BdApi("CakeDay");
+var ModalModule = wpGetByKeys(["openModal"]);
+var Modal = Webpack3.getByStrings("actionBarInputLayout", { searchExports: true });
 var Confetti = Webpack3.getBySource("createMultipleConfettiAt:()=>[]");
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
 var Badges = Webpack3.getBySource('action:"PRESS_BADGE"');
