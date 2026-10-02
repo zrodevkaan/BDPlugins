@@ -1,12 +1,12 @@
 /**
  * @name MentionFix
- * @version 2.0.5
+ * @version 2.0.6
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/MentionFix/MentionFix.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 607562
- * @canary 608649
+ * @stable 627798
+ * @canary 628403
  */
 "use strict";
 
@@ -83,6 +83,7 @@ var MentionFix = class {
     Patcher.after(UserMention.module, UserMention.key, (that, [args], res) => {
       const userId = args.userId ?? args.parsedUserId;
       if (!userId || Webpack3.Stores.UserStore.getUser(userId)) return res;
+      args.userId = args.parsedUserId;
       return /* @__PURE__ */ BdApi.React.createElement(CustomMention, { args });
     });
   }

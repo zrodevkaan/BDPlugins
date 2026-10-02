@@ -1,6 +1,6 @@
 /**
  * @name MentionFix
- * @version 2.0.5
+ * @version 2.0.6
  * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
  * @author Kaan
  */
@@ -81,6 +81,7 @@ class MentionFix {
             const userId = args.userId ?? args.parsedUserId;
             if (!userId || Webpack.Stores.UserStore.getUser(userId)) return res;
 
+            args.userId = args.parsedUserId;
             return <CustomMention args={args}/>
         })
     }
