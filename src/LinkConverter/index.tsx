@@ -2,7 +2,7 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.5
+ * @version 2.0.6
  */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
@@ -11,7 +11,7 @@ const SelectableSearch = Webpack.getByStrings('horizontalControlColumnWidth:`min
 const Textarea = Webpack.getByStrings(`\"text-input\"`,{searchExports:true})
 const AboutMe = Webpack.getModule(x => x.A.toString().includes('disableInteractions'))
 const MessageActions = Webpack.getByKeys('_sendMessage')
-const Modal = Webpack.getModule(x => x.Modal).Modal
+const Modal = Webpack.getByStrings("actionBarInputLayout", { searchExports: true });
 const ModalSystem = Webpack.getMangled(".modalKey?", {
     openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
     openModal: Webpack.Filters.byStrings(",instant:"),

@@ -2,11 +2,11 @@
  * @name LinkConverter
  * @description Converts all links into a configurable embed link
  * @author Kaan
- * @version 2.0.5
+ * @version 2.0.6
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkConverter/LinkConverter.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 605958
- * @canary 606445
+ * @stable 627798
+ * @canary 628362
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -40,7 +40,7 @@ var SelectableSearch = Webpack.getByStrings("horizontalControlColumnWidth:`min($
 var Textarea = Webpack.getByStrings(`"text-input"`, { searchExports: true });
 var AboutMe = Webpack.getModule((x) => x.A.toString().includes("disableInteractions"));
 var MessageActions = Webpack.getByKeys("_sendMessage");
-var Modal = Webpack.getModule((x) => x.Modal).Modal;
+var Modal = Webpack.getByStrings("actionBarInputLayout", { searchExports: true });
 var ModalSystem = Webpack.getMangled(".modalKey?", {
   openModalLazy: Webpack.Filters.byStrings(".modalKey?"),
   openModal: Webpack.Filters.byStrings(",instant:"),
