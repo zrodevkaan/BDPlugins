@@ -5,8 +5,8 @@
  * @version 1.0.5
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Quoter/Quoter.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 595897
- * @canary 596000
+ * @stable 627798
+ * @canary 628758
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -164,15 +164,9 @@ var timestampToSnowflake = (timestamp) => {
   const ms = BigInt(timestamp) - DISCORD_EPOCH;
   return ms <= BigInt(0) ? "0" : (ms << SHIFT).toString();
 };
-async function upload(a, b, c, channelId) {
+async function upload(a, b, c, channelId, messageId) {
   const yeah = await generateQuoteImage(a, b, c);
   const file = new File([yeah], "quote.png", { type: "image/png" });
-  const replyOptions = mods.getSendMessageOptionsForReply(
-    PendingReplyStore.getPendingReply(channelId)
-  );
-  if (replyOptions.messageReference) {
-    FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
-  }
   const upload2 = new CloudUploader({ file }, SelectedStore.getCurrentlySelectedChannelId());
   const messagePayload = {
     flags: 0,
@@ -181,7 +175,14 @@ async function upload(a, b, c, channelId) {
     sticker_ids: [],
     validNonShortcutEmojis: [],
     type: 0,
-    messageReference: replyOptions?.messageReference || null,
+    ...SettingStore.getSetting("shouldReply") ? {
+      messageReference: {
+        message_id: messageId,
+        channel_id: channelId,
+        guild_id: SelectedGuildStore.getGuildId() ?? void 0
+      }
+    } : null,
+    // messageReference: replyOptions?.messageReference || null,
     nonce: timestampToSnowflake(Date.now())
   };
   mods.sendMessage(channelId, messagePayload, null, {
@@ -228,29 +229,38 @@ var Quoter = class {
           } else {
             attribution = props.message.author.username;
           }
-          await upload(img, text, attribution, props.message.channel_id);
+          await upload(img, text, attribution, props.message.channel_id, props.message.id);
         }
       }));
     });
   }
   getSettingsPanel() {
     return () => {
-      return /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Username Option", note: "Changes what name shows of a user under the quote." }, /* @__PURE__ */ BdApi.React.createElement(Components.RadioInput, { defaultValue: SettingStore.getSetting("username"), onChange: (e) => {
-        SettingStore.setSetting("username", e);
-      }, options: [
+      return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
+        Components.SettingItem,
         {
-          value: 0,
-          name: "Username"
+          name: "Username Option",
+          note: "Changes what name shows of a user under the quote."
         },
-        {
-          value: 1,
-          name: "Global Username"
-        },
-        {
-          value: 2,
-          name: "Server Username"
-        }
-      ] }));
+        /* @__PURE__ */ BdApi.React.createElement(Components.RadioInput, { defaultValue: SettingStore.getSetting("username"), onChange: (e) => {
+          SettingStore.setSetting("username", e);
+        }, options: [
+          {
+            value: 0,
+            name: "Username"
+          },
+          {
+            value: 1,
+            name: "Global Username"
+          },
+          {
+            value: 2,
+            name: "Server Username"
+          }
+        ] })
+      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Reply", note: "Should you reply to the selected message?" }, /* @__PURE__ */ BdApi.React.createElement(Components.SwitchInput, { checked: SettingStore.getSetting("shouldReply"), onChange: (e) => {
+        SettingStore.setSetting("shouldReply", e);
+      } })));
     };
   }
   stop() {

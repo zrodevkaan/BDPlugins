@@ -2,16 +2,16 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.5
+ * @version 1.0.6
  */
 
-const { Webpack, Patcher, ContextMenu, Data, Components, Utils } = new BdApi("Quoter")
+const {Webpack, Patcher, ContextMenu, Data, Components, Utils} = new BdApi("Quoter")
 
 function calculateFontSize({
-    charCount,
-    width,
-    height,
-}: {
+                               charCount,
+                               width,
+                               height,
+                           }: {
     charCount: number;
     width: number;
     height: number;
@@ -137,7 +137,7 @@ const generateQuoteImage = async (imageUrl, text, attribution, width = 1250, hei
     });
 };
 
-const CloudUploader = Webpack.getByStrings('uploadFileToCloud', { searchExports: true })
+const CloudUploader = Webpack.getByStrings('uploadFileToCloud', {searchExports: true})
 const SelectedStore = Webpack.getStore('SelectedChannelStore')
 const UserStore = Webpack.getStore("UserStore")
 const GuildMemberStore = Webpack.getStore("GuildMemberStore")
@@ -154,19 +154,19 @@ export const timestampToSnowflake = (timestamp: number): string => {
     return ms <= BigInt(0) ? "0" : (ms << SHIFT).toString();
 };
 
-async function upload(a, b, c, channelId) {
+async function upload(a, b, c, channelId, messageId) {
     const yeah = await generateQuoteImage(a, b, c);
 
-    const file = new File([yeah], 'quote.png', { type: 'image/png' });
+    const file = new File([yeah], 'quote.png', {type: 'image/png'});
 
-    const replyOptions = mods.getSendMessageOptionsForReply(
-        PendingReplyStore.getPendingReply(channelId),
-    );
-    if (replyOptions.messageReference) {
-        FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
-    }
+    // const replyOptions = mods.getSendMessageOptionsForReply(
+    //     PendingReplyStore.getPendingReply(channelId),
+    // );
+    // if (replyOptions.messageReference) {
+    //     FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
+    // }
 
-    const upload = new CloudUploader({ file }, SelectedStore.getCurrentlySelectedChannelId());
+    const upload = new CloudUploader({file}, SelectedStore.getCurrentlySelectedChannelId());
 
     const messagePayload = {
         flags: 0,
@@ -175,7 +175,14 @@ async function upload(a, b, c, channelId) {
         sticker_ids: [],
         validNonShortcutEmojis: [],
         type: 0,
-        messageReference: replyOptions?.messageReference || null,
+        ...(SettingStore.getSetting("shouldReply") ? {
+            messageReference: {
+                message_id: messageId,
+                channel_id: channelId,
+                guild_id: SelectedGuildStore.getGuildId() ?? undefined,
+            }
+        } : null),
+        // messageReference: replyOptions?.messageReference || null,
         nonce: timestampToSnowflake(Date.now()),
     };
 
@@ -231,33 +238,40 @@ export default class Quoter {
                         attribution = props.message.author.username
                     }
 
-                    await upload(img, text, attribution, props.message.channel_id);
+                    await upload(img, text, attribution, props.message.channel_id, props.message.id);
                 }
             }));
         });
     }
 
-    getSettingsPanel()
-    {
+    getSettingsPanel() {
         return () => {
-            return <Components.SettingItem name={"Username Option"} note={"Changes what name shows of a user under the quote."}>
-                <Components.RadioInput defaultValue={SettingStore.getSetting("username")} onChange={(e) => {
-                    SettingStore.setSetting("username", e);
-                }} options={[
-                    {
-                        value: 0x00,
-                        name: 'Username'
-                    },
-                    {
-                        value: 0x01,
-                        name: 'Global Username'
-                    },
-                    {
-                        value: 0x02,
-                        name: 'Server Username'
-                    }
-                ]}/>
-            </Components.SettingItem>
+            return <div>
+                <Components.SettingItem name={"Username Option"}
+                                        note={"Changes what name shows of a user under the quote."}>
+                    <Components.RadioInput defaultValue={SettingStore.getSetting("username")} onChange={(e) => {
+                        SettingStore.setSetting("username", e);
+                    }} options={[
+                        {
+                            value: 0x00,
+                            name: 'Username'
+                        },
+                        {
+                            value: 0x01,
+                            name: 'Global Username'
+                        },
+                        {
+                            value: 0x02,
+                            name: 'Server Username'
+                        }
+                    ]}/>
+                </Components.SettingItem>
+                <Components.SettingItem name={"Reply"} note={"Should you reply to the selected message?"}>
+                    <Components.SwitchInput checked={SettingStore.getSetting("shouldReply")} onChange={(e) => {
+                        SettingStore.setSetting("shouldReply", e);
+                    }}/>
+                </Components.SettingItem>
+            </div>
         }
     }
 
