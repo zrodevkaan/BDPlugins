@@ -211,6 +211,7 @@ export default class Quoter {
         this.contextMenuPatch = null;
         Data.save("settings", {
             username: 0x00,
+            shouldReply: false,
             ...Data.load("settings"),
         })
     }

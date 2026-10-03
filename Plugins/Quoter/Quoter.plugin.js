@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.5
+ * @version 1.0.6
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Quoter/Quoter.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 627798
@@ -206,6 +206,7 @@ var Quoter = class {
     this.contextMenuPatch = null;
     Data.save("settings", {
       username: 0,
+      shouldReply: false,
       ...Data.load("settings")
     });
   }
