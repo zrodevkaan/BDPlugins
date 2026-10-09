@@ -1,7 +1,7 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.4
+ * @version 2.1.5
  * @description Typing status per user on servers, channels or threads.
  */
 import {getKey} from "@helpers";
@@ -78,7 +78,7 @@ const {
 
 /* when will Webpack.Stores be merged.... :( */
 
-const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.A?.render).includes('.button||(') && String(x.A?.render).includes(".metaKey||")}, {
+const [ChannelElement, Popout, useStateFromStores] = getBulk({filter: x => x && String(x.A).includes('.button||(') && String(x.A).includes(".metaKey||")}, {
     filter: Filters.byStrings("Unsupported animation config:"),
     searchExports: true
 }, {filter: Filters.byStrings("useStateFromStores"), searchExports: true})
@@ -542,7 +542,7 @@ class LiveTyping {
     }
 
     patchChannelElement() {
-        Patcher.after(ChannelElement.A, "render", (_, [props], ret) => {
+        Patcher.after(ChannelElement, "A", (_, [props], ret) => {
             if (shouldIgnoreItem('ignoreChannels')) return ret;
 
             const channelId = ExtractItemID(props['data-list-item-id']);

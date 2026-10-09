@@ -1,13 +1,13 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.4
+ * @version 2.1.5
  * @description Typing status per user on servers, channels or threads.
  * @keyframes pulse {
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 603132
- * @canary 603437
+ * @stable 633029
+ * @canary 634365
  */
 "use strict";
 
@@ -93,7 +93,7 @@ var {
   "ChannelStore",
   "UserGuildSettingsStore"
 ]);
-var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.A?.render).includes(".button||(") && String(x.A?.render).includes(".metaKey||") }, {
+var [ChannelElement, Popout, useStateFromStores] = getBulk({ filter: (x) => x && String(x.A).includes(".button||(") && String(x.A).includes(".metaKey||") }, {
   filter: Filters.byStrings("Unsupported animation config:"),
   searchExports: true
 }, { filter: Filters.byStrings("useStateFromStores"), searchExports: true });
@@ -488,7 +488,7 @@ var LiveTyping = class {
     });
   }
   patchChannelElement() {
-    Patcher.after(ChannelElement.A, "render", (_, [props], ret) => {
+    Patcher.after(ChannelElement, "A", (_, [props], ret) => {
       if (shouldIgnoreItem("ignoreChannels")) return ret;
       const channelId = ExtractItemID(props["data-list-item-id"]);
       if (!channelId) return;
