@@ -2,7 +2,7 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.6
+ * @version 1.0.7
  */
 
 const {Webpack, Patcher, ContextMenu, Data, Components, Utils} = new BdApi("Quoter")
@@ -193,8 +193,13 @@ async function upload(a, b, c, channelId, messageId) {
     });
 }
 
+const DEFAULTS = {
+    username: 0x00,
+    shouldReply: false,
+};
+
 const SettingStore = new class SS extends Utils.Store {
-    #settings: Record<string, any> = Data.load("settings")
+    #settings: Record<string, any> = {...DEFAULTS, ...(Data.load("settings") ?? {})}
 
     getSetting(key: string): any {
         return this.#settings[key]
@@ -202,6 +207,7 @@ const SettingStore = new class SS extends Utils.Store {
 
     setSetting(key: string, value: any) {
         this.#settings[key] = value;
+        Data.save("settings", this.#settings);
         this.emitChange();
     }
 }
@@ -209,11 +215,6 @@ const SettingStore = new class SS extends Utils.Store {
 export default class Quoter {
     constructor() {
         this.contextMenuPatch = null;
-        Data.save("settings", {
-            username: 0x00,
-            shouldReply: false,
-            ...Data.load("settings"),
-        })
     }
 
     async start() {
@@ -247,30 +248,31 @@ export default class Quoter {
 
     getSettingsPanel() {
         return () => {
+            const username = Hooks.useStateFromStores(
+                [SettingStore], () => SettingStore.getSetting("username")
+            );
+            const shouldReply = Hooks.useStateFromStores(
+                [SettingStore], () => SettingStore.getSetting("shouldReply")
+            );
+
             return <div>
-                <Components.SettingItem name={"Username Option"}
-                                        note={"Changes what name shows of a user under the quote."}>
-                    <Components.RadioInput defaultValue={SettingStore.getSetting("username")} onChange={(e) => {
-                        SettingStore.setSetting("username", e);
-                    }} options={[
-                        {
-                            value: 0x00,
-                            name: 'Username'
-                        },
-                        {
-                            value: 0x01,
-                            name: 'Global Username'
-                        },
-                        {
-                            value: 0x02,
-                            name: 'Server Username'
-                        }
-                    ]}/>
+                <Components.SettingItem name="Username Option"
+                                        note="Changes what name shows of a user under the quote.">
+                    <Components.RadioInput
+                        value={username}
+                        onChange={(e) => SettingStore.setSetting("username", e)}
+                        options={[
+                            {value: 0x00, name: 'Username'},
+                            {value: 0x01, name: 'Global Username'},
+                            {value: 0x02, name: 'Server Username'},
+                        ]}
+                    />
                 </Components.SettingItem>
-                <Components.SettingItem name={"Reply"} note={"Should you reply to the selected message?"}>
-                    <Components.SwitchInput checked={SettingStore.getSetting("shouldReply")} onChange={(e) => {
-                        SettingStore.setSetting("shouldReply", e);
-                    }}/>
+                <Components.SettingItem name="Reply" note="Should you reply to the selected message?">
+                    <Components.SwitchInput
+                        value={shouldReply}
+                        onChange={(e) => SettingStore.setSetting("shouldReply", e)}
+                    />
                 </Components.SettingItem>
             </div>
         }

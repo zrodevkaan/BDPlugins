@@ -2,11 +2,11 @@
  * @name Quoter
  * @description Right click a message to quote your friends wild statements.
  * @author Kaan
- * @version 1.0.6
+ * @version 1.0.7
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Quoter/Quoter.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 627798
- * @canary 628758
+ * @stable 633029
+ * @canary 634365
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -191,24 +191,24 @@ async function upload(a, b, c, channelId, messageId) {
     ...messagePayload
   });
 }
+var DEFAULTS = {
+  username: 0,
+  shouldReply: false
+};
 var SettingStore = new class SS extends Utils.Store {
-  #settings = Data.load("settings");
+  #settings = { ...DEFAULTS, ...Data.load("settings") ?? {} };
   getSetting(key) {
     return this.#settings[key];
   }
   setSetting(key, value) {
     this.#settings[key] = value;
+    Data.save("settings", this.#settings);
     this.emitChange();
   }
 }();
 var Quoter = class {
   constructor() {
     this.contextMenuPatch = null;
-    Data.save("settings", {
-      username: 0,
-      shouldReply: false,
-      ...Data.load("settings")
-    });
   }
   async start() {
     this.contextMenuPatch = ContextMenu.patch("message", (res, props) => {
@@ -237,31 +237,39 @@ var Quoter = class {
   }
   getSettingsPanel() {
     return () => {
+      const username = Hooks.useStateFromStores(
+        [SettingStore],
+        () => SettingStore.getSetting("username")
+      );
+      const shouldReply = Hooks.useStateFromStores(
+        [SettingStore],
+        () => SettingStore.getSetting("shouldReply")
+      );
       return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(
         Components.SettingItem,
         {
           name: "Username Option",
           note: "Changes what name shows of a user under the quote."
         },
-        /* @__PURE__ */ BdApi.React.createElement(Components.RadioInput, { defaultValue: SettingStore.getSetting("username"), onChange: (e) => {
-          SettingStore.setSetting("username", e);
-        }, options: [
+        /* @__PURE__ */ BdApi.React.createElement(
+          Components.RadioInput,
           {
-            value: 0,
-            name: "Username"
-          },
-          {
-            value: 1,
-            name: "Global Username"
-          },
-          {
-            value: 2,
-            name: "Server Username"
+            value: username,
+            onChange: (e) => SettingStore.setSetting("username", e),
+            options: [
+              { value: 0, name: "Username" },
+              { value: 1, name: "Global Username" },
+              { value: 2, name: "Server Username" }
+            ]
           }
-        ] })
-      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Reply", note: "Should you reply to the selected message?" }, /* @__PURE__ */ BdApi.React.createElement(Components.SwitchInput, { checked: SettingStore.getSetting("shouldReply"), onChange: (e) => {
-        SettingStore.setSetting("shouldReply", e);
-      } })));
+        )
+      ), /* @__PURE__ */ BdApi.React.createElement(Components.SettingItem, { name: "Reply", note: "Should you reply to the selected message?" }, /* @__PURE__ */ BdApi.React.createElement(
+        Components.SwitchInput,
+        {
+          value: shouldReply,
+          onChange: (e) => SettingStore.setSetting("shouldReply", e)
+        }
+      )));
     };
   }
   stop() {
