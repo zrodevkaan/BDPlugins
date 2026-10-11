@@ -222,6 +222,8 @@ function ChatColorPopoutContent({targetRef, format: initialFormat = "hex"}: {
             display: "flex",
             backgroundColor: "#000",
             flexDirection: "column",
+            padding: "5px",
+            borderRadius: "8px",
             color: "#fff",
             minWidth: "500px"
         }}>

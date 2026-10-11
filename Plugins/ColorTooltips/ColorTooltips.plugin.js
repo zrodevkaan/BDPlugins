@@ -5,8 +5,8 @@
  * @description A remaster of Pu's ColorTooltips plugin, allowing you to do color conversions in chat
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ColorTooltips/ColorTooltips.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 603738
- * @canary 604200
+ * @stable 634304
+ * @canary 635524
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -1153,6 +1153,8 @@ function ChatColorPopoutContent({ targetRef, format: initialFormat = "hex" }) {
     display: "flex",
     backgroundColor: "#000",
     flexDirection: "column",
+    padding: "5px",
+    borderRadius: "8px",
     color: "#fff",
     minWidth: "500px"
   } }, /* @__PURE__ */ BdApi.React.createElement("div", { style: {
