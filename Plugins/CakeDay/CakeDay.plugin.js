@@ -405,12 +405,14 @@ var CakeSVG = ({ size }) => {
   );
 };
 var DataStore = new class CakeStore extends Utils.Store {
-  birthdays = Data.load("Birthdays") ?? {};
+  birthdays = Object.fromEntries(
+    Object.entries(Data.load("Birthdays") ?? {}).map(([id, birthday]) => [id, typeof birthday === "string" ? { date: birthday } : birthday])
+  );
   get(id) {
-    return this.birthdays[id] || {};
+    return this.birthdays[id] ?? {};
   }
-  set(id, date) {
-    this.birthdays = { ...this.birthdays, [id]: date };
+  set(id, birthday) {
+    this.birthdays = { ...this.birthdays, [id]: birthday };
     Data.save("Birthdays", this.birthdays);
     this.emitChange();
   }
@@ -450,9 +452,7 @@ var TextInput = ({ user, birthday }) => {
       onChange: (e) => {
         const newValue = e.target.value;
         setValue(newValue);
-        birthday.date = newValue;
-        birthday.shouldShow = true;
-        DataStore.set(user.id, birthday);
+        DataStore.set(user.id, { ...birthday, date: newValue, shouldShow: true });
       }
     }
   ));
@@ -692,6 +692,15 @@ var CakeDay = class {
             ModalModule.openModal((props) => /* @__PURE__ */ BdApi.React.createElement(
               Modal,
               {
+                size: "sm",
+                actions: [
+                  {
+                    label: "Apply & Close",
+                    onClick: () => {
+                      ModalModule.closeAllModals();
+                    }
+                  }
+                ],
                 ...props,
                 title: `Set ${user.globalName ?? user.username}'s birthday`
               },

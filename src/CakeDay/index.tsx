@@ -30,8 +30,6 @@ interface Birthday {
 }
 
 interface DataStoreType {
-    Birthdays: Record<string, Birthday>;
-
     [key: string]: any;
 }
 
@@ -224,14 +222,17 @@ const CakeSVG = ({size}): React.JSX.Element => {
 };
 
 const DataStore: DataStoreType = new class CakeStore extends Utils.Store {
-    private birthdays: Record<string, Birthday> = Data.load("Birthdays") ?? {};
+    private birthdays: Record<string, Birthday> = Object.fromEntries(
+        Object.entries(Data.load<Record<string, Birthday | string>>("Birthdays") ?? {})
+            .map(([id, birthday]) => [id, typeof birthday === "string" ? {date: birthday} : birthday])
+    );
 
-    get(id: string) {
-        return this.birthdays[id] || {};
+    get(id: string): Birthday {
+        return this.birthdays[id] ?? {};
     }
 
-    set(id: string, date: string) {
-        this.birthdays = {...this.birthdays, [id]: date};
+    set(id: string, birthday: Birthday) {
+        this.birthdays = {...this.birthdays, [id]: birthday};
         Data.save("Birthdays", this.birthdays);
         this.emitChange();
     }
@@ -278,9 +279,7 @@ const TextInput = ({user, birthday}: TextInputProps): React.JSX.Element => {
             onChange={(e: SyntheticEvent<HTMLInputElement>) => {
                 const newValue = e.target.value;
                 setValue(newValue);
-                birthday.date = newValue;
-                birthday.shouldShow = true;
-                DataStore.set(user.id, birthday);
+                DataStore.set(user.id, {...birthday, date: newValue, shouldShow: true});
             }}
         />
     </div>;
@@ -616,7 +615,14 @@ export default class CakeDay {
                     label: 'Set Date',
                     action: () => {
                         // im lazy....
-                        ModalModule.openModal((props) => <Modal {...props}
+                        ModalModule.openModal((props) => <Modal size={"sm"} actions={[
+                            {
+                                label: "Apply & Close",
+                                onClick: () => {
+                                    ModalModule.closeAllModals()
+                                }
+                            }
+                        ]} {...props}
                                                                 title={`Set ${user.globalName ?? user.username}'s birthday`}>
                             <TextInput user={user}
                                        birthday={birthday}/>

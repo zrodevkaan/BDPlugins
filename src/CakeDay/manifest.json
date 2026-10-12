@@ -7,7 +7,7 @@
       "title": "1.1.6 - 2024-06-17",
       "type": "added",
       "items": [
-        "Added a feature to show the birthday cake emoji on a user's profile."
+        "Uses the new BetterDiscord Modal Component for the birthday modal"
       ]
     }
   ],
