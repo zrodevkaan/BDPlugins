@@ -5,8 +5,8 @@
  * @description Copies Apples iMessage pins
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DMBubbles/DMBubbles.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -41,22 +41,56 @@ var { Webpack } = BdApi;
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
-var ContextMenuHelper = (patches) => {
-  const unpatches = [];
-  patches.forEach((patch) => {
-    unpatches.push(ContextMenu.patch(patch.navId, patch.patch));
-  });
+function ContextMenuHelper(patches) {
+  const unpatches = patches.map((p) => ContextMenu.patch(p.navId, p.patch));
   return () => unpatches.forEach((unpatch) => unpatch());
+}
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
 };
 
 // src/DMBubbles/index.tsx
@@ -64,7 +98,7 @@ var { Patcher, Webpack: Webpack3, React: React2, DOM, Data, Hooks: Hooks2, Utils
 var Module = Webpack3.getBySource(".A.CONTACTS_LIST");
 var AvatarImg = Webpack3.getByStrings("CutoutIcon", "avatarTooltipText", { searchExports: true });
 var Colors = Webpack3.getByKeys("unsafe_rawColors")?.unsafe_rawColors;
-var { Stores } = Webpack3;
+var { Stores: Stores2 } = Webpack3;
 var FavoritesStore = new class FS extends Utils.Store {
   favorites = {};
   constructor() {
@@ -109,16 +143,16 @@ var GridContainer = styled.div({
   padding: "4px 8px"
 });
 function Yeah({ id }) {
-  const userData = Hooks2.useStateFromStores([Stores.UserStore, Stores.PresenceStore, Stores.TypingStore, Stores.SelectedChannelStore], () => {
-    const user = Stores.UserStore.getUser(id);
-    const status = Stores.PresenceStore.getStatus(id);
+  const userData = Hooks2.useStateFromStores([Stores2.UserStore, Stores2.PresenceStore, Stores2.TypingStore, Stores2.SelectedChannelStore], () => {
+    const user = Stores2.UserStore.getUser(id);
+    const status = Stores2.PresenceStore.getStatus(id);
     return {
       username: user?.globalName ? user.globalName : user?.username,
       src: `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.webp?size=80`,
       status,
       statusColor: getStatusColor(status),
-      isMobile: Stores.PresenceStore.isMobileOnline(id),
-      isTyping: Stores.TypingStore.isTyping(id, Stores.SelectedChannelStore.getChannelId()),
+      isMobile: Stores2.PresenceStore.isMobileOnline(id),
+      isTyping: Stores2.TypingStore.isTyping(id, Stores2.SelectedChannelStore.getChannelId()),
       size: "SIZE_40"
     };
   });

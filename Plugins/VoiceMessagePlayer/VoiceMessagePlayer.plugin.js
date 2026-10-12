@@ -5,8 +5,8 @@
  * @description Recreation of the popout on mobile for voice messages.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/VoiceMessagePlayer/VoiceMessagePlayer.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -44,22 +44,59 @@ var { Webpack } = BdApi;
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 
 // src/VoiceMessagePlayer/index.tsx
 var { Patcher, React: React2, Webpack: Webpack3, DOM, ContextMenu: ContextMenu2, UI, Net, Utils, Data, Hooks: Hooks2 } = new BdApi(
   "VoiceMessagePlayer"
 );
-var { Stores } = Webpack3;
+var { Stores: Stores2 } = Webpack3;
 var { Store, className } = Utils;
 var { useStateFromStores } = Hooks2;
 var Module = Webpack3.getByKeys("create");
@@ -127,10 +164,10 @@ var Resume = ({ size }) => /* @__PURE__ */ BdApi.React.createElement("svg", { xm
   }
 ));
 var AudioElement = React2.memo(({ Audio }) => {
-  const AudioData = useStateFromStores([Stores.MediaPlaybackStore], () => {
+  const AudioData = useStateFromStores([Stores2.MediaPlaybackStore], () => {
     return {
-      time: Stores.MediaPlaybackStore.getPlaybackPosition(Audio.key),
-      volume: Stores.MediaPlaybackStore.getPlaybackRate(Audio.key)
+      time: Stores2.MediaPlaybackStore.getPlaybackPosition(Audio.key),
+      volume: Stores2.MediaPlaybackStore.getPlaybackRate(Audio.key)
     };
   });
   const audio = useStateFromStores(
@@ -290,7 +327,7 @@ var VoiceMessagePlayer = class {
           url: domElement.src,
           playing: false,
           muted: false,
-          currentTime: Stores.MediaPlaybackStore.getPlaybackPosition(__.playbackCacheKey),
+          currentTime: Stores2.MediaPlaybackStore.getPlaybackPosition(__.playbackCacheKey),
           volume: 1,
           key: __.playbackCacheKey
         });

@@ -5,8 +5,8 @@
  * @description doggy sucks ;p
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Signal/Signal.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

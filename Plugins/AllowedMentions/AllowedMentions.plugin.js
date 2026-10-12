@@ -5,8 +5,8 @@
  * @description Allows you to select various mentions like @everyone, @here, users, roles or add flags to the message!
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/AllowedMentions/AllowedMentions.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 619060
- * @canary 619391
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

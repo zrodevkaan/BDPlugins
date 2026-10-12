@@ -1,9 +1,3 @@
-/**
- * @name MentionFix
- * @version 2.0.6
- * @description Hate the `@unknown-user` when mentioning someone you've never met? Yeah this fixes that. :>
- * @author Kaan
- */
 import {getKey} from "@helpers";
 
 const {Webpack, Patcher, React, Hooks, Components} = new BdApi('MentionFix')

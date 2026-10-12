@@ -1,10 +1,3 @@
-/**
- * @name Signal
- * @author Kaan
- * @version 1.0.1
- * @description doggy sucks ;p
- */
-
 const {Webpack, Data, Utils, Components} = new BdApi('Signal');
 
 const [settings, setSettings] = Utils.createSignal(Data.load('settings') || [{

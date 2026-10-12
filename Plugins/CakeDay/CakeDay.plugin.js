@@ -3,10 +3,11 @@
  * @author Kaan
  * @version 1.1.6
  * @description Birfdays in discord
+ * @changelog 1.1.6: 1.1.6 - 2024-06-17; Added a feature to show the birthday cake emoji on a user's profile.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 621195
- * @canary 622061
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -34,6 +35,9 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// <define:__PLUGIN_CHANGELOG__>
+var define_PLUGIN_CHANGELOG_default = [{ version: "1.1.6", title: "1.1.6 - 2024-06-17", type: "added", items: ["Added a feature to show the birthday cake emoji on a user's profile."] }];
+
 // helpers/webpack.ts
 var { Webpack } = BdApi;
 function resolveModule(filter, options) {
@@ -60,48 +64,165 @@ function wpGetBySource(source, options) {
 // helpers/index.tsx
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
+function parseVersion(version) {
+  const match = version.match(
+    /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/
+  );
+  if (!match) throw new Error(`Invalid semantic version "${version}"`);
+  const prerelease = match[4] ? match[4].split(".").map((identifier) => {
+    if (/^\d+$/.test(identifier)) {
+      if (identifier.length > 1 && identifier.startsWith("0")) {
+        throw new Error(`Invalid numeric prerelease identifier in "${version}"`);
+      }
+      return Number(identifier);
+    }
+    return identifier;
+  }) : [];
+  return { numbers: [Number(match[1]), Number(match[2]), Number(match[3])], prerelease };
+}
+function compareVersions(left, right) {
+  const a = parseVersion(left);
+  const b = parseVersion(right);
+  for (let index = 0; index < a.numbers.length; index++) {
+    const leftNumber = a.numbers[index];
+    const rightNumber = b.numbers[index];
+    if (leftNumber !== void 0 && rightNumber !== void 0 && leftNumber !== rightNumber) {
+      return leftNumber > rightNumber ? 1 : -1;
+    }
+  }
+  if (!a.prerelease.length || !b.prerelease.length) {
+    if (a.prerelease.length === b.prerelease.length) return 0;
+    return a.prerelease.length ? -1 : 1;
+  }
+  const length = Math.max(a.prerelease.length, b.prerelease.length);
+  for (let index = 0; index < length; index++) {
+    const leftIdentifier = a.prerelease[index];
+    const rightIdentifier = b.prerelease[index];
+    if (leftIdentifier === void 0 || rightIdentifier === void 0) {
+      return leftIdentifier === rightIdentifier ? 0 : leftIdentifier === void 0 ? -1 : 1;
+    }
+    if (leftIdentifier === rightIdentifier) continue;
+    if (typeof leftIdentifier === "number" && typeof rightIdentifier !== "number") return -1;
+    if (typeof leftIdentifier !== "number" && typeof rightIdentifier === "number") return 1;
+    return leftIdentifier > rightIdentifier ? 1 : -1;
+  }
+  return 0;
+}
+function ChangeLog(entries = define_PLUGIN_CHANGELOG_default) {
+  const api = new BdApi("CakeDay");
+  const savedVersion = api.Data.load("lastVersion");
+  if (savedVersion != null && typeof savedVersion !== "string") {
+    throw new Error(`[${"CakeDay"}] saved changelog version is not a string`);
+  }
+  const latestSeenVersion = typeof savedVersion === "string" ? savedVersion : null;
+  parseVersion("1.1.6");
+  for (let index = 1; index < entries.length; index++) {
+    const newer = entries[index - 1];
+    const older = entries[index];
+    if (newer && older && compareVersions(newer.version, older.version) <= 0) {
+      throw new Error(
+        `[${"CakeDay"}] changelog entries must be ordered newest to oldest`
+      );
+    }
+  }
+  if (latestSeenVersion === "1.1.6") return false;
+  const availableEntries = entries.filter(
+    (entry) => compareVersions(entry.version, "1.1.6") <= 0
+  );
+  const changes = availableEntries.filter(
+    (entry) => latestSeenVersion ? compareVersions(entry.version, latestSeenVersion) > 0 : entry === availableEntries[0]
+  );
+  if (changes.length) {
+    api.UI.showChangelogModal({
+      title: "CakeDay",
+      subtitle: "1.1.6",
+      changes: changes.map(({ version: _version, ...change }) => change)
+    });
+  }
+  api.Data.save("lastVersion", "1.1.6");
+  return changes.length > 0;
+}
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
 function getKey(module2, fn) {
   for (const key in module2) {
     if (fn(module2[key])) return { key, module: module2 };
   }
 }
-function findInTree(tree, predicate, { walkable = [], ignore = [], maxDepth = 100 } = {}) {
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function* childrenOf(node, { walkable = [], ignore = [] }) {
+  const keys = walkable.length ? walkable.filter((k) => k in node) : Object.keys(node).filter((k) => !ignore.includes(k));
+  for (const key of keys) {
+    const child = node[key];
+    if (Array.isArray(child)) yield* child;
+    else yield child;
+  }
+}
+function findInTree(tree, predicate, options = {}) {
+  const { maxDepth = 100 } = options;
+  const seen = /* @__PURE__ */ new WeakSet();
   function walk(node, depth) {
-    if (!node || typeof node !== "object" || depth > maxDepth) return null;
+    if (!node || typeof node !== "object" || depth > maxDepth || seen.has(node)) return null;
+    seen.add(node);
     if (predicate(node)) return node;
-    const keys = walkable.length ? walkable.filter((k) => k in node) : Object.keys(node).filter((k) => !ignore.includes(k));
-    for (const key of keys) {
-      const child = node[key];
-      if (Array.isArray(child)) {
-        for (const item of child) {
-          const result = walk(item, depth + 1);
-          if (result !== null) return result;
-        }
-      } else {
-        const result = walk(child, depth + 1);
-        if (result !== null) return result;
-      }
+    for (const child of childrenOf(node, options)) {
+      const result = walk(child, depth + 1);
+      if (result !== null) return result;
     }
     return null;
   }
   return walk(tree, 0);
 }
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 
 // src/CakeDay/index.tsx
 var { Patcher, Webpack: Webpack3, React: React2, Data, DOM, ContextMenu: ContextMenu2, UI, Net, Utils, Components, Hooks: Hooks2 } = new BdApi("CakeDay");
 var ModalModule = wpGetByKeys(["openModal"]);
-var Modal = Webpack3.getByStrings("actionBarInputLayout", { searchExports: true });
+var Modal = BdApi.Components.Modal;
 var Confetti = Webpack3.getBySource("createMultipleConfettiAt:()=>[]");
 var ConfettiContext = Object.values(Confetti).find((m) => typeof m === "object");
 var Badges = Webpack3.getBySource('action:"PRESS_BADGE"');
@@ -416,6 +537,7 @@ function reactSvgToDataUri(Component, props = {}) {
 var CakeDay = class {
   interval;
   start() {
+    ChangeLog();
     Patcher.after(Badges, "A", (that, [args], res) => {
       const userData = args.displayProfile;
       const birthday = DataStore.get(userData?.userId) || {};

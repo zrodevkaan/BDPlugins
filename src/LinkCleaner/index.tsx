@@ -1,10 +1,3 @@
-/**
- * @name LinkCleaner
- * @author kaan
- * @description Clean URLs automatically every time you send a message.
- * @version 1.0.5
- */
-
 const {Webpack, Patcher, Utils, Net, Logger} = new BdApi("LinkCleaner")
 const MessageActions = Webpack.getByKeys("sendMessage")
 

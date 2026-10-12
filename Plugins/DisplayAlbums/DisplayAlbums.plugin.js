@@ -1,12 +1,12 @@
 /**
  * @name DisplayAlbums
- * @description Replaces the default MP3/mu3a etc files with a nicer display
  * @author Kaan
  * @version 1.0.0
+ * @description Replaces the default MP3/mu3a etc files with a nicer display
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DisplayAlbums/DisplayAlbums.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __create = Object.create;
@@ -15,6 +15,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
@@ -40,10 +43,17 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// <define:__PLUGIN_CHANGELOG__>
+var init_define_PLUGIN_CHANGELOG = __esm({
+  "<define:__PLUGIN_CHANGELOG__>"() {
+  }
+});
+
 // src/DisplayAlbums/mp3tag.js
 var require_mp3tag = __commonJS({
   "src/DisplayAlbums/mp3tag.js"(exports, module2) {
     "use strict";
+    init_define_PLUGIN_CHANGELOG();
     !(function(t, r) {
       "object" == typeof exports && "undefined" != typeof module2 ? module2.exports = r() : "function" == typeof define && define.amd ? define(r) : (t = "undefined" != typeof globalThis ? globalThis : t || self).MP3Tag = r();
     })(exports, (function() {
@@ -2978,25 +2988,67 @@ __export(index_exports, {
   default: () => DisplayAlbums
 });
 module.exports = __toCommonJS(index_exports);
+init_define_PLUGIN_CHANGELOG();
 var import_mp3tag = __toESM(require_mp3tag());
 
+// helpers/index.tsx
+init_define_PLUGIN_CHANGELOG();
+
 // helpers/webpack.ts
+init_define_PLUGIN_CHANGELOG();
 var { Webpack } = BdApi;
 
 // helpers/index.tsx
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 
 // src/DisplayAlbums/index.tsx
 var { Patcher, Webpack: Webpack3, Data, React: React2, Utils } = new BdApi("DisplayAlbums");

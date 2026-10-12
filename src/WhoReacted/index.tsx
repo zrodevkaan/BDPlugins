@@ -1,8 +1,3 @@
-/**
- * @name WhoReacted
- * @author Kaan
- * @version 1.0.0
- */
 import {wpGetBySource} from "@helpers";
 
 const {Webpack, Patcher} = new BdApi("WhoReacted");

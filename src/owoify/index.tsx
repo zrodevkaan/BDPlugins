@@ -1,9 +1,3 @@
-/**
- * @name owoify
- * @author Kaan
- * @version 1.0.0
- * @icon https://upload.wikimedia.org/wikipedia/commons/f/f8/Stylized_uwu_emoticon.svg
- */
 const {Patcher, React, Webpack, DOM, ContextMenu, Commands, Net} = new BdApi('owoify');
 const {Stores} = Webpack;
 

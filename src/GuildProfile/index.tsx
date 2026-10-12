@@ -1,9 +1,3 @@
-/**
- * @name GuildProfile
- * @author Kaan
- * @version 2.0.1
- * @description Gives every server a profile popout of a guild spanning to Mutual friends, blocked and even emojis!
- */
 import {waitForExportByKeys} from "@helpers";
 
 const {Webpack, Webpack: {Filters}, ContextMenu, DOM, React, Components, UI} = BdApi;

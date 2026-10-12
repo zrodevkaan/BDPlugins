@@ -1,0 +1,7 @@
+{
+  "name": "GuildContexts",
+  "version": "1.0.0",
+  "changelog": [],
+  "author": "Kaan",
+  "description": "Allows you to open a user in the context of a mutual guild you share with said person"
+}

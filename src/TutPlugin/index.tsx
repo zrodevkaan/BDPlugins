@@ -1,8 +1,3 @@
-/**
- * @name TutPlugin
- * @author based
- * @version 1.0.0
- */
 import type {ReactNode} from "react";
 
 const {Patcher, Hooks, Utils, Webpack} = new BdApi("TutPlugin")

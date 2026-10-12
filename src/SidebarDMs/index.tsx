@@ -1,10 +1,3 @@
-/**
- * @name SidebarDMs
- * @author Kaan
- * @version 1.0.1
- * @description startTyping compiler test
- */
-
 const App = new BdApi("SidebarDMs");
 const {Patcher, Webpack, Utils} = App;
 

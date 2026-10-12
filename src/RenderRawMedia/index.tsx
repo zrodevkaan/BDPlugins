@@ -1,9 +1,3 @@
-/**
- * @name RenderRawMedia
- * @author Kaan
- * @version 1.0.0
- * @description Renders the direct TikTok, Media or more links in chat
- */
 const { Webpack, Net, React } = new BdApi("RenderRawMedia")
 
 import { FFmpeg } from '@ffmpeg/ffmpeg'

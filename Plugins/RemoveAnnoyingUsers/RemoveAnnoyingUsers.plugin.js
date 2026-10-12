@@ -5,8 +5,8 @@
  * @description Does a person you blocked keep yapping? Remove those pesky annoying users/blocked users in your chat!
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/RemoveAnnoyingUsers/RemoveAnnoyingUsers.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

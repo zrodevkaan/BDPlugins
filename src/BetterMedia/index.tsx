@@ -1,10 +1,3 @@
-/**
- * @name BetterMedia
- * @description Expands image and emoji features. Reverse image search, download, copy url, copy image, and more!
- * @version 1.0.0
- * @author Kaan
- */
-
 const { Webpack, Patcher, DOM, Components, React, ContextMenu, UI, Net, Data, Plugins } = new BdApi(
   'BetterMedia'
 );

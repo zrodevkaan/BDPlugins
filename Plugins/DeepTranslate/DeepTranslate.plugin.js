@@ -5,8 +5,8 @@
  * @description Allow translations from DeepL, the best translator in existence. You can autotranslate selected users
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DeepTranslate/DeepTranslate.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 611316
- * @canary 611599
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -145,6 +145,7 @@ async function translate(text, targetLang, sourceLang = "auto", signal) {
   if (source) body.source_lang = source;
   const response = await Net.fetch("https://oneshot-free.www.deepl.com/v1/translate", {
     // https://oneshot-pro.www.deepl.com/v1/translate also exists but this requires a bearer.
+    timeout: null,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -406,21 +407,58 @@ var { Webpack: Webpack2 } = BdApi;
 var { Webpack: Webpack3, React: React3, ContextMenu: ContextMenu2, Hooks: Hooks2 } = BdApi;
 var { createElement, forwardRef } = React3;
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React3.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
 function getKey(module2, fn) {
   for (const key in module2) {
     if (fn(module2[key])) return { key, module: module2 };
   }
 }
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack3.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 
 // src/DeepTranslate/index.tsx
 var MAX_CHARS = 1500;

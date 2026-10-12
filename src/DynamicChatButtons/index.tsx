@@ -1,10 +1,3 @@
-/**
- * @name DynamicChatButtons
- * @author Kaan
- * @version 1.0.0
- * @description Customize which chat buttons are visible in Discord by right clicking the chat area and forget that breakable css filter that only supports aria-label :)
- */
-
 const {Patcher, React, Webpack, DOM, ContextMenu, Data, Utils, Hooks} = new BdApi('DynamicChatButtons')
 const {useStateFromStores} = Hooks
 

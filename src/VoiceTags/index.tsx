@@ -1,9 +1,3 @@
-/**
- * @name VoiceTags
- * @description Displays if someone is in your current voice channel.
- * @author Kaan
- * @version 1.0.0
- */
 import type {MessageJSON} from "discord-types/general";
 
 const {Webpack, Hooks, Utils, Patcher, DOM, Components, Data} = new BdApi("VoiceTags")

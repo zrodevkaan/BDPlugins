@@ -1,10 +1,3 @@
-/**
- * @name QuickResponses
- * @author Kaan
- * @version 1.0.1
- * @description Allows you to quickly send snippets or complete messages using a slash command like style
- */
-
 const { Webpack, DOM, Data, ContextMenu, Components, React, Net, Patcher } = new BdApi('QuickResponses')
 import css from './index.css?raw'
 

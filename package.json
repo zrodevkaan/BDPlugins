@@ -9,6 +9,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@betterdiscord/types": "^1.14.2",
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",

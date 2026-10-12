@@ -1,9 +1,3 @@
-/**
- * @name BetterMediaPlayer
- * @description Tries to improve the video player with more information.
- * @version 1.0.0
- * @author Kaan
- */
 import { styled } from "@helpers";
 
 const { Webpack, Patcher, Utils, Hooks, DOM, React } = new BdApi("BetterMediaPlayer");

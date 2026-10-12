@@ -1,10 +1,3 @@
-/**
- * @name ColorTooltips
- * @author Kaan
- * @version 1.1.0
- * @description A remaster of Pu's ColorTooltips plugin, allowing you to do color conversions in chat
- */
-
 const {React, Webpack, Components, DOM} = new BdApi("ColorTooltips");
 import TinyColor from "tinycolor2";
 

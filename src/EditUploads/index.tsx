@@ -1,10 +1,3 @@
-/**
- * @name EditUploads
- * @author Kaan
- * @version 1.0.0
- * @description Edit uploads before they are sent
- */
-
 const {Webpack, Data, Utils, Components, React, Patcher} = new BdApi("EditUploads")
 const Toolbar = Webpack.getBySource(/spoiler:!.{1,3}.spoiler/)
 const ToolbarButton = Webpack.getByStrings('actionBarIcon')

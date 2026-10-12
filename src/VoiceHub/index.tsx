@@ -1,10 +1,3 @@
-/**
- * @name VoiceHub
- * @author Kaan
- * @version 2.0.0
- * @description Wanna know what people are in VCs? Here ya go.
- */
-
 const { Patcher, Webpack, React, DOM, Data } = new BdApi('VoiceHub');
 const Module = Webpack.getBySource('.A.CONTACTS_LIST');
 

@@ -1,10 +1,11 @@
 /**
  * @name ExperimentHelper
+ * @version 1.0.0
  * @description A ton of experiment based helpers
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ExperimentHelper/ExperimentHelper.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -87,7 +88,7 @@ var ModalSystem = Webpack.getMangled(".modalKey?", {
   closeModal: Webpack.Filters.byStrings(".onCloseCallback()"),
   closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
-var Modal = Webpack.getModule((x) => x.Modal).Modal;
+var Modal = BdApi.Components.Modal;
 var TextInput = Webpack.getByStrings("setShouldValidate", { searchExports: true });
 var ArrowUpRightDashes = (props) => /* @__PURE__ */ BdApi.React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", ...props }, /* @__PURE__ */ BdApi.React.createElement(
   "path",

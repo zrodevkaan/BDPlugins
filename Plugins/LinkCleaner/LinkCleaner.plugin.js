@@ -1,12 +1,12 @@
 /**
  * @name LinkCleaner
  * @author kaan
- * @description Clean URLs automatically every time you send a message.
  * @version 1.0.5
+ * @description Clean URLs automatically every time you send a message.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkCleaner/LinkCleaner.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 590738
- * @canary 590965
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

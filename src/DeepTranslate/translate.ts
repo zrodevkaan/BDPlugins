@@ -86,6 +86,7 @@ export async function translate(text: string, targetLang: keyof typeof TARGET_LA
 
     const response = await Net.fetch('https://oneshot-free.www.deepl.com/v1/translate', {
         // https://oneshot-pro.www.deepl.com/v1/translate also exists but this requires a bearer.
+        timeout: null,
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

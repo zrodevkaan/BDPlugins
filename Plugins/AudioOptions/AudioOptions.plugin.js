@@ -5,8 +5,8 @@
  * @description Adds an option button next to voice messages.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/AudioOptions/AudioOptions.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 591071
- * @canary 591157
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 
@@ -34,21 +34,58 @@ function wpGet(filter, options) {
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
 function getKey(module2, fn) {
   for (const key in module2) {
     if (fn(module2[key])) return { key, module: module2 };
   }
 }
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 
 // src/AudioOptions/index.tsx
 var { Patcher, React: React2, Webpack: Webpack3, DOM, ContextMenu: ContextMenu2, UI, Net, Utils } = new BdApi("AudioOptions");

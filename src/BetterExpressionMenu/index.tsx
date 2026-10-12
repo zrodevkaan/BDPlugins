@@ -1,9 +1,3 @@
-/**
- * @name BetterExpressionMenu
- * @description Adds more options to the expression popup
- * @version 1.0.0
- * @author Kaan
- */
 const { React, Webpack, Patcher, Utils, DOM, Components, Net, Data, ContextMenu } = new BdApi('BetterExpressionMenu');
 const { SearchInput, DropdownInput, Tooltip, TextInput, Button: BetterDiscordButton } = Components;
 const Buttons = Webpack.getBySource("isSubmitButtonEnabled", '.A.getActiveOption(')

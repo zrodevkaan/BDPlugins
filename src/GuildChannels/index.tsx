@@ -1,8 +1,3 @@
-/**
- * @name GuildChannels
- * @author Kaan
- */
-
 const { Webpack, Patcher, Utils, React } = new BdApi("GuildChannels")
 const { Filters } = Webpack
 

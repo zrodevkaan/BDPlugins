@@ -1,14 +1,15 @@
-import { build, context } from "esbuild";
+import { build } from "esbuild";
 import path from "path";
 import { fileURLToPath } from "url";
 import { readdir } from "fs/promises";
 import * as fs from "node:fs";
 import os from "os";
-import { extractMeta, fetchLatestWorkingVersion } from "./util/index.js";
+import { createMeta, fetchLatestWorkingVersion } from "./util/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const srcDir = path.resolve(__dirname, "src");
 const distDir = path.resolve(__dirname, "Plugins");
+const semverPattern = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/;
 
 function parseArgs(argv) {
     const args = argv.slice(2);
@@ -45,7 +46,11 @@ function getBetterDiscordPath() {
 
 async function getPluginFolders() {
     const entries = await readdir(srcDir, { withFileTypes: true });
-    return entries.filter(dirent => dirent.isDirectory() && !dirent.name.endsWith(".ignore"));
+    return entries.filter(dirent =>
+        dirent.isDirectory() &&
+        !dirent.name.endsWith(".ignore") &&
+        fs.existsSync(path.join(srcDir, dirent.name, "index.tsx"))
+    );
 }
 
 const reactPlugin = {
@@ -74,46 +79,76 @@ const helpersAliasPlugin = {
 
 async function createBuildConfig(pluginName, version, cversion) {
     const entryFile = path.join(srcDir, pluginName, "index.tsx");
+    const manifestFile = path.join(srcDir, pluginName, "manifest.json");
+    const manifest = JSON.parse(await fs.promises.readFile(manifestFile, "utf-8"));
 
-    try {
-        const fileContents = await fs.promises.readFile(entryFile, "utf-8");
-
-        await fs.promises.mkdir(path.join(distDir, pluginName), { recursive: true });
-
-        const baseConfig = {
-            entryPoints: [entryFile],
-            bundle: true,
-            format: "cjs",
-            treeShaking: true,
-            banner: { js: await extractMeta(fileContents, pluginName, version, cversion) },
-            loader: {
-                ".js": "jsx",
-                ".jsx": "jsx",
-                ".ts": "tsx",
-                ".tsx": "tsx",
-                ".css": "text",
-            },
-            resolveExtensions: [".tsx", ".ts", ".jsx", ".js"],
-            jsxFactory: "BdApi.React.createElement",
-            jsxFragment: "BdApi.React.Fragment",
-            external: ["discord-types/*", "discord-types/other"],
-            plugins: [reactPlugin, helpersAliasPlugin],
-        };
-
-        return [
-            {
-                ...baseConfig,
-                outfile: path.join(distDir, pluginName, `${pluginName}.plugin.js`),
-            },
-            {
-                ...baseConfig,
-                outfile: path.join(getBetterDiscordPath(), `${pluginName}.plugin.js`),
-            }
-        ];
-    } catch (error) {
-        console.error(`Failed to create build config for ${pluginName}:`, error);
-        return null;
+    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+        throw new Error(`${manifestFile} must contain a JSON object`);
     }
+    if (typeof manifest.name !== "string" || !manifest.name.trim()) {
+        throw new Error(`${manifestFile} must define a non-empty "name"`);
+    }
+    if (typeof manifest.version !== "string" || !semverPattern.test(manifest.version)) {
+        throw new Error(`${manifestFile} must define a semantic "version"`);
+    }
+    for (const field of ["author", "description", "icon"]) {
+        if (manifest[field] !== undefined && typeof manifest[field] !== "string") {
+            throw new Error(`${manifestFile} field "${field}" must be a string`);
+        }
+    }
+    if (
+        manifest.changelog !== undefined &&
+        (!Array.isArray(manifest.changelog) || manifest.changelog.some(entry =>
+            !entry ||
+            typeof entry !== "object" ||
+            typeof entry.version !== "string" ||
+            !semverPattern.test(entry.version) ||
+            typeof entry.title !== "string" ||
+            !["progress", "fixed", "added", "improved"].includes(entry.type) ||
+            !Array.isArray(entry.items) ||
+            entry.items.some(item => typeof item !== "string") ||
+            (entry.blurb !== undefined && typeof entry.blurb !== "string")
+        ))
+    ) {
+        throw new Error(`${manifestFile} field "changelog" must be an array of versioned BetterDiscord changelog entries`);
+    }
+
+    await fs.promises.mkdir(path.join(distDir, pluginName), { recursive: true });
+
+    const baseConfig = {
+        entryPoints: [entryFile],
+        bundle: true,
+        format: "cjs",
+        treeShaking: true,
+        banner: { js: createMeta(manifest, pluginName, version, cversion) },
+        loader: {
+            ".js": "jsx",
+            ".jsx": "jsx",
+            ".ts": "tsx",
+            ".tsx": "tsx",
+            ".css": "text",
+        },
+        resolveExtensions: [".tsx", ".ts", ".jsx", ".js"],
+        jsxFactory: "BdApi.React.createElement",
+        jsxFragment: "BdApi.React.Fragment",
+        plugins: [reactPlugin, helpersAliasPlugin],
+        define: {
+            __PLUGIN_NAME__: JSON.stringify(manifest.name),
+            __PLUGIN_VERSION__: JSON.stringify(manifest.version),
+            __PLUGIN_CHANGELOG__: JSON.stringify(manifest.changelog ?? []),
+        },
+    };
+
+    return [
+        {
+            ...baseConfig,
+            outfile: path.join(distDir, pluginName, `${pluginName}.plugin.js`),
+        },
+        {
+            ...baseConfig,
+            outfile: path.join(getBetterDiscordPath(), `${pluginName}.plugin.js`),
+        }
+    ];
 }
 
 async function main() {
@@ -131,9 +166,7 @@ async function main() {
         if (targetPlugin && dirent.name !== targetPlugin) continue;
 
         const pluginConfigs = await createBuildConfig(dirent.name, version, cversion);
-        if (pluginConfigs) {
-            configs.push(...pluginConfigs);
-        }
+        configs.push(...pluginConfigs);
     }
 
     if (configs.length === 0) {

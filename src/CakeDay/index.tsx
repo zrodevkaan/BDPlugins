@@ -1,16 +1,10 @@
-/**
- * @name CakeDay
- * @author Kaan
- * @version 1.1.6
- * @description Birfdays in discord
- */
-import {findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
+import {ChangeLog, findInTree, getKey, wpGetByKeys, wpGetBySource} from "@helpers";
 import type {SyntheticEvent} from "react";
 
 const {Patcher, Webpack, React, Data, DOM, ContextMenu, UI, Net, Utils, Components, Hooks} = new BdApi('CakeDay');
 
 const ModalModule = wpGetByKeys(["openModal"])
-const Modal = Webpack.getByStrings("actionBarInputLayout", {searchExports: true})
+const Modal = BdApi.Components.Modal
 
 interface BdApi {
     Patcher: any;
@@ -416,6 +410,8 @@ export default class CakeDay {
     private interval: NodeJS.Timeout;
 
     start(): void {
+        ChangeLog();
+
         Patcher.after(Badges, "A", (that: any, [args]: [DisplayProfileArgs], res: any) => {
             const userData = args.displayProfile;
 

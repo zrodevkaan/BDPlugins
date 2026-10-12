@@ -1,10 +1,3 @@
-/**
- * @name UnhideSpam
- * @author Kaan
- * @version 1.0.0
- * @description you love spam :)
- */
-
 const {Webpack} = new BdApi("UnhideSpam");
 const originalGetUser = Webpack.getStore('UserStore').getUser;
 

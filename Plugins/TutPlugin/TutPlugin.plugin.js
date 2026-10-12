@@ -4,8 +4,8 @@
  * @version 1.0.0
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/TutPlugin/TutPlugin.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

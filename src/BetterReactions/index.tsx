@@ -1,9 +1,3 @@
-/**
- * @name BetterReactions
- * @description Enhanced reactions with better styling, animations, and user avatars
- * @author Kaan
- * @version 2.4.0
- */
 const {Webpack, Patcher, DOM, React, Hooks, Components, Utils} = new BdApi('BetterReactions')
 const {useStateFromStores} = Hooks;
 const {Store} = Utils;

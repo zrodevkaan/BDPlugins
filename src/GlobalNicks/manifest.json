@@ -1,0 +1,7 @@
+{
+  "name": "GlobalNicks",
+  "version": "1.0.0",
+  "changelog": [],
+  "author": "Kaan",
+  "description": "Overrides non-friend users name with a global nickname"
+}

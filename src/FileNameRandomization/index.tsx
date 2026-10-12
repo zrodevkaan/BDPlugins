@@ -1,9 +1,3 @@
-/**
- * @name FileNameRandomization
- * @author kaan
- * @version 2.1.0
- * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
- */
 const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 const {React, Webpack, Patcher, Components, Data} = new BdApi('FileNameRandomization');

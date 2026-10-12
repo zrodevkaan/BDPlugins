@@ -1,10 +1,3 @@
-/**
- * @name AllowedMentions
- * @author kaan
- * @version 1.0.0
- * @description Allows you to select various mentions like @everyone, @here, users, roles or add flags to the message!
- */
-
 import {BetterDiscord, Buttons, HeaderComponents, MentionSVG, MessageActions, Popout} from "./shared.tsx";
 import type {Role, User} from "discord-types/general";
 

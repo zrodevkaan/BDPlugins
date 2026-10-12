@@ -1,9 +1,3 @@
-/**
- * @name Timezones
- * @author Kaan
- * @version 2.1.6
- * @description Allows you to display a local timezone you set for a user.
- */
 import type {User} from "discord-types/general";
 import {ContextMenuHelper, getKey, styled, waitAndPatch, waitForExportBySource, wpGetByStrings} from "@helpers";
 

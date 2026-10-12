@@ -1,13 +1,12 @@
 /**
  * @name BetterReactions
- * @description Enhanced reactions with better styling, animations, and user avatars
  * @author Kaan
  * @version 2.4.0
- * @keyframes pulse {
+ * @description Enhanced reactions with better styling, animations, and user avatars
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterReactions/BetterReactions.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

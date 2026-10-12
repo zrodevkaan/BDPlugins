@@ -1,9 +1,3 @@
-/**
- * @name LiveTyping
- * @author Kaan
- * @version 2.1.5
- * @description Typing status per user on servers, channels or threads.
- */
 import {getKey} from "@helpers";
 
 const {Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu} = new BdApi("LiveTyping");

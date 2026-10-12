@@ -1,10 +1,3 @@
-/**
- * @name GlobalNicks
- * @author Kaan
- * @version 1.0.0
- * @description Overrides non-friend users name with a global nickname
- */
-
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils, Data} = new BdApi('GlobalNicks')
 const UserStore = Webpack.getStore('UserStore')
 const RelationshipStore = Webpack.getStore('RelationshipStore')

@@ -1,8 +1,3 @@
-/**
- * @name ThemeCompiler
- * @description Autocompiles theme files
- * @version 1.0.0
- */
 const css = `
 $(97009, form) {
   display: grid;

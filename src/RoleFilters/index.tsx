@@ -1,10 +1,3 @@
-/**
- * @name RoleFilters
- * @author Kaan
- * @version 1.0.0
- * @description Allows you to hide, show and collapse roles!
- */
-
 import type { Channel } from "discord-types/general";
 
 const { Patcher, Webpack, React, Data, UI, Utils, ContextMenu } = new BdApi("RoleFilters");

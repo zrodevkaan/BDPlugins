@@ -1,9 +1,3 @@
-/**
- * @name DeepTranslate
- * @author kaan
- * @version 1.0.0
- * @description Allow translations from DeepL, the best translator in existence. You can autotranslate selected users
- */
 import {Components, ContextMenu, Hooks, Patcher, React, Utils, Webpack} from "./global.ts";
 import type {ReactNode} from "react";
 import type {Message, User} from "discord-types/general";

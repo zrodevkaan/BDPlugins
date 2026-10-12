@@ -1,9 +1,3 @@
-/**
- * @name ChannelDMs
- * @author Kaan
- * @version 1.0.0
- * @description Recreates sterns old ChannelDms plugin that a allows you to open DMs from a server channel on the memberlist
- */
 const {Patcher, Webpack, Utils, React, Components, Hooks} = new BdApi("ChannelDMs")
 const {Button} = Components
 const Popout = Webpack.getModule((m) => m?.Animation, {searchExports: true, raw: true}).exports.y;

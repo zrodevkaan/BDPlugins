@@ -1,10 +1,3 @@
-/**
- * @name Quoter
- * @description Right click a message to quote your friends wild statements.
- * @author Kaan
- * @version 1.0.7
- */
-
 const {Webpack, Patcher, ContextMenu, Data, Components, Utils} = new BdApi("Quoter")
 
 function calculateFontSize({

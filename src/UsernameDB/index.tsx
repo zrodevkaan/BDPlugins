@@ -1,9 +1,3 @@
-/**
- * @name UsernameDB
- * @author Kaan
- * @description Colors or names ;p
- */
-
 const { Webpack, Patcher, Data, React, Net } = new BdApi('UsernameDB')
 
 const UsernameHeader = Webpack.getBySource('subscribeToGroupId', 'renderRemixTag', 'decorations')

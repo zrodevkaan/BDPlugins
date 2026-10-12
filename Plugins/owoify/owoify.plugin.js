@@ -3,13 +3,10 @@
  * @author Kaan
  * @version 1.0.0
  * @icon https://upload.wikimedia.org/wikipedia/commons/f/f8/Stylized_uwu_emoticon.svg
- * @Caktukk Translator | Free & AI-Powered",
- * @mTOn Translator | Free & AI-Powered",
- * @oik_wow Translator | Free & AI-Powered",
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/owoify/owoify.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

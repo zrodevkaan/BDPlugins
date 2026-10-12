@@ -1,9 +1,3 @@
-/**
- * @name VoiceMessagePlayer
- * @author Kaan
- * @version 1.0.0
- * @description Recreation of the popout on mobile for voice messages.
- */
 const { Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils, Data, Hooks } = new BdApi(
   'VoiceMessagePlayer'
 );

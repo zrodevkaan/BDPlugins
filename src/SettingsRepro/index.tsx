@@ -1,9 +1,3 @@
-/**
- * @name SettingsRepro
- * @author Kaan
- * @version 1.0.0
- */
-
 const { Webpack, Patcher, React } = new BdApi("SettingsRepro")
 
 const RootSectionModule = Webpack.getModule(x => x.E?.key == "$Root")

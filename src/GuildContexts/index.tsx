@@ -1,10 +1,3 @@
-/**
- * @name GuildContexts
- * @author Kaan
- * @version 1.0.0
- * @description Allows you to open a user in the context of a mutual guild you share with said person
- */
-
 const { Patcher, React, Webpack, ContextMenu } = new BdApi('GuildContexts');
 
 const UserProfileModal = Webpack.getByKeys('openUserProfileModal');

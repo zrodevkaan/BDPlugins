@@ -1,0 +1,7 @@
+{
+  "name": "DynamicChatButtons",
+  "version": "1.0.0",
+  "changelog": [],
+  "author": "Kaan",
+  "description": "Customize which chat buttons are visible in Discord by right clicking the chat area and forget that breakable css filter that only supports aria-label :)"
+}

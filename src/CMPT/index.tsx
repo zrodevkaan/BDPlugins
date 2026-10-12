@@ -1,10 +1,3 @@
-/**
- * @name CMPT
- * @description 
- * @author Kaan
- * @version 1.0.0
- */
-
 import { ContextMenuHelper } from "@helpers";
 
 export default class CMPT {

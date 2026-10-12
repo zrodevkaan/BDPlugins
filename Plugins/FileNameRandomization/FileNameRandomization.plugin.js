@@ -5,8 +5,8 @@
  * @description Randomizes uploaded file names for enhanced privacy and organization. Users can opt for a unique random string, a Unix timestamp, or a custom format.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/FileNameRandomization/FileNameRandomization.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 
@@ -93,14 +93,14 @@ var caseOptions = [
 var SettingsPanel = () => {
   const { useTimestamp, prefix, suffix, randomLength, customFormat, preserveOriginalName, caseOption } = useSettingsStore();
   const onFieldChange = (key, value) => settingsStore.set(key, value);
-  return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(SettingGroup, { name: "General", collapsible: false, shown: true }, /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Use Unix Timestamp", note: "Use a Unix timestamp instead of random characters.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(SwitchInput, { value: useTimestamp, onChange: (e) => onFieldChange("useTimestamp", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Preserve Original Filename", note: "Include the original filename in the new name.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(SwitchInput, { value: preserveOriginalName, onChange: (e) => onFieldChange("preserveOriginalName", e) }))), /* @__PURE__ */ BdApi.React.createElement(SettingGroup, { name: "Formatting", collapsible: false, shown: true }, /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Case Option", note: "Choose how the generated filename casing is applied." }, /* @__PURE__ */ BdApi.React.createElement(
+  return /* @__PURE__ */ BdApi.React.createElement("div", null, /* @__PURE__ */ BdApi.React.createElement(SettingGroup, { name: "General", collapsible: false, shown: true }, /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Use Unix Timestamp", note: "Use a Unix timestamp instead of random characters.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(SwitchInput, { defaultValue: useTimestamp, onChange: (e) => onFieldChange("useTimestamp", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Preserve Original Filename", note: "Include the original filename in the new name.", inline: true }, /* @__PURE__ */ BdApi.React.createElement(SwitchInput, { defaultValue: preserveOriginalName, onChange: (e) => onFieldChange("preserveOriginalName", e) }))), /* @__PURE__ */ BdApi.React.createElement(SettingGroup, { name: "Formatting", collapsible: false, shown: true }, /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Case Option", note: "Choose how the generated filename casing is applied." }, /* @__PURE__ */ BdApi.React.createElement(
     RadioInput,
     {
       options: caseOptions,
-      value: caseOption,
+      defaultValue: caseOption,
       onChange: (e) => onFieldChange("caseOption", e)
     }
-  )), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Prefix", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { value: prefix, onChange: (e) => onFieldChange("prefix", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Suffix", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { value: suffix, onChange: (e) => onFieldChange("suffix", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Random String Length", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { type: "number", value: randomLength, onChange: (e) => onFieldChange("randomLength", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Custom Format", note: "Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders." }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { value: customFormat, onChange: (e) => onFieldChange("customFormat", e) }))));
+  )), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Prefix", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { defaultValue: prefix, onChange: (e) => onFieldChange("prefix", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Suffix", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { defaultValue: suffix, onChange: (e) => onFieldChange("suffix", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Random String Length", inline: true }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { type: "number", defaultValue: randomLength, onChange: (e) => onFieldChange("randomLength", e) })), /* @__PURE__ */ BdApi.React.createElement(SettingItem, { name: "Custom Format", note: "Use {prefix}, {suffix}, {timestamp}, {random}, and {original} as placeholders." }, /* @__PURE__ */ BdApi.React.createElement(TextInput, { defaultValue: customFormat, onChange: (e) => onFieldChange("customFormat", e) }))));
 };
 var FileNameRandomization = class {
   start() {

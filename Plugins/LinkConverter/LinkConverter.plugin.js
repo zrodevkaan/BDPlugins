@@ -1,12 +1,12 @@
 /**
  * @name LinkConverter
- * @description Converts all links into a configurable embed link
  * @author Kaan
  * @version 2.0.6
+ * @description Converts all links into a configurable embed link
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LinkConverter/LinkConverter.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 627798
- * @canary 628362
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

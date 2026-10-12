@@ -1,9 +1,3 @@
-/**
- * @name AudioOptions
- * @author Kaan
- * @version 2.0.2
- * @description Adds an option button next to voice messages.
- */
 import {getKey, wpGet, wpWait} from "@helpers";
 
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils} = new BdApi('AudioOptions')

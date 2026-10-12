@@ -1,9 +1,3 @@
-/**
- * @name DisplayAlbums
- * @description Replaces the default MP3/mu3a etc files with a nicer display
- * @author Kaan
- * @version 1.0.0
- */
 const { Patcher, Webpack, Data, React, Utils } = new BdApi("DisplayAlbums")
 import MP3Tag from './mp3tag'
 import { styled } from '@helpers';

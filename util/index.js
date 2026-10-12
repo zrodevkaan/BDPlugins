@@ -14,32 +14,31 @@ async function fetchLatestWorkingVersion(channel = "stable") {
     return match ? match[1] : null;
 }
 
-async function extractMeta(fileContents, pluginName, version, cversion) {
-    const metaInfoByName = {};
+function createMeta(manifest, pluginName, version, cversion) {
+    const sanitize = value => String(value).replace(/\r?\n/g, " ").replace(/\*\//g, "* /");
+    const lines = [];
 
-    const matches = fileContents.matchAll(/@(\w+)\s+(.*)/g);
-
-    for (const match of matches) {
-        const [, name, value] = match;
-        metaInfoByName[name] = value;
+    for (const field of ["name", "author", "version", "description", "icon"]) {
+        const value = manifest[field];
+        if (typeof value === "string" && value.trim()) {
+            lines.push(` * @${field} ${sanitize(value.trim())}`);
+        }
     }
 
-    let jsdocHeader = "/**\n";
-
-    for (const [key, value] of Object.entries(metaInfoByName)) {
-        jsdocHeader += ` * @${key} ${value}\n`;
+    for (const entry of manifest.changelog ?? []) {
+        const details = [entry.title, ...entry.items].filter(Boolean).join("; ");
+        lines.push(` * @changelog ${sanitize(`${entry.version}: ${details}`)}`);
     }
 
-    jsdocHeader += ` * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/${pluginName}/${pluginName}.plugin.js\n`;
-    jsdocHeader += ` * @invite t3zMgv7Nvb\n`;
-    jsdocHeader += ` * @stable ${version}\n`;
-    jsdocHeader += ` * @canary ${cversion}\n`;
-    jsdocHeader += " */";
+    lines.push(` * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/${pluginName}/${pluginName}.plugin.js`);
+    lines.push(" * @invite t3zMgv7Nvb");
+    lines.push(` * @stable ${version}`);
+    lines.push(` * @canary ${cversion}`);
 
-    return jsdocHeader;
+    return ["/**", ...lines, " */"].join("\n");
 }
 
 module.exports = {
-    extractMeta,
+    createMeta,
     fetchLatestWorkingVersion
 };

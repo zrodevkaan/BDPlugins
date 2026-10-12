@@ -1,8 +1,3 @@
-/**
- * @name ExperimentHelper
- * @description A ton of experiment based helpers
- */
-
 const {React, Webpack, Data, Patcher, ContextMenu, UI} = new BdApi('ExperimentHelper')
 
 const UserStore = Webpack.getStore("UserStore")
@@ -86,7 +81,7 @@ var ModalSystem = Webpack.getMangled(".modalKey?", {
     closeAllModals: Webpack.Filters.byStrings(".getState();for")
 });
 
-const Modal = Webpack.getModule(x => x.Modal).Modal
+const Modal = BdApi.Components.Modal;
 const TextInput = Webpack.getByStrings('setShouldValidate', {searchExports: true})
 
 const ArrowUpRightDashes = (props) => (

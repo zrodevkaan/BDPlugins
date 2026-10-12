@@ -1,12 +1,12 @@
 /**
  * @name BetterExpressionMenu
- * @description Adds more options to the expression popup
- * @version 1.0.0
  * @author Kaan
+ * @version 1.0.0
+ * @description Adds more options to the expression popup
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterExpressionMenu/BetterExpressionMenu.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

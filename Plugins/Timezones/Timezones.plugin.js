@@ -5,8 +5,8 @@
  * @description Allows you to display a local timezone you set for a user.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/Timezones/Timezones.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 621195
- * @canary 622040
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -40,44 +40,84 @@ var { Webpack } = BdApi;
 // helpers/index.tsx
 var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
 var { createElement, forwardRef } = React;
+function orNull(value) {
+  return value ?? null;
+}
+function toOptions({ declaration, ...rest } = {}) {
+  return declaration ? { ...rest, declarationFilter: declaration } : rest;
+}
 function styledBase(tag, cssOrFn) {
-  return (props) => {
+  const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
-    return React.createElement(tag, { ...props, style: { ...style, ...props.style } });
+    return createElement(tag, { ...props, style: { ...style, ...props.style } });
   };
+  Styled.displayName = `styled.${String(tag)}`;
+  return Styled;
 }
 var styled = new Proxy(styledBase, {
-  get(target, p) {
-    return (cssOrFn) => target(p, cssOrFn);
-  }
+  get: (target, p) => (css) => target(p, css)
 });
-var ContextMenuHelper = (patches) => {
-  const unpatches = [];
-  patches.forEach((patch) => {
-    unpatches.push(ContextMenu.patch(patch.navId, patch.patch));
-  });
+function ContextMenuHelper(patches) {
+  const unpatches = patches.map((p) => ContextMenu.patch(p.navId, p.patch));
   return () => unpatches.forEach((unpatch) => unpatch());
+}
+async function waitForExportByFilter(filter, options) {
+  return orNull(await Webpack2.waitForModule(filter, toOptions(options)));
+}
+function waitForExportBySource(source, o) {
+  return waitForExportByFilter(Webpack2.Filters.bySource(source), o);
+}
+function lazyExport(getter) {
+  let cached;
+  const resolve = () => cached ??= getter();
+  return new Proxy({}, {
+    get: (_, key) => resolve()?.[key],
+    set: (_, key, value) => {
+      const target = resolve();
+      if (target) target[key] = value;
+      return true;
+    },
+    has: (_, key) => {
+      const t = resolve();
+      return t ? key in t : false;
+    },
+    ownKeys: () => {
+      const t = resolve();
+      return t ? Reflect.ownKeys(t) : [];
+    },
+    getOwnPropertyDescriptor: (_, key) => {
+      const t = resolve();
+      const desc = t ? Reflect.getOwnPropertyDescriptor(t, key) : void 0;
+      return desc && { ...desc, configurable: true };
+    }
+  });
+}
+function waitAndPatch(patcher, filter, key, callback) {
+  const controller = new AbortController();
+  let unpatch = null;
+  let cancelled = false;
+  waitForExportByFilter(filter, { signal: controller.signal }).then((mod) => {
+    if (!cancelled && mod) unpatch = patcher.after(mod, key, callback);
+  }).catch(() => {
+  });
+  return () => {
+    cancelled = true;
+    controller.abort();
+    unpatch?.();
+  };
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
 };
-function waitAndPatch(Patcher2, filter, key, callback) {
-  Webpack2.waitForModule(filter).then((mod) => Patcher2.after(mod, key, callback));
-}
-function findDeclaration(declarations, predicate) {
-  for (const key in declarations) {
-    if (predicate(declarations[key])) return { key, module: declarations };
-  }
-  return null;
-}
-function resolveFromRaw(raw, declaration) {
-  if (!raw?.declarations) return null;
-  const found = findDeclaration(raw.declarations, declaration);
-  return found ? found.module[found.key] : null;
-}
-async function waitForExportBySource(source, options = {}) {
-  const raw = await Webpack2.waitForModule(Webpack2.Filters.bySource(source), { raw: true });
-  if (!raw) return null;
-  if (options.declaration) return resolveFromRaw(raw, options.declaration);
-  return raw.exports ?? null;
-}
 
 // src/Timezones/index.tsx
 var { Patcher, Webpack: Webpack3, Data, Utils, Hooks: Hooks2, ContextMenu: ContextMenu2, Components, React: React2 } = new BdApi("Timezones");

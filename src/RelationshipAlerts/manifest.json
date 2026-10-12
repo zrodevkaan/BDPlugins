@@ -1,0 +1,7 @@
+{
+  "name": "RelationshipAlerts",
+  "version": "1.0.0",
+  "changelog": [],
+  "author": "kaan",
+  "description": "Logs when someone is added or removed as a friend"
+}

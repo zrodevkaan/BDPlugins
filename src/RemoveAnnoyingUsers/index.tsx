@@ -1,10 +1,3 @@
-/**
- * @name RemoveAnnoyingUsers
- * @author Kaan
- * @version 1.0.0
- * @description Does a person you blocked keep yapping? Remove those pesky annoying users/blocked users in your chat!
- */
-
 const {Patcher, React, Webpack, DOM, ContextMenu, UI, Net, Utils, Data} = new BdApi('RemoveAnnoyingUsers')
 const MessageModule = Webpack.getBySource('ChatMessage', 'THREAD_STARTER_MESSAGE')
 const BlockedMessage = Webpack.getBySource('blockedAction', 'blockedMessageText', 'fgq1go')

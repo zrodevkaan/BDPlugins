@@ -1,9 +1,3 @@
-/**
- * @name DMBubbles
- * @author Kaan
- * @version 1.0.0
- * @description Copies Apples iMessage pins
- */
 import {ContextMenuHelper, styled} from "@helpers";
 
 const {Patcher, Webpack, React, DOM, Data, Hooks, Utils, ContextMenu} = new BdApi('DMBubbles');

@@ -1,9 +1,3 @@
-/**
- * @name InAppNotifications
- * @author kaan
- * @version 1.0.2
- * @description A compact and sleek UI for messages. its for my liking, there is no config besides keywords.
- */
 import type {Message} from "discord-types/general";
 import {
     wpFilter,

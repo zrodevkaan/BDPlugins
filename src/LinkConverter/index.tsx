@@ -1,9 +1,3 @@
-/**
- * @name LinkConverter
- * @description Converts all links into a configurable embed link
- * @author Kaan
- * @version 2.0.6
- */
 const { Webpack, Patcher, Data, React, Components, DOM, ContextMenu } = new BdApi("LinkConverter")
 const { useState } = React;
 const { Button, ColorInput, SwitchInput } = Components

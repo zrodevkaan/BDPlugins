@@ -6,7 +6,7 @@
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/ColorTooltips/ColorTooltips.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 634304
- * @canary 635524
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;

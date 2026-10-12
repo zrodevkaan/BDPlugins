@@ -1,13 +1,12 @@
 /**
  * @name BetterMedia
- * @description Expands image and emoji features. Reverse image search, download, copy url, copy image, and more!
- * @version 1.0.0
  * @author Kaan
- * @keyframes barrel-roll {
+ * @version 1.0.0
+ * @description Expands image and emoji features. Reverse image search, download, copy url, copy image, and more!
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/BetterMedia/BetterMedia.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 585344
- * @canary 585560
+ * @stable 634304
+ * @canary 635660
  */
 "use strict";
 var __defProp = Object.defineProperty;
