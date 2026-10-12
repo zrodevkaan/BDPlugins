@@ -517,7 +517,7 @@ export default class CakeDay {
         Webpack.Stores.UserStore._dispatcher.subscribe("HOUR", this.updateUserThatSomePersonBirthdayIsTodayLmao)
         ContextMenu.patch('user-context', this.patchUserContextMenu);
 
-        this.interval = setInterval(() => Webpack.Stores.A._dispatcher.dispatch({type: "HOUR"}), 60 * 60 * 1000);
+        this.interval = setInterval(() => Webpack.Stores.UserStore._dispatcher.dispatch({type: "HOUR"}), 60 * 60 * 1000);
     }
 
     updateUserThatSomePersonBirthdayIsTodayLmao(): void {

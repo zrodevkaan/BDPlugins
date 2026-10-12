@@ -3,7 +3,7 @@
  * @author Kaan
  * @version 1.1.6
  * @description Birfdays in discord
- * @changelog 1.1.6: 1.1.6 - 2024-06-17; Uses the new BetterDiscord Modal Component for the birthday modal
+ * @changelog 1.1.6: Changes; Fixed Dispatch being undefined, preventing the birthday notifications from showing.; Uses the new BetterDiscord Modal Component for the birthday modal
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 634304
@@ -36,7 +36,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // <define:__PLUGIN_CHANGELOG__>
-var define_PLUGIN_CHANGELOG_default = [{ version: "1.1.6", title: "1.1.6 - 2024-06-17", type: "added", items: ["Uses the new BetterDiscord Modal Component for the birthday modal"] }];
+var define_PLUGIN_CHANGELOG_default = [{ version: "1.1.6", title: "Changes", type: "added", items: ["Fixed Dispatch being undefined, preventing the birthday notifications from showing.", "Uses the new BetterDiscord Modal Component for the birthday modal"] }];
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;
@@ -595,7 +595,7 @@ var CakeDay = class {
     });
     Webpack3.Stores.UserStore._dispatcher.subscribe("HOUR", this.updateUserThatSomePersonBirthdayIsTodayLmao);
     ContextMenu2.patch("user-context", this.patchUserContextMenu);
-    this.interval = setInterval(() => Webpack3.Stores.A._dispatcher.dispatch({ type: "HOUR" }), 60 * 60 * 1e3);
+    this.interval = setInterval(() => Webpack3.Stores.UserStore._dispatcher.dispatch({ type: "HOUR" }), 60 * 60 * 1e3);
   }
   updateUserThatSomePersonBirthdayIsTodayLmao() {
     const allBirthdays = Object.entries(DataStore.getAll()).filter(([id, data]) => checkDate(data.date));

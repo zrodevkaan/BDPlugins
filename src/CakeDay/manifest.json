@@ -7,6 +7,7 @@
       "title": "Changes",
       "type": "added",
       "items": [
+        "Fixed Dispatch being undefined, preventing the birthday notifications from showing.",
         "Uses the new BetterDiscord Modal Component for the birthday modal"
       ]
     }
