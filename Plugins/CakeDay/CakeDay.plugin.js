@@ -3,7 +3,7 @@
  * @author Kaan
  * @version 1.1.6
  * @description Birfdays in discord
- * @changelog 1.1.6: 1.1.6 - 2024-06-17; Added a feature to show the birthday cake emoji on a user's profile.
+ * @changelog 1.1.6: 1.1.6 - 2024-06-17; Uses the new BetterDiscord Modal Component for the birthday modal
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/CakeDay/CakeDay.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 634304
@@ -36,7 +36,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // <define:__PLUGIN_CHANGELOG__>
-var define_PLUGIN_CHANGELOG_default = [{ version: "1.1.6", title: "1.1.6 - 2024-06-17", type: "added", items: ["Added a feature to show the birthday cake emoji on a user's profile."] }];
+var define_PLUGIN_CHANGELOG_default = [{ version: "1.1.6", title: "1.1.6 - 2024-06-17", type: "added", items: ["Uses the new BetterDiscord Modal Component for the birthday modal"] }];
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;

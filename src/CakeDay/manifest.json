@@ -4,7 +4,7 @@
   "changelog": [
     {
       "version": "1.1.6",
-      "title": "1.1.6 - 2024-06-17",
+      "title": "Changes",
       "type": "added",
       "items": [
         "Uses the new BetterDiscord Modal Component for the birthday modal"
