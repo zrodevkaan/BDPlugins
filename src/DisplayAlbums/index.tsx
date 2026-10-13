@@ -3,9 +3,9 @@ import MP3Tag from './mp3tag'
 import { styled } from '@helpers';
 
 const Slider = Webpack.getModule(Webpack.Filters.byStrings("stickToMarkers", 'fillStyles'), { searchExports: true })
-const Clickable = Webpack.getModule(x => String(x.render).includes('secondaryColorClass:'), { searchExports: true })
+const Clickable = Webpack.getModule(x => String(x).includes('secondaryColorClass:'), { searchExports: true })
 const Mediabar = Webpack.getByStrings('sliderWrapperClassName')
-const AudioModule = Webpack.getBySource('clip_participants', 'playbackCacheKey')
+const AudioModule = Webpack.getBySource('VOICE_MESSAGE_PLAYBACK_STARTED,{message_id:')
 
 const PlayerBackground = styled.div({
     background: 'var(--background-base-low)',

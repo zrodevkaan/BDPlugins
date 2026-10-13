@@ -5,8 +5,8 @@
  * @description Replaces the default MP3/mu3a etc files with a nicer display
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/DisplayAlbums/DisplayAlbums.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 634304
- * @canary 635660
+ * @stable 636431
+ * @canary 637009
  */
 "use strict";
 var __create = Object.create;
@@ -2999,8 +2999,20 @@ init_define_PLUGIN_CHANGELOG();
 var { Webpack } = BdApi;
 
 // helpers/index.tsx
-var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
+var { Webpack: Webpack2, React, ContextMenu, Hooks, Utils, Data } = BdApi;
 var { createElement, forwardRef } = React;
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 function styledBase(tag, cssOrFn) {
   const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
@@ -3012,6 +3024,40 @@ function styledBase(tag, cssOrFn) {
 var styled = new Proxy(styledBase, {
   get: (target, p) => (css) => target(p, css)
 });
+var SettingsStore = class extends BdApi.Utils.Store {
+  constructor(defaults, dataKey = "settings") {
+    super();
+    this.defaults = defaults;
+    this.dataKey = dataKey;
+    const saved = BdApi.Data.load("DisplayAlbums", dataKey);
+    this.settings = { ...defaults, ...saved };
+  }
+  settings;
+  get(key) {
+    return this.settings[key];
+  }
+  set(key, value) {
+    this.settings = { ...this.settings, [key]: value };
+    this.persist();
+  }
+  del(key) {
+    this.set(key, this.defaults[key]);
+  }
+  all() {
+    return this.settings;
+  }
+  reset() {
+    this.settings = { ...this.defaults };
+    this.persist();
+  }
+  use(key) {
+    return BdApi.Hooks.useStateFromStores(this, () => this.get(key), [key]);
+  }
+  persist() {
+    BdApi.Data.save("DisplayAlbums", this.dataKey, this.settings);
+    this.emitChange();
+  }
+};
 function lazyExport(getter) {
   let cached;
   const resolve = () => cached ??= getter();
@@ -3037,25 +3083,13 @@ function lazyExport(getter) {
     }
   });
 }
-function lazyStore(name) {
-  return lazyExport(() => Webpack2.getStore(name));
-}
-var Stores = {
-  User: lazyStore("UserStore"),
-  Guild: lazyStore("GuildStore"),
-  Channel: lazyStore("ChannelStore"),
-  GuildMember: lazyStore("GuildMemberStore"),
-  SelectedGuild: lazyStore("SelectedGuildStore"),
-  SelectedChannel: lazyStore("SelectedChannelStore"),
-  Message: lazyStore("MessageStore")
-};
 
 // src/DisplayAlbums/index.tsx
-var { Patcher, Webpack: Webpack3, Data, React: React2, Utils } = new BdApi("DisplayAlbums");
+var { Patcher, Webpack: Webpack3, Data: Data2, React: React2, Utils: Utils2 } = new BdApi("DisplayAlbums");
 var Slider = Webpack3.getModule(Webpack3.Filters.byStrings("stickToMarkers", "fillStyles"), { searchExports: true });
-var Clickable = Webpack3.getModule((x) => String(x.render).includes("secondaryColorClass:"), { searchExports: true });
+var Clickable = Webpack3.getModule((x) => String(x).includes("secondaryColorClass:"), { searchExports: true });
 var Mediabar = Webpack3.getByStrings("sliderWrapperClassName");
-var AudioModule = Webpack3.getBySource("clip_participants", "playbackCacheKey");
+var AudioModule = Webpack3.getBySource("VOICE_MESSAGE_PLAYBACK_STARTED,{message_id:");
 var PlayerBackground = styled.div({
   background: "var(--background-base-low)",
   color: "var(--text-default)",
@@ -3110,7 +3144,7 @@ var SliderContainer = styled.div({
 function Show({ when, children }) {
   return when && children;
 }
-var ID3CacheStore = new class ID3 extends Utils.Store {
+var ID3CacheStore = new class ID3 extends Utils2.Store {
   id3cache = {};
   cacheID3(name, id3) {
     this.id3cache[name] = id3;
