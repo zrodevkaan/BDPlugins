@@ -1,0 +1,12 @@
+{
+  "name": "OpenInApp",
+  "version": "1.0.0",
+  "changelog": [{
+    "version": "1.0.0",
+    "title": "Initial release",
+    "type": "added",
+    "items": ["Initial release of OpenInApp"]
+  }],
+  "description": "Open links in the app instead of the browser",
+  "author": "Kaan"
+}
