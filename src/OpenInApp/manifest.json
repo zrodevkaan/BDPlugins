@@ -1,12 +1,26 @@
 {
   "name": "OpenInApp",
-  "version": "1.0.0",
-  "changelog": [{
-    "version": "1.0.0",
-    "title": "Initial release",
-    "type": "added",
-    "items": ["Initial release of OpenInApp"]
-  }],
+  "version": "1.0.1",
+  "changelog": [
+    {
+      "version": "1.0.1",
+      "title": "More Protocol/Link Support",
+      "type": "added",
+      "items": [
+        "Added support for jetbrains",
+        "Added support for OS only based protocols (e.g. Maps, RiotClient, etc.)",
+        "Added support for basic links. (e.g. Steam, Spotify and Tidal) If the link is not supported, it will be opened in the browser instead."
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "title": "Initial release",
+      "type": "added",
+      "items": [
+        "Initial release of OpenInApp"
+      ]
+    }
+  ],
   "description": "Open links in the app instead of the browser",
   "author": "Kaan"
 }

@@ -25,10 +25,10 @@ function createMeta(manifest, pluginName, version, cversion) {
         }
     }
 
-    for (const entry of manifest.changelog ?? []) {
-        const details = [entry.title, ...entry.items].filter(Boolean).join("; ");
-        lines.push(` * @changelog ${sanitize(`${entry.version}: ${details}`)}`);
-    }
+    // for (const entry of manifest.changelog ?? []) {
+    //     const details = [entry.title, ...entry.items].filter(Boolean).join("; ");
+    //     lines.push(` * @changelog ${sanitize(`${entry.version}: ${details}`)}`);
+    // }
 
     lines.push(` * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/${pluginName}/${pluginName}.plugin.js`);
     lines.push(" * @invite t3zMgv7Nvb");

@@ -1,13 +1,12 @@
 /**
  * @name OpenInApp
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description Open links in the app instead of the browser
- * @changelog 1.0.0: Initial release; Initial release of OpenInApp
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/OpenInApp/OpenInApp.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 636431
- * @canary 637121
+ * @canary 637239
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -36,7 +35,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // <define:__PLUGIN_CHANGELOG__>
-var define_PLUGIN_CHANGELOG_default = [{ version: "1.0.0", title: "Initial release", type: "added", items: ["Initial release of OpenInApp"] }];
+var define_PLUGIN_CHANGELOG_default = [{ version: "1.0.1", title: "More Protocol/Link Support", type: "added", items: ["Added support for jetbrains", "Added support for OS only based protocols (e.g. Maps, RiotClient, etc.)", "Added support for basic links. (e.g. Steam, Spotify and Tidal) If the link is not supported, it will be opened in the browser instead."] }, { version: "1.0.0", title: "Initial release", type: "added", items: ["Initial release of OpenInApp"] }];
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;
@@ -146,7 +145,7 @@ function ChangeLog(entries = define_PLUGIN_CHANGELOG_default) {
     throw new Error(`[${"OpenInApp"}] saved changelog version is not a string`);
   }
   const latestSeenVersion = typeof savedVersion === "string" ? savedVersion : null;
-  parseVersion("1.0.0");
+  parseVersion("1.0.1");
   for (let index = 1; index < entries.length; index++) {
     const newer = entries[index - 1];
     const older = entries[index];
@@ -156,9 +155,9 @@ function ChangeLog(entries = define_PLUGIN_CHANGELOG_default) {
       );
     }
   }
-  if (latestSeenVersion === "1.0.0") return false;
+  if (latestSeenVersion === "1.0.1") return false;
   const availableEntries = entries.filter(
-    (entry) => compareVersions(entry.version, "1.0.0") <= 0
+    (entry) => compareVersions(entry.version, "1.0.1") <= 0
   );
   const changes = availableEntries.filter(
     (entry) => latestSeenVersion ? compareVersions(entry.version, latestSeenVersion) > 0 : entry === availableEntries[0]
@@ -166,11 +165,11 @@ function ChangeLog(entries = define_PLUGIN_CHANGELOG_default) {
   if (changes.length) {
     api.UI.showChangelogModal({
       title: "OpenInApp",
-      subtitle: "1.0.0",
+      subtitle: "1.0.1",
       changes: changes.map(({ version: _version, ...change }) => change)
     });
   }
-  api.Data.save("lastVersion", "1.0.0");
+  api.Data.save("lastVersion", "1.0.1");
   return changes.length > 0;
 }
 function lazyStore(name) {
@@ -261,9 +260,20 @@ var { Components } = new BdApi("OpenInApp");
 var { Tooltip } = Components;
 var ICON_SIZE = 24;
 var GITHUB_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943'/%3E%3C/svg%3E";
+var PLATFORM_NAMES = {
+  win32: "Windows",
+  darwin: "macOS",
+  linux: "Linux"
+};
+var currentPlatform = window.DiscordNative?.process?.platform ?? (0, eval)("process").platform;
+var isSupported = (platforms) => !platforms || platforms.includes(currentPlatform);
+var platformLabel = (platforms) => platforms.map((p) => PLATFORM_NAMES[p]).join(" / ");
 var Modules = wpGetBulkKeyed({
   "SimpleMarkdown": {
     filter: (m) => m.reactParserFor
+  },
+  "URLMarkdown": {
+    filter: BdApi.Webpack.Filters.bySource(".A.MASKED_LINK),")
   }
 });
 var open = (url) => {
@@ -278,11 +288,13 @@ function generateFaviconURL(website, size = ICON_SIZE) {
 }
 var escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 var protocolRegex = (protocol) => new RegExp(`^${escapeRegex(protocol)}(?:[^\\s<>]*[^\\s<>.,;:!?)\\]'"])?`);
-var app = (protocol, site, trusted = false, execute = open) => ({
+var openBasic = (url) => window.open(url, "_blank", "noopener noreferrer");
+var app = (protocol, site, trusted = false, platforms, execute = open) => ({
   protocol,
   icon: generateFaviconURL(site),
   trusted,
-  execute
+  execute,
+  platforms
 });
 var Protocols = {
   // OMG, MOM GET THE CAMERA, I NEED TO TAKE A PICTURE OF THIS PROTOCOL
@@ -292,6 +304,7 @@ var Protocols = {
     execute: (url) => window.open(url),
     trusted: true
   },
+  "Jetbrains": app("jetbrains://", "jetbrains.com", true, ["win32", "darwin", "linux"]),
   // Communication / social
   Spotify: app("spotify://", "spotify.com", true),
   Skype: app("skype://", "skype.com"),
@@ -318,7 +331,7 @@ var Protocols = {
   Origin: app("origin2://", "ea.com"),
   Minecraft: app("minecraft://", "minecraft.net"),
   Roblox: app("roblox://", "roblox.com", true),
-  Riot: app("riotclient://", "riotgames.com"),
+  Riot: app("riotclient://", "riotgames.com", false, ["win32"]),
   // Dev tools / productivity
   VSCode: app("vscode://", "code.visualstudio.com", true),
   Cursor: app("cursor://", "cursor.com"),
@@ -330,13 +343,23 @@ var Protocols = {
   Linear: app("linear://", "linear.app"),
   Zotero: app("zotero://", "zotero.org"),
   // Media
-  "Apple Music": app("music://", "music.apple.com"),
+  "Apple Music": app("music://", "music.apple.com", false, ["darwin"]),
   Tidal: app("tidal://", "tidal.com"),
   Plex: app("plex://", "plex.tv"),
   // Maps / mail / misc
-  Maps: app("maps://", "maps.apple.com"),
+  Maps: app("maps://", "maps.apple.com", true, ["darwin"]),
   Mailto: app("mailto:", "mail.google.com", true),
   Tel: app("tel:", "google.com")
+};
+var OpenProtocols = {
+  steam: "steam://openurl/",
+  spotify: "spotify://",
+  tidal: "tidal://"
+};
+var Links = {
+  steam: ["steamcommunity.com", "help.steampowered.com", "store.steampowered.com", "s.team"],
+  spotify: ["open.spotify.com", "play.spotify.com"],
+  tidal: ["tidal.com", "listen.tidal.com"]
 };
 var Settings = new SettingsStore({
   trusted: [],
@@ -357,12 +380,13 @@ var ProtocolMention = styled.span({
 });
 var TRUSTED_COLOR = "hsl(139, calc(var(--saturation-factor, 1) * 47.3%), 43.9%)";
 var UNTRUSTED_COLOR = "hsl(0, calc(var(--saturation-factor, 1) * 100%), 50%)";
-var ProtocolContainer = styled.div(({ protocol, trusted }) => {
+var ProtocolContainer = styled.div(({ protocol, trusted, supported = true }) => {
   const isTrusted = trusted ?? Settings.get("trusted").includes(protocol);
+  const accent = !supported ? "var(--text-muted)" : isTrusted ? TRUSTED_COLOR : UNTRUSTED_COLOR;
   return {
     background: "var(--background-surface-high)",
     border: "1px solid var(--border-subtle)",
-    borderInlineStart: `4px solid ${isTrusted ? TRUSTED_COLOR : UNTRUSTED_COLOR}`,
+    borderInlineStart: `4px solid ${accent}`,
     borderRadius: 4,
     padding: 8,
     display: "flex",
@@ -371,7 +395,8 @@ var ProtocolContainer = styled.div(({ protocol, trusted }) => {
     width: "100%",
     maxWidth: 200,
     boxSizing: "border-box",
-    cursor: "pointer"
+    cursor: supported ? "pointer" : "not-allowed",
+    opacity: supported ? 1 : 0.6
   };
 });
 var Header = styled.div({
@@ -411,12 +436,27 @@ var OpenIcon = () => /* @__PURE__ */ BdApi.React.createElement("svg", { width: 1
     d: "M14 3v2h3.6l-9.8 9.8 1.4 1.4L19 6.4V10h2V3zM5 5h6V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-6h-2v6H5z"
   }
 ));
-function ReactiveParent({ node, protocol, icon, name, trusted, execute }) {
+function ReactiveParent({ node, protocol, icon, name, trusted, execute, platforms }) {
   const isCompact = Settings.use("compact");
-  return isCompact ? /* @__PURE__ */ BdApi.React.createElement(Tooltip, { text: node.content }, (x) => /* @__PURE__ */ BdApi.React.createElement(ProtocolMention, { ...x, className: "mention interactive" }, /* @__PURE__ */ BdApi.React.createElement(Icon, { size: "16px", src: icon }), /* @__PURE__ */ BdApi.React.createElement("span", { onClick: (e) => {
-    e.preventDefault();
+  const supported = isSupported(platforms);
+  const unsupportedText = platforms ? `Only works on ${platformLabel(platforms)}` : "";
+  const run = () => {
+    if (!supported) return UI.showToast(`${name}: ${unsupportedText}`, { type: "error" });
     execute(node.content);
-  } }, name))) : /* @__PURE__ */ BdApi.React.createElement(
+  };
+  return isCompact ? /* @__PURE__ */ BdApi.React.createElement(Tooltip, { text: supported ? node.content : unsupportedText }, (x) => /* @__PURE__ */ BdApi.React.createElement(
+    ProtocolMention,
+    {
+      ...x,
+      className: "mention interactive",
+      style: supported ? void 0 : { opacity: 0.6, cursor: "not-allowed" }
+    },
+    /* @__PURE__ */ BdApi.React.createElement(Icon, { size: "16px", src: icon }),
+    /* @__PURE__ */ BdApi.React.createElement("span", { onClick: (e) => {
+      e.preventDefault();
+      run();
+    } }, name)
+  )) : /* @__PURE__ */ BdApi.React.createElement(
     ProtocolEmbed,
     {
       protocol,
@@ -424,16 +464,28 @@ function ReactiveParent({ node, protocol, icon, name, trusted, execute }) {
       icon,
       name,
       url: node.content,
-      execute
+      execute: run,
+      supported,
+      unsupportedText
     }
   );
 }
-function ProtocolEmbed({ protocol, icon, name, url, execute, trusted }) {
-  return /* @__PURE__ */ BdApi.React.createElement(ProtocolContainer, { trusted, protocol, onClick: (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    execute(url);
-  } }, /* @__PURE__ */ BdApi.React.createElement(Header, null, /* @__PURE__ */ BdApi.React.createElement(Icon, { src: icon, alt: "" }), /* @__PURE__ */ BdApi.React.createElement(Name, null, name), /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null)), /* @__PURE__ */ BdApi.React.createElement(Tooltip, { text: url }, (props) => /* @__PURE__ */ BdApi.React.createElement(Footer, { ...props }, url)));
+function ProtocolEmbed({ protocol, icon, name, url, execute, trusted, supported, unsupportedText }) {
+  return /* @__PURE__ */ BdApi.React.createElement(
+    ProtocolContainer,
+    {
+      trusted,
+      protocol,
+      supported,
+      onClick: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        execute();
+      }
+    },
+    /* @__PURE__ */ BdApi.React.createElement(Header, null, /* @__PURE__ */ BdApi.React.createElement(Icon, { src: icon, alt: "" }), /* @__PURE__ */ BdApi.React.createElement(Name, null, name), supported && /* @__PURE__ */ BdApi.React.createElement(OpenIcon, null)),
+    supported ? /* @__PURE__ */ BdApi.React.createElement(Tooltip, { text: url }, (props) => /* @__PURE__ */ BdApi.React.createElement(Footer, { ...props }, url)) : /* @__PURE__ */ BdApi.React.createElement(Footer, { style: { color: "var(--status-warning)" } }, unsupportedText)
+  );
 }
 function SettingsPanel() {
   return /* @__PURE__ */ BdApi.React.createElement(Components.SettingGroup, { name: "Embed Options" }, /* @__PURE__ */ BdApi.React.createElement(
@@ -449,7 +501,7 @@ function SettingsPanel() {
 var OpenInApp = class {
   start() {
     ChangeLog();
-    for (const [name, { protocol, icon, execute, trusted }] of Object.entries(Protocols)) {
+    for (const [name, { protocol, icon, execute, trusted, platforms }] of Object.entries(Protocols)) {
       const regex = protocolRegex(protocol);
       Modules.SimpleMarkdown.defaultRules[name.toLowerCase()] = {
         order: 0,
@@ -463,18 +515,40 @@ var OpenInApp = class {
             icon,
             name,
             trusted,
-            execute
+            execute,
+            platforms
           }
         )
       };
     }
     Modules.SimpleMarkdown.parse = Modules.SimpleMarkdown.reactParserFor(Modules.SimpleMarkdown.defaultRules);
+    BdApi.Patcher.before("OpenInApp", Modules.URLMarkdown.A, "type", (_, args) => {
+      const props = args[0];
+      const originalOnClick = props.onClick;
+      props.onClick = (e) => {
+        let domain;
+        try {
+          domain = new URL(props.href).hostname;
+        } catch {
+          return originalOnClick?.(e);
+        }
+        const entry = Object.entries(Links).find(([_2, sites]) => sites.includes(domain));
+        if (!entry) return originalOnClick?.(e);
+        const [name] = entry;
+        const protocol = OpenProtocols[name.toLowerCase()];
+        if (!protocol) return originalOnClick?.(e);
+        e.preventDefault();
+        e.stopPropagation();
+        openBasic(`${protocol}${props.href}`);
+      };
+    });
   }
   stop() {
     for (const name of Object.keys(Protocols)) {
       delete Modules.SimpleMarkdown.defaultRules[name.toLowerCase()];
     }
     Modules.SimpleMarkdown.parse = Modules.SimpleMarkdown.reactParserFor(Modules.SimpleMarkdown.defaultRules);
+    BdApi.Patcher.unpatchAll("OpenInApp");
   }
   getSettingsPanel() {
     return /* @__PURE__ */ BdApi.React.createElement(SettingsPanel, null);
