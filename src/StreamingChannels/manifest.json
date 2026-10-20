@@ -1,0 +1,8 @@
+{
+  "name": "StreamingChannels",
+  "version": "1.0.0",
+  "description": "When screensharing or live streaming, selected channels will hide and not load any messages visually.\n\n**Credit:** atomictyler give me this idea at a whopping 8am.",
+  "changelog": [],
+  "author": "Kaan",
+  "credits": ["atomic"]
+}
