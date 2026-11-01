@@ -1,4 +1,4 @@
-import {getKey} from "@helpers";
+import {ChangeLog, getKey} from "@helpers";
 
 const {Webpack, Patcher, React, Components, Data, UI, Utils, DOM, ContextMenu} = new BdApi("LiveTyping");
 
@@ -421,6 +421,7 @@ const GuildTypingIndicatorV2 = React.memo(({guildId}) => {
 
 class LiveTyping {
     start() {
+        ChangeLog();
         this.patchChannelElement();
         this.patchGuildObject();
         this.patchDMTyping();
@@ -527,11 +528,11 @@ class LiveTyping {
     }
 
     patchDMTyping() {
-        Patcher.after(scrollersModule.zC, "render", (that, [props], res) => {
+        Patcher.after(scrollersModule,"Ch", (that, [props], res) => {
             if (shouldIgnoreItem('ignoreDMs')) return res;
 
-            const isGuildObject = Utils.findInTree(res, x => x?.lurkingGuildIds, {walkable: ['props', 'children']})
-            isGuildObject && res.props.children.props.children.unshift(React.createElement('div', {}, React.createElement(TypingIndicatorDMBar)))
+            //const isGuildObject = true//Utils.findInTree(res, x => x?.lurkingGuildIds, {walkable: ['props', 'children']})
+            /* isGuildObject && cant figure out why now.  */ res.props.children.props.children.unshift(React.createElement('div', {}, React.createElement(TypingIndicatorDMBar)))
         });
     }
 
@@ -544,7 +545,7 @@ class LiveTyping {
 
             if (shouldIgnoreItem('ignoreChannels', channelId)) return ret;
 
-            const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children; // BetterChanneList made me do this.......
+            const children = ret.props.children.props.children.props.children[0].props.children ?? ret.props.children.props.children; // BetterChanneList made me do this.......
             const component = React.createElement("div", null, React.createElement(TypingIndicator, {channelId}))
 
             const location = DataStore.settings.indicatorLocation || DEFAULT_INDICATOR_LOCATION;

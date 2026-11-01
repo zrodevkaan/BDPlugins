@@ -1,7 +1,17 @@
 {
   "name": "LiveTyping",
-  "version": "2.1.5",
-  "changelog": [],
+  "version": "2.1.6",
   "author": "Kaan",
-  "description": "Typing status per user on servers, channels or threads."
+  "description": "Typing status per user on servers, channels or threads.",
+  "changelog": [
+    {
+      "version": "2.1.6",
+      "title": "Changes",
+      "type": "fixed",
+      "items": [
+        "Channel elements not having the spinners",
+        "spinner not showing up in guilds list under the Discord logo"
+      ]
+    }
+  ]
 }

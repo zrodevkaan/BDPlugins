@@ -1,21 +1,119 @@
 /**
  * @name LiveTyping
  * @author Kaan
- * @version 2.1.5
+ * @version 2.1.6
  * @description Typing status per user on servers, channels or threads.
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/LiveTyping/LiveTyping.plugin.js
  * @invite t3zMgv7Nvb
- * @stable 634304
- * @canary 635660
+ * @stable 657850
+ * @canary 659817
  */
 "use strict";
+
+// <define:__PLUGIN_CHANGELOG__>
+var define_PLUGIN_CHANGELOG_default = [{ version: "2.1.6", title: "Changes", type: "fixed", items: ["Channel elements not having the spinners", "spinner not showing up in guilds list under the Discord logo"] }];
 
 // helpers/webpack.ts
 var { Webpack } = BdApi;
 
 // helpers/index.tsx
-var { Webpack: Webpack2, React, ContextMenu, Hooks } = BdApi;
+var { Webpack: Webpack2, React, ContextMenu, Hooks, Utils, Data } = BdApi;
 var { createElement, forwardRef } = React;
+function getKey(module2, fn) {
+  for (const key in module2) {
+    if (fn(module2[key])) return { key, module: module2 };
+  }
+}
+function parseVersion(version) {
+  const match = version.match(
+    /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/
+  );
+  if (!match) throw new Error(`Invalid semantic version "${version}"`);
+  const prerelease = match[4] ? match[4].split(".").map((identifier) => {
+    if (/^\d+$/.test(identifier)) {
+      if (identifier.length > 1 && identifier.startsWith("0")) {
+        throw new Error(`Invalid numeric prerelease identifier in "${version}"`);
+      }
+      return Number(identifier);
+    }
+    return identifier;
+  }) : [];
+  return { numbers: [Number(match[1]), Number(match[2]), Number(match[3])], prerelease };
+}
+function compareVersions(left, right) {
+  const a = parseVersion(left);
+  const b = parseVersion(right);
+  for (let index = 0; index < a.numbers.length; index++) {
+    const leftNumber = a.numbers[index];
+    const rightNumber = b.numbers[index];
+    if (leftNumber !== void 0 && rightNumber !== void 0 && leftNumber !== rightNumber) {
+      return leftNumber > rightNumber ? 1 : -1;
+    }
+  }
+  if (!a.prerelease.length || !b.prerelease.length) {
+    if (a.prerelease.length === b.prerelease.length) return 0;
+    return a.prerelease.length ? -1 : 1;
+  }
+  const length = Math.max(a.prerelease.length, b.prerelease.length);
+  for (let index = 0; index < length; index++) {
+    const leftIdentifier = a.prerelease[index];
+    const rightIdentifier = b.prerelease[index];
+    if (leftIdentifier === void 0 || rightIdentifier === void 0) {
+      return leftIdentifier === rightIdentifier ? 0 : leftIdentifier === void 0 ? -1 : 1;
+    }
+    if (leftIdentifier === rightIdentifier) continue;
+    if (typeof leftIdentifier === "number" && typeof rightIdentifier !== "number") return -1;
+    if (typeof leftIdentifier !== "number" && typeof rightIdentifier === "number") return 1;
+    return leftIdentifier > rightIdentifier ? 1 : -1;
+  }
+  return 0;
+}
+function ChangeLog(entries = define_PLUGIN_CHANGELOG_default) {
+  const api = new BdApi("LiveTyping");
+  const savedVersion = api.Data.load("lastVersion");
+  if (savedVersion != null && typeof savedVersion !== "string") {
+    throw new Error(`[${"LiveTyping"}] saved changelog version is not a string`);
+  }
+  const latestSeenVersion = typeof savedVersion === "string" ? savedVersion : null;
+  parseVersion("2.1.6");
+  for (let index = 1; index < entries.length; index++) {
+    const newer = entries[index - 1];
+    const older = entries[index];
+    if (newer && older && compareVersions(newer.version, older.version) <= 0) {
+      throw new Error(
+        `[${"LiveTyping"}] changelog entries must be ordered newest to oldest`
+      );
+    }
+  }
+  if (latestSeenVersion === "2.1.6") return false;
+  const availableEntries = entries.filter(
+    (entry) => compareVersions(entry.version, "2.1.6") <= 0
+  );
+  const changes = availableEntries.filter(
+    (entry) => latestSeenVersion ? compareVersions(entry.version, latestSeenVersion) > 0 : entry === availableEntries[0]
+  );
+  if (changes.length) {
+    api.UI.showChangelogModal({
+      title: "LiveTyping",
+      subtitle: "2.1.6",
+      changes: changes.map(({ version: _version, ...change }) => change)
+    });
+  }
+  api.Data.save("lastVersion", "2.1.6");
+  return changes.length > 0;
+}
+function lazyStore(name) {
+  return lazyExport(() => Webpack2.getStore(name));
+}
+var Stores = {
+  User: lazyStore("UserStore"),
+  Guild: lazyStore("GuildStore"),
+  Channel: lazyStore("ChannelStore"),
+  GuildMember: lazyStore("GuildMemberStore"),
+  SelectedGuild: lazyStore("SelectedGuildStore"),
+  SelectedChannel: lazyStore("SelectedChannelStore"),
+  Message: lazyStore("MessageStore")
+};
 function styledBase(tag, cssOrFn) {
   const Styled = (props) => {
     const style = typeof cssOrFn === "function" ? cssOrFn(props) : cssOrFn;
@@ -27,11 +125,48 @@ function styledBase(tag, cssOrFn) {
 var styled = new Proxy(styledBase, {
   get: (target, p) => (css) => target(p, css)
 });
-function getKey(module2, fn) {
-  for (const key in module2) {
-    if (fn(module2[key])) return { key, module: module2 };
+var SettingsStore = class extends BdApi.Utils.Store {
+  constructor(defaults, dataKey = "settings") {
+    super();
+    this.defaults = defaults;
+    this.dataKey = dataKey;
+    const saved = BdApi.Data.load("LiveTyping", dataKey);
+    this.settings = { ...defaults, ...saved };
   }
-}
+  settings;
+  get(key) {
+    return this.settings[key];
+  }
+  set(key, value) {
+    this.settings = { ...this.settings, [key]: value };
+    this.persist();
+  }
+  del(key) {
+    this.set(key, this.defaults[key]);
+  }
+  push(key, value) {
+    const current = this.settings[key];
+    if (!Array.isArray(current)) throw new Error(`Cannot push to non-array setting "${String(key)}"`);
+    this.set(key, [...current, value]);
+  }
+  all() {
+    return this.settings;
+  }
+  reset() {
+    this.settings = { ...this.defaults };
+    this.persist();
+  }
+  use(key) {
+    return BdApi.Hooks.useStateFromStores(this, () => this.get(key), [key]);
+  }
+  useAll() {
+    return BdApi.Hooks.useStateFromStores(this, () => this.all());
+  }
+  persist() {
+    BdApi.Data.save("LiveTyping", this.dataKey, this.settings);
+    this.emitChange();
+  }
+};
 function lazyExport(getter) {
   let cached;
   const resolve = () => cached ??= getter();
@@ -57,21 +192,9 @@ function lazyExport(getter) {
     }
   });
 }
-function lazyStore(name) {
-  return lazyExport(() => Webpack2.getStore(name));
-}
-var Stores = {
-  User: lazyStore("UserStore"),
-  Guild: lazyStore("GuildStore"),
-  Channel: lazyStore("ChannelStore"),
-  GuildMember: lazyStore("GuildMemberStore"),
-  SelectedGuild: lazyStore("SelectedGuildStore"),
-  SelectedChannel: lazyStore("SelectedChannelStore"),
-  Message: lazyStore("MessageStore")
-};
 
 // src/LiveTyping/index.tsx
-var { Webpack: Webpack3, Patcher, React: React2, Components, Data, UI, Utils, DOM, ContextMenu: ContextMenu2 } = new BdApi("LiveTyping");
+var { Webpack: Webpack3, Patcher, React: React2, Components, Data: Data2, UI, Utils: Utils2, DOM, ContextMenu: ContextMenu2 } = new BdApi("LiveTyping");
 var {
   getStore,
   getByStrings,
@@ -231,20 +354,20 @@ var shouldIgnoreItem = (type, id = null) => {
 var DataStore = new Proxy({}, {
   get: (_, key) => {
     if (key === "settings") {
-      const savedSettings = Data.load(key) || {};
+      const savedSettings = Data2.load(key) || {};
       return CONFIG.defaultConfig.reduce((acc, setting) => {
         acc[setting.id] = savedSettings[setting.id] ?? setting.value;
         return acc;
       }, {});
     }
-    return Data.load(key) || (key.startsWith("ignored") ? {} : null);
+    return Data2.load(key) || (key.startsWith("ignored") ? {} : null);
   },
   set: (_, key, value) => {
-    Data.save(key, value);
+    Data2.save(key, value);
     return true;
   },
   deleteProperty: (_, key) => {
-    Data.delete(key);
+    Data2.delete(key);
     return true;
   }
 });
@@ -428,6 +551,7 @@ var GuildTypingIndicatorV2 = React2.memo(({ guildId }) => {
 });
 var LiveTyping = class {
   start() {
+    ChangeLog();
     this.patchChannelElement();
     this.patchGuildObject();
     this.patchDMTyping();
@@ -517,10 +641,9 @@ var LiveTyping = class {
     ContextMenu2.patch("gdm-context", this.patchChannelContextMenu);
   }
   patchDMTyping() {
-    Patcher.after(scrollersModule.zC, "render", (that, [props], res) => {
+    Patcher.after(scrollersModule, "Ch", (that, [props], res) => {
       if (shouldIgnoreItem("ignoreDMs")) return res;
-      const isGuildObject = Utils.findInTree(res, (x) => x?.lurkingGuildIds, { walkable: ["props", "children"] });
-      isGuildObject && res.props.children.props.children.unshift(React2.createElement("div", {}, React2.createElement(TypingIndicatorDMBar)));
+      res.props.children.props.children.unshift(React2.createElement("div", {}, React2.createElement(TypingIndicatorDMBar)));
     });
   }
   patchChannelElement() {
@@ -529,7 +652,7 @@ var LiveTyping = class {
       const channelId = ExtractItemID(props["data-list-item-id"]);
       if (!channelId) return;
       if (shouldIgnoreItem("ignoreChannels", channelId)) return ret;
-      const children = ret.props.children.props.children[0].props.children ?? ret.props.children.props.children;
+      const children = ret.props.children.props.children.props.children[0].props.children ?? ret.props.children.props.children;
       const component = React2.createElement("div", null, React2.createElement(TypingIndicator, { channelId }));
       const location = DataStore.settings.indicatorLocation || DEFAULT_INDICATOR_LOCATION;
       if (location === "left") {
