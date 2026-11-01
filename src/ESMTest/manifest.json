@@ -1,0 +1,6 @@
+{
+  "name": "ESM-Test",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "A test plugin for ESM support in BetterDiscord"
+}

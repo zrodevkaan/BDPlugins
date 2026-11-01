@@ -130,7 +130,7 @@ function resolveQuery(query: Query): any {
     if ("map" in (query as any)) {
         const q = query as any;
         const newModule: Record<string, any> = {};
-        const foundModule = Webpack.getModule(q.filter as any);
+        const foundModule = Webpack.getModule(q.filter as any, {...q?.options, map: q.map});
 
         if (foundModule) {
             const remaining = new Map(Object.entries(q.map));
@@ -168,8 +168,19 @@ function runPatch<M extends object, K extends Extract<keyof M, string>>(
     return patcher[type](pluginName, mod, key, callback);
 }
 
+function byLength(length: number, strings: string[]): boolean {
+    return (func,b,c) => {
+        const str = String(func).substring(0, length);
+        for (const string of strings) {
+            if (!str.includes(string)) return false;
+        }
+        return true;
+    }
+}
+
 export const wpFilter = {
     byKeys: (...keys: string[]) => Webpack.Filters.byKeys(...keys),
+    byLength: (length: number, strings: string[]) => byLength(length, strings),
     byPrototypeKeys: (...keys: string[]) => Webpack.Filters.byPrototypeKeys(...keys),
     byStrings: (...strings: string[]) => Webpack.Filters.byStrings(...strings),
     bySource: (...source: Array<string | RegExp>) => Webpack.Filters.bySource(...source),
@@ -220,7 +231,10 @@ export function wpGetStore<T = any>(storeName: string, options?: GetOptions): T 
     return resolveModule<T>(Webpack.Filters.byStoreName(storeName) as any, options);
 }
 
-export function wpGetWithKey<T = any>(filter: ModuleFilter, options?: GetOptions): {mod: T, foundKey: string | unknown} | null {
+export function wpGetWithKey<T = any>(filter: ModuleFilter, options?: GetOptions): {
+    mod: T,
+    foundKey: string | unknown
+} | null {
     let foundKey: string | undefined;
     const mod = Webpack.getModule((exports: any) => {
         if (!exports || (typeof exports !== "object" && typeof exports !== "function")) return false;
@@ -465,7 +479,8 @@ function resolveLive(filter: ModuleFilter, options: GetOptions | undefined, path
 }
 
 function createLiveProxy(filter: ModuleFilter, options: GetOptions | undefined, path: PathSegment[]): any {
-    const target = function wpGetProxyTarget() {} as any; // constructible target
+    const target = function wpGetProxyTarget() {
+    } as any; // constructible target
 
     return new Proxy(target, {
         get(_t, prop) {
@@ -542,6 +557,6 @@ export function wpGetProxyQuery<T = any>(query: Query): T {
 
 export function getKey(module2, fn) {
     for (const key in module2) {
-        if (fn(module2[key])) return { key, module: module2 };
+        if (fn(module2[key])) return {key, module: module2};
     }
 }

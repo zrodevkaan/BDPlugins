@@ -1,12 +1,12 @@
 /**
  * @name PresenceForge
  * @author Kaan
- * @version 1.0.0
+ * @version 1.0.1
  * @description The ultimate rich presence editor for BetterDiscord
  * @source https://github.com/zrodevkaan/BDPlugins/tree/main/Plugins/PresenceForge/PresenceForge.plugin.js
  * @invite t3zMgv7Nvb
  * @stable 657850
- * @canary 659595
+ * @canary 659817
  */
 "use strict";
 var __defProp = Object.defineProperty;
@@ -34,12 +34,93 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// <define:__PLUGIN_CHANGELOG__>
+var define_PLUGIN_CHANGELOG_default = [{ version: "1.0.1", title: "Crash Fix", type: "improved", items: ["Error occurred when trying to open the Edit modal"] }];
+
 // helpers/webpack.ts
 var { Webpack } = BdApi;
 
 // helpers/index.tsx
-var { Webpack: Webpack2, React: React2, ContextMenu, Hooks, Utils, Data } = BdApi;
-var { createElement, forwardRef } = React2;
+var { Webpack: Webpack2, React, ContextMenu, Hooks, Utils, Data } = BdApi;
+var { createElement, forwardRef } = React;
+function parseVersion(version) {
+  const match = version.match(
+    /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/
+  );
+  if (!match) throw new Error(`Invalid semantic version "${version}"`);
+  const prerelease = match[4] ? match[4].split(".").map((identifier) => {
+    if (/^\d+$/.test(identifier)) {
+      if (identifier.length > 1 && identifier.startsWith("0")) {
+        throw new Error(`Invalid numeric prerelease identifier in "${version}"`);
+      }
+      return Number(identifier);
+    }
+    return identifier;
+  }) : [];
+  return { numbers: [Number(match[1]), Number(match[2]), Number(match[3])], prerelease };
+}
+function compareVersions(left, right) {
+  const a = parseVersion(left);
+  const b = parseVersion(right);
+  for (let index = 0; index < a.numbers.length; index++) {
+    const leftNumber = a.numbers[index];
+    const rightNumber = b.numbers[index];
+    if (leftNumber !== void 0 && rightNumber !== void 0 && leftNumber !== rightNumber) {
+      return leftNumber > rightNumber ? 1 : -1;
+    }
+  }
+  if (!a.prerelease.length || !b.prerelease.length) {
+    if (a.prerelease.length === b.prerelease.length) return 0;
+    return a.prerelease.length ? -1 : 1;
+  }
+  const length = Math.max(a.prerelease.length, b.prerelease.length);
+  for (let index = 0; index < length; index++) {
+    const leftIdentifier = a.prerelease[index];
+    const rightIdentifier = b.prerelease[index];
+    if (leftIdentifier === void 0 || rightIdentifier === void 0) {
+      return leftIdentifier === rightIdentifier ? 0 : leftIdentifier === void 0 ? -1 : 1;
+    }
+    if (leftIdentifier === rightIdentifier) continue;
+    if (typeof leftIdentifier === "number" && typeof rightIdentifier !== "number") return -1;
+    if (typeof leftIdentifier !== "number" && typeof rightIdentifier === "number") return 1;
+    return leftIdentifier > rightIdentifier ? 1 : -1;
+  }
+  return 0;
+}
+function ChangeLog(entries = define_PLUGIN_CHANGELOG_default) {
+  const api = new BdApi("PresenceForge");
+  const savedVersion = api.Data.load("lastVersion");
+  if (savedVersion != null && typeof savedVersion !== "string") {
+    throw new Error(`[${"PresenceForge"}] saved changelog version is not a string`);
+  }
+  const latestSeenVersion = typeof savedVersion === "string" ? savedVersion : null;
+  parseVersion("1.0.1");
+  for (let index = 1; index < entries.length; index++) {
+    const newer = entries[index - 1];
+    const older = entries[index];
+    if (newer && older && compareVersions(newer.version, older.version) <= 0) {
+      throw new Error(
+        `[${"PresenceForge"}] changelog entries must be ordered newest to oldest`
+      );
+    }
+  }
+  if (latestSeenVersion === "1.0.1") return false;
+  const availableEntries = entries.filter(
+    (entry) => compareVersions(entry.version, "1.0.1") <= 0
+  );
+  const changes = availableEntries.filter(
+    (entry) => latestSeenVersion ? compareVersions(entry.version, latestSeenVersion) > 0 : entry === availableEntries[0]
+  );
+  if (changes.length) {
+    api.UI.showChangelogModal({
+      title: "PresenceForge",
+      subtitle: "1.0.1",
+      changes: changes.map(({ version: _version, ...change }) => change)
+    });
+  }
+  api.Data.save("lastVersion", "1.0.1");
+  return changes.length > 0;
+}
 function lazyStore(name) {
   return lazyExport(() => Webpack2.getStore(name));
 }
@@ -145,6 +226,7 @@ var {
   Components: { Button, Flex, SwitchInput, Modal, TextInput, SettingGroup, SettingItem },
   Webpack: Webpack3,
   Webpack: { Stores: Stores2 },
+  React: React2,
   Logger
 } = new BdApi("PresenceForge");
 var ModalActions = Webpack3.getByKeys("openModal");
@@ -266,7 +348,9 @@ var PreviewLabel = styled.div({
 var FLAG_OPTIONS = [
   { label: "Instance", bit: 1 /* INSTANCE */ },
   { label: "Join", bit: 2 /* JOIN */ },
-  { label: "Party: Friends", bit: 64 /* PARTY_PRIVACY_FRIENDS */ }
+  { label: "Party: Friends", bit: 64 /* PARTY_PRIVACY_FRIENDS */ },
+  { label: "Sync", bit: 16 /* SYNC */ },
+  { label: "Playable", bit: 32 /* PLAY */ }
 ];
 var PLATFORM_OPTIONS = ["desktop", "xbox", "playstation", "ios", "android"];
 var STATUS_DISPLAY = [
@@ -284,8 +368,8 @@ function Checkmark() {
   ));
 }
 function Chip({ label, on, onClick }) {
-  const [hover, setHover] = React.useState(false);
-  const [focus, setFocus] = React.useState(false);
+  const [hover, setHover] = React2.useState(false);
+  const [focus, setFocus] = React2.useState(false);
   const background = on ? "var(--brand-500, #5865f2)" : hover ? "var(--background-mod-normal)" : "var(--background-mod-subtle)";
   return /* @__PURE__ */ BdApi.React.createElement(
     "div",
@@ -335,7 +419,7 @@ function ButtonsTab({ activity, update }) {
     nextUrls[i] = url;
     update({ buttons: nextLabels, metadata: { ...activity.metadata, button_urls: nextUrls } });
   };
-  return /* @__PURE__ */ BdApi.React.createElement("div", { style: gridStyle }, [0, 1].map((i) => /* @__PURE__ */ BdApi.React.createElement(React.Fragment, { key: i }, /* @__PURE__ */ BdApi.React.createElement(
+  return /* @__PURE__ */ BdApi.React.createElement("div", { style: gridStyle }, [0, 1].map((i) => /* @__PURE__ */ BdApi.React.createElement(React2.Fragment, { key: i }, /* @__PURE__ */ BdApi.React.createElement(
     TextWithLabel,
     {
       label: `Button ${i + 1} label`,
@@ -532,8 +616,8 @@ async function resolveAssetUrl(appId, image) {
   return null;
 }
 function useAssetUrl(appId, image) {
-  const [url, setUrl] = React.useState(null);
-  React.useEffect(() => {
+  const [url, setUrl] = React2.useState(null);
+  React2.useEffect(() => {
     let cancelled = false;
     const timeout = setTimeout(
       () => resolveAssetUrl(appId, image).then((u) => !cancelled && setUrl(u)),
@@ -548,8 +632,8 @@ function useAssetUrl(appId, image) {
 }
 function EditModal({ index, props }) {
   const activities = _data.use("activities");
-  const [draft, setDraft] = React.useState(() => activities[index]);
-  const [selected, setSelected] = React.useState(0);
+  const [draft, setDraft] = React2.useState(() => activities[index]);
+  const [selected, setSelected] = React2.useState(0);
   const update = (patch) => setDraft((d) => ({ ...d, ...patch }));
   const largeUrl = useAssetUrl(draft.application_id, draft.assets?.large_image);
   const smallUrl = useAssetUrl(draft.application_id, draft.assets?.small_image);
@@ -673,6 +757,7 @@ function SettingsPanel() {
 }
 var _ = class {
   start() {
+    ChangeLog();
     _data.get("settings").startup && setActivity(Object.values(_data.get("activities")).find((a) => a.enabled) ?? null);
   }
   stop() {

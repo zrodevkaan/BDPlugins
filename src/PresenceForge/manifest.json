@@ -1,6 +1,16 @@
 {
   "name": "PresenceForge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The ultimate rich presence editor for BetterDiscord",
-  "author": "Kaan"
+  "author": "Kaan",
+  "changelog": [
+    {
+      "version": "1.0.1",
+      "title": "Crash Fix",
+      "type": "improved",
+      "items": [
+        "Error occurred when trying to open the Edit modal"
+      ]
+    }
+  ]
 }

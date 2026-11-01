@@ -1,10 +1,11 @@
-import {SettingsStore, styled} from "@helpers";
+import {ChangeLog, SettingsStore, styled} from "@helpers";
 import {ActivityFlags, ActivityType, type HeadlessActivityBase, StatusDisplayType, TYPE_LABELS} from "./types.ts";
 
 const {
     Components: {Button, Flex, SwitchInput, Modal, TextInput, SettingGroup, SettingItem},
     Webpack,
     Webpack: {Stores},
+    React,
     Logger
 } = new BdApi(__PLUGIN_NAME__);
 
@@ -154,6 +155,8 @@ const FLAG_OPTIONS = [
     {label: "Instance", bit: ActivityFlags.INSTANCE},
     {label: "Join", bit: ActivityFlags.JOIN},
     {label: "Party: Friends", bit: ActivityFlags.PARTY_PRIVACY_FRIENDS},
+    {label: "Sync", bit: ActivityFlags.SYNC},
+    {label: "Playable", bit: ActivityFlags.PLAY},
 ];
 
 const PLATFORM_OPTIONS = ["desktop", "xbox", "playstation", "ios", "android"];
@@ -622,6 +625,7 @@ function SettingsPanel() {
 
 export default class _ {
     start() {
+        ChangeLog();
         _data.get("settings").startup && setActivity(Object.values(_data.get("activities")).find((a) => a.enabled) ?? null);
     }
 
